@@ -15,7 +15,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 // ─── LOGIN BYPASS ─────────────────────────────────────────────────────────────
 // Set BYPASS_LOGIN = true to skip the login page and auto-authenticate.
 // Set BYPASS_LOGIN = false (or remove) to restore normal login flow.
-const BYPASS_LOGIN = true;
+const BYPASS_LOGIN = false;
 const BYPASS_CREDENTIALS = { email: 'admin@eclearnix.com', password: 'admin@123' };
 // ──────────────────────────────────────────────────────────────────────────────
 

@@ -13,13 +13,6 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// ─── LOGIN BYPASS ─────────────────────────────────────────────────────────────
-// Set BYPASS_LOGIN = true to skip the login page and auto-authenticate.
-// Set BYPASS_LOGIN = false (or remove) to restore normal login flow.
-const BYPASS_LOGIN = false;
-const BYPASS_CREDENTIALS = { email: 'john@company.com', password: 'Password@123' };
-// ──────────────────────────────────────────────────────────────────────────────
-
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -27,38 +20,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   useEffect(() => {
     const initializeAuth = async () => {
-      // ── Bypass: silent login with real credentials so all API calls work ──
-      if (BYPASS_LOGIN) {
-        // Re-use cached token if already present to avoid re-login on every refresh
-        const cachedToken = localStorage.getItem('token');
-        const cachedUser  = localStorage.getItem('user');
-        if (cachedToken && cachedUser) {
-          try {
-            setToken(cachedToken);
-            setUser(JSON.parse(cachedUser));
-            const response = await api.get<User>('/auth/me');
-            setUser(response.data);
-            localStorage.setItem('user', JSON.stringify(response.data));
-            setLoading(false);
-            return;
-          } catch {
-            // cached token expired – fall through to fresh login
-          }
-        }
-        try {
-          const response = await api.post<{ token: string; user: User }>('/auth/login', BYPASS_CREDENTIALS);
-          localStorage.setItem('token', response.data.token);
-          localStorage.setItem('user', JSON.stringify(response.data.user));
-          setToken(response.data.token);
-          setUser(response.data.user);
-        } catch (err) {
-          console.error('[BYPASS] Auto-login failed:', err);
-        }
-        setLoading(false);
-        return;
-      }
-      // ─────────────────────────────────────────────────────────────────────
-
       const storedToken = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
 
@@ -73,7 +34,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           localStorage.setItem('user', JSON.stringify(response.data));
         } catch (error) {
           console.error('Failed to verify token', error);
-          // Token is invalid/expired
           logout();
         }
       }

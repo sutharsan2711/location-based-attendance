@@ -4,13 +4,18 @@ import com.company.attendance.dto.AttendanceRequest;
 import com.company.attendance.dto.AttendanceResponse;
 import com.company.attendance.entity.Attendance;
 import com.company.attendance.entity.CompanyLocation;
+import com.company.attendance.entity.PermissionRequest;
 import com.company.attendance.entity.User;
 import com.company.attendance.enums.AttendanceStatus;
+import com.company.attendance.enums.AttendanceTimingStatus;
+import com.company.attendance.enums.RequestStatus;
 import com.company.attendance.enums.UserStatus;
 import com.company.attendance.exception.LocationValidationException;
 import com.company.attendance.exception.ResourceNotFoundException;
 import com.company.attendance.repository.AttendanceRepository;
 import com.company.attendance.repository.CompanyLocationRepository;
+import com.company.attendance.repository.LeaveRequestRepository;
+import com.company.attendance.repository.PermissionRequestRepository;
 import com.company.attendance.repository.UserRepository;
 import com.company.attendance.util.DistanceCalculator;
 import org.springframework.stereotype.Service;
@@ -18,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
@@ -28,15 +34,21 @@ public class AttendanceService {
     private final AttendanceRepository attendanceRepository;
     private final CompanyLocationRepository locationRepository;
     private final UserRepository userRepository;
+    private final PermissionRequestRepository permissionRepository;
+    private final LeaveRequestRepository leaveRepository;
 
     private static final ZoneId KOLKATA_ZONE = ZoneId.of("Asia/Kolkata");
 
     public AttendanceService(AttendanceRepository attendanceRepository,
                              CompanyLocationRepository locationRepository,
-                             UserRepository userRepository) {
+                             UserRepository userRepository,
+                             PermissionRequestRepository permissionRepository,
+                             LeaveRequestRepository leaveRepository) {
         this.attendanceRepository = attendanceRepository;
         this.locationRepository = locationRepository;
         this.userRepository = userRepository;
+        this.permissionRepository = permissionRepository;
+        this.leaveRepository = leaveRepository;
     }
 
     @Transactional
@@ -93,15 +105,44 @@ public class AttendanceService {
         attendance.setLoginDistance(distance);
         attendance.setStatus(AttendanceStatus.LOGGED_IN);
 
+        // Calculate timing status (server-side, Asia/Kolkata)
+        LocalTime loginLocalTime = now.toLocalTime();
+        LocalTime officeLoginTime = location.getOfficeLoginTime() != null ? location.getOfficeLoginTime() : LocalTime.of(9, 0);
+        int graceMinutes = location.getGracePeriodMinutes() != null ? location.getGracePeriodMinutes() : 15;
+        LocalTime lateThreshold = officeLoginTime.plusMinutes(graceMinutes);
+
+        // Check if employee has an approved permission for today that covers current login time
+        List<PermissionRequest> approvedPermissions = permissionRepository
+                .findByEmployeeIdAndPermissionDateAndStatus(employee.getId(), today, RequestStatus.APPROVED);
+
+        boolean coveredByPermission = approvedPermissions.stream().anyMatch(p ->
+                !loginLocalTime.isBefore(p.getFromTime()) && !loginLocalTime.isAfter(p.getToTime())
+        );
+
+        AttendanceTimingStatus timingStatus;
+        if (coveredByPermission) {
+            timingStatus = AttendanceTimingStatus.PERMISSION;
+        } else if (!loginLocalTime.isAfter(lateThreshold)) {
+            timingStatus = AttendanceTimingStatus.PRESENT;
+        } else {
+            timingStatus = AttendanceTimingStatus.LATE;
+        }
+
+        attendance.setTimingStatus(timingStatus);
         attendanceRepository.save(attendance);
+
+        String statusMessage = timingStatus == AttendanceTimingStatus.LATE 
+                ? "Login recorded (LATE)" 
+                : (timingStatus == AttendanceTimingStatus.PERMISSION ? "Login recorded (PERMISSION)" : "Login recorded successfully");
 
         return new AttendanceResponse(
                 true,
-                "Login recorded successfully",
+                statusMessage,
                 distance,
                 location.getAllowedRadius(),
                 now,
-                attendance.getStatus().name()
+                attendance.getStatus().name(),
+                timingStatus.name()
         );
     }
 

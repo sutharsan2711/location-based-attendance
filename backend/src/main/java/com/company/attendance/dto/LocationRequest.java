@@ -4,6 +4,7 @@ import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalTime;
 
 public class LocationRequest {
 
@@ -28,6 +29,10 @@ public class LocationRequest {
     @DecimalMin(value = "1.0", message = "Max GPS accuracy must be at least 1 meter")
     private Double maxGpsAccuracy;
 
+    private LocalTime officeLoginTime;
+    private LocalTime officeLogoutTime;
+    private Integer gracePeriodMinutes;
+
     // Getters and Setters
     public String getCompanyName() { return companyName; }
     public void setCompanyName(String companyName) { this.companyName = companyName; }
@@ -43,4 +48,14 @@ public class LocationRequest {
 
     public Double getMaxGpsAccuracy() { return maxGpsAccuracy; }
     public void setMaxGpsAccuracy(Double maxGpsAccuracy) { this.maxGpsAccuracy = maxGpsAccuracy; }
+
+    public LocalTime getOfficeLoginTime() { return officeLoginTime; }
+    public void setOfficeLoginTime(LocalTime officeLoginTime) { this.officeLoginTime = officeLoginTime; }
+
+    public LocalTime getOfficeLogoutTime() { return officeLogoutTime; }
+    public void setOfficeLogoutTime(LocalTime officeLogoutTime) { this.officeLogoutTime = officeLogoutTime; }
+
+    public Integer getGracePeriodMinutes() { return gracePeriodMinutes; }
+    public void setGracePeriodMinutes(Integer gracePeriodMinutes) { this.gracePeriodMinutes = gracePeriodMinutes; }
 }
+

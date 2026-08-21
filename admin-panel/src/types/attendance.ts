@@ -15,6 +15,9 @@ export interface Attendance {
   logoutAccuracy?: number;
   logoutDistance?: number;
   status: 'NOT_LOGGED_IN' | 'LOGGED_IN' | 'COMPLETED';
+  timingStatus?: 'PRESENT' | 'LATE' | 'PERMISSION' | 'LEAVE' | 'ABSENT' | 'WORKING';
+  displayStatus?: string;
+  workingHours?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -32,4 +35,36 @@ export interface AttendanceResponse {
   allowedRadius?: number;
   time?: string;
   status?: 'NOT_LOGGED_IN' | 'LOGGED_IN' | 'COMPLETED';
+  timingStatus?: string;
 }
+
+export interface MonthlyDayDetail {
+  day: number;
+  date: string;
+  code: 'P' | 'L' | 'PR' | 'LV' | 'A' | 'WO' | '--';
+  status: string;
+  loginTime: string;
+  logoutTime: string;
+  workingHours: string;
+}
+
+export interface MonthlyEmployeeRow {
+  employeeId: number;
+  employeeName: string;
+  employeeCode: string;
+  days: Record<string, MonthlyDayDetail>;
+  totalPresent: number;
+  totalLate: number;
+  totalPermission: number;
+  totalLeave: number;
+  totalAbsent: number;
+  totalWeekOff: number;
+}
+
+export interface MonthlyAttendanceData {
+  year: number;
+  month: number;
+  daysInMonth: number;
+  employees: MonthlyEmployeeRow[];
+}
+

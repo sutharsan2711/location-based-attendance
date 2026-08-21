@@ -3,16 +3,9 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import {
   Home,
-  Radio,
-  CheckSquare,
-  Banknote,
   Calendar,
   CheckCircle,
   FileText,
-  Users,
-  Info,
-  Layers,
-  GitFork,
   ChevronDown,
   ChevronUp,
   Settings,
@@ -26,8 +19,6 @@ const Sidebar: React.FC = () => {
 
   // State for collapsible sub-menus
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
-    'To do': false,
-    'Salary': false,
     'Leave': false,
     'Attendance': true,
   });
@@ -36,7 +27,7 @@ const Sidebar: React.FC = () => {
     setOpenMenus((prev) => ({ ...prev, [name]: !prev[name] }));
   };
 
-  const displayName = user?.name ? user.name.split(' ')[0] : 'Sutharsan';
+  const displayName = user?.name ? user.name.split(' ')[0] : 'Employee';
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-slate-200/80 bg-white md:flex select-none">
@@ -52,7 +43,7 @@ const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      {/* ── 2. User Info Card ("Hi Sutharsan", "View My Info") ── */}
+      {/* ── 2. User Info Card ── */}
       <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100/80 bg-slate-50/40">
         <div className="h-9 w-9 rounded-full bg-slate-800 flex items-center justify-center text-white shadow-sm shrink-0">
           <UserIcon className="h-5 w-5 text-slate-200" />
@@ -94,85 +85,6 @@ const Sidebar: React.FC = () => {
           <span>Home</span>
         </NavLink>
 
-        {/* Engage */}
-        <NavLink
-          to="/employee/engage"
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all ${
-              isActive
-                ? 'bg-blue-50/80 text-blue-600 font-semibold'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-            }`
-          }
-        >
-          <Radio className="h-4 w-4 shrink-0" />
-          <span>Engage</span>
-        </NavLink>
-
-        {/* To do (Collapsible) */}
-        <div>
-          <button
-            onClick={() => toggleMenu('To do')}
-            className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
-          >
-            <div className="flex items-center gap-3">
-              <CheckSquare className="h-4 w-4 shrink-0 text-slate-500" />
-              <span>To do</span>
-            </div>
-            {openMenus['To do'] ? <ChevronUp className="h-3 w-3 text-slate-400" /> : <ChevronDown className="h-3 w-3 text-slate-400" />}
-          </button>
-          {openMenus['To do'] && (
-            <div className="pl-9 pr-2 py-1 space-y-1 text-[11px]">
-              <div className="py-1 text-slate-500 hover:text-blue-600 cursor-pointer">Tasks (0)</div>
-              <div className="py-1 text-slate-500 hover:text-blue-600 cursor-pointer">Review Items (0)</div>
-            </div>
-          )}
-        </div>
-
-        {/* Salary (Collapsible) */}
-        <div>
-          <button
-            onClick={() => toggleMenu('Salary')}
-            className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
-          >
-            <div className="flex items-center gap-3">
-              <Banknote className="h-4 w-4 shrink-0 text-slate-500" />
-              <span>Salary</span>
-            </div>
-            {openMenus['Salary'] ? <ChevronUp className="h-3 w-3 text-slate-400" /> : <ChevronDown className="h-3 w-3 text-slate-400" />}
-          </button>
-          {openMenus['Salary'] && (
-            <div className="pl-9 pr-2 py-1 space-y-1 text-[11px]">
-              <div className="py-1 text-slate-500 hover:text-blue-600 cursor-pointer">Payslips</div>
-              <div className="py-1 text-slate-500 hover:text-blue-600 cursor-pointer">YTD Reports</div>
-              <div className="py-1 text-slate-500 hover:text-blue-600 cursor-pointer">IT Statement</div>
-              <div className="py-1 text-slate-500 hover:text-blue-600 cursor-pointer">Reimbursement</div>
-            </div>
-          )}
-        </div>
-
-        {/* Leave (Collapsible) */}
-        <div>
-          <button
-            onClick={() => toggleMenu('Leave')}
-            className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
-          >
-            <div className="flex items-center gap-3">
-              <Calendar className="h-4 w-4 shrink-0 text-slate-500" />
-              <span>Leave</span>
-            </div>
-            {openMenus['Leave'] ? <ChevronUp className="h-3 w-3 text-slate-400" /> : <ChevronDown className="h-3 w-3 text-slate-400" />}
-          </button>
-          {openMenus['Leave'] && (
-            <div className="pl-9 pr-2 py-1 space-y-1 text-[11px]">
-              <div className="py-1 text-slate-500 hover:text-blue-600 cursor-pointer">Leave Apply</div>
-              <div className="py-1 text-slate-500 hover:text-blue-600 cursor-pointer">Leave Balances</div>
-              <div className="py-1 text-slate-500 hover:text-blue-600 cursor-pointer">Leave Calendar</div>
-              <div className="py-1 text-slate-500 hover:text-blue-600 cursor-pointer">Holiday Calendar</div>
-            </div>
-          )}
-        </div>
-
         {/* Attendance (Collapsible - Open by Default) */}
         <div>
           <button
@@ -207,6 +119,75 @@ const Sidebar: React.FC = () => {
               >
                 View Swipes & History
               </NavLink>
+              <NavLink
+                to="/employee/permissions"
+                className={({ isActive }) =>
+                  `block py-1 transition-colors ${
+                    isActive ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-blue-600'
+                  }`
+                }
+              >
+                Permission Requests
+              </NavLink>
+            </div>
+          )}
+        </div>
+
+        {/* Leave (Collapsible) */}
+        <div>
+          <button
+            onClick={() => toggleMenu('Leave')}
+            className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
+          >
+            <div className="flex items-center gap-3">
+              <Calendar className="h-4 w-4 shrink-0 text-slate-500" />
+              <span>Leave</span>
+            </div>
+            {openMenus['Leave'] ? <ChevronUp className="h-3 w-3 text-slate-400" /> : <ChevronDown className="h-3 w-3 text-slate-400" />}
+          </button>
+          {openMenus['Leave'] && (
+            <div className="pl-9 pr-2 py-1 space-y-1 text-[11px]">
+              <NavLink
+                to="/employee/leaves"
+                end
+                className={({ isActive }) =>
+                  `block py-1 transition-colors ${
+                    isActive ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-blue-600'
+                  }`
+                }
+              >
+                Leave Apply
+              </NavLink>
+              <NavLink
+                to="/employee/leaves/balances"
+                className={({ isActive }) =>
+                  `block py-1 transition-colors ${
+                    isActive ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-blue-600'
+                  }`
+                }
+              >
+                Leave Balances
+              </NavLink>
+              <NavLink
+                to="/employee/leaves/calendar"
+                className={({ isActive }) =>
+                  `block py-1 transition-colors ${
+                    isActive ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-blue-600'
+                  }`
+                }
+              >
+                Leave Calendar
+              </NavLink>
+              <NavLink
+                to="/employee/leaves/holidays"
+                className={({ isActive }) =>
+                  `block py-1 transition-colors ${
+                    isActive ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-blue-600'
+                  }`
+                }
+              >
+                Holiday Calendar
+              </NavLink>
             </div>
           )}
         </div>
@@ -217,29 +198,20 @@ const Sidebar: React.FC = () => {
           <span>Document Center</span>
         </div>
 
-        {/* People */}
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 cursor-pointer">
-          <Users className="h-4 w-4 shrink-0 text-slate-500" />
-          <span>People</span>
-        </div>
-
-        {/* Helpdesk */}
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 cursor-pointer">
-          <Info className="h-4 w-4 shrink-0 text-slate-500" />
-          <span>Helpdesk</span>
-        </div>
-
-        {/* Request Hub */}
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 cursor-pointer">
-          <Layers className="h-4 w-4 shrink-0 text-slate-500" />
-          <span>Request Hub</span>
-        </div>
-
-        {/* Workflow Delegates */}
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 cursor-pointer">
-          <GitFork className="h-4 w-4 shrink-0 text-slate-500" />
-          <span>Workflow Delegates</span>
-        </div>
+        {/* Profile */}
+        <NavLink
+          to="/employee/profile"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all ${
+              isActive
+                ? 'bg-blue-50/80 text-blue-600 font-semibold'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+            }`
+          }
+        >
+          <UserIcon className="h-4 w-4 shrink-0" />
+          <span>My Profile</span>
+        </NavLink>
       </nav>
     </aside>
   );

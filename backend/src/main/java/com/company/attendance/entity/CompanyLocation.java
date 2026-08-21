@@ -2,6 +2,7 @@ package com.company.attendance.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "company_location")
@@ -26,6 +27,15 @@ public class CompanyLocation {
     @Column(name = "max_gps_accuracy", nullable = false)
     private Double maxGpsAccuracy = 100.0;
 
+    @Column(name = "office_login_time", nullable = false)
+    private LocalTime officeLoginTime = LocalTime.of(9, 0);
+
+    @Column(name = "office_logout_time", nullable = false)
+    private LocalTime officeLogoutTime = LocalTime.of(18, 0);
+
+    @Column(name = "grace_period_minutes", nullable = false)
+    private Integer gracePeriodMinutes = 15;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
@@ -47,6 +57,9 @@ public class CompanyLocation {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        if (officeLoginTime == null) officeLoginTime = LocalTime.of(9, 0);
+        if (officeLogoutTime == null) officeLogoutTime = LocalTime.of(18, 0);
+        if (gracePeriodMinutes == null) gracePeriodMinutes = 15;
     }
 
     @PreUpdate
@@ -73,9 +86,19 @@ public class CompanyLocation {
     public Double getMaxGpsAccuracy() { return maxGpsAccuracy; }
     public void setMaxGpsAccuracy(Double maxGpsAccuracy) { this.maxGpsAccuracy = maxGpsAccuracy; }
 
+    public LocalTime getOfficeLoginTime() { return officeLoginTime; }
+    public void setOfficeLoginTime(LocalTime officeLoginTime) { this.officeLoginTime = officeLoginTime; }
+
+    public LocalTime getOfficeLogoutTime() { return officeLogoutTime; }
+    public void setOfficeLogoutTime(LocalTime officeLogoutTime) { this.officeLogoutTime = officeLogoutTime; }
+
+    public Integer getGracePeriodMinutes() { return gracePeriodMinutes; }
+    public void setGracePeriodMinutes(Integer gracePeriodMinutes) { this.gracePeriodMinutes = gracePeriodMinutes; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }
+

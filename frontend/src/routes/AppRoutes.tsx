@@ -10,8 +10,12 @@ import Loading from '../components/Loading';
 import Login from '../pages/auth/Login';
 import EmployeeDashboard from '../pages/employee/EmployeeDashboard';
 import AttendanceHistory from '../pages/employee/AttendanceHistory';
+import EmployeePermissions from '../pages/employee/EmployeePermissions';
+import EmployeeLeaves from '../pages/employee/EmployeeLeaves';
+import LeaveBalances from '../pages/employee/LeaveBalances';
+import LeaveCalendar from '../pages/employee/LeaveCalendar';
+import HolidayCalendar from '../pages/employee/HolidayCalendar';
 import EmployeeProfile from '../pages/employee/EmployeeProfile';
-import Engage from '../pages/employee/Engage';
 
 const ADMIN_PANEL_URL = 'http://localhost:5200';
 
@@ -54,11 +58,16 @@ const AppRoutes: React.FC = () => {
         {/* Employee-only Routes */}
         <Route element={<ProtectedRoute allowedRoles={['EMPLOYEE']} />}>
           <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
-          <Route path="/employee/engage" element={<Engage />} />
           <Route path="/employee/attendance" element={<AttendanceHistory />} />
+          <Route path="/employee/permissions" element={<EmployeePermissions />} />
+          <Route path="/employee/leaves" element={<EmployeeLeaves />} />
+          <Route path="/employee/leaves/balances" element={<LeaveBalances />} />
+          <Route path="/employee/leaves/calendar" element={<LeaveCalendar />} />
+          <Route path="/employee/leaves/holidays" element={<HolidayCalendar />} />
           <Route path="/employee/profile" element={<EmployeeProfile />} />
         </Route>
       </Route>
+
 
       {/* Wildcard fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

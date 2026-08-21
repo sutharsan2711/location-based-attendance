@@ -1295,23 +1295,45 @@ const Employees: React.FC = () => {
                     { header: 'Check In', render: (r: Attendance) => r.loginTime ? formatTime(r.loginTime) : '--' },
                     { header: 'Check Out', render: (r: Attendance) => r.logoutTime ? formatTime(r.logoutTime) : '--' },
                     {
-                      header: 'Status',
-                      render: (r: Attendance) => (
-                        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold ${
-                          r.status === 'COMPLETED'
-                            ? 'bg-emerald-50 text-emerald-600'
-                            : r.status === 'LOGGED_IN'
-                            ? 'bg-blue-50 text-blue-600'
-                            : 'bg-slate-100 text-slate-500'
-                        }`}>
-                          {r.status}
-                        </span>
-                      ),
+                      header: 'Working Hours',
+                      render: (r: Attendance) => {
+                        if (!r.loginTime || !r.logoutTime) return '--';
+                        try {
+                          const diff = new Date(r.logoutTime).getTime() - new Date(r.loginTime).getTime();
+                          if (diff <= 0) return '--';
+                          const h = Math.floor(diff / (1000 * 60 * 60));
+                          const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                          return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                        } catch {
+                          return '--';
+                        }
+                      },
                     },
                     {
-                      header: 'Distance (Login)',
+                      header: 'Status',
+                      render: (r: Attendance) => {
+                        if (r.timingStatus === 'LEAVE') {
+                          return <span className="inline-flex rounded-full bg-rose-50 px-2 py-0.5 text-xs font-bold text-rose-600 border border-rose-200">Leave</span>;
+                        }
+                        if (r.timingStatus === 'PERMISSION') {
+                          return <span className="inline-flex rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-bold text-indigo-600 border border-indigo-200">Permission</span>;
+                        }
+                        if (r.timingStatus === 'LATE') {
+                          return <span className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800 border border-amber-300">Late</span>;
+                        }
+                        if (r.status === 'LOGGED_IN') {
+                          return <span className="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-600 border border-blue-200">Working</span>;
+                        }
+                        if (r.status === 'COMPLETED') {
+                          return <span className="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-600 border border-emerald-200">Present</span>;
+                        }
+                        return <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-500">{r.status}</span>;
+                      },
+                    },
+                    {
+                      header: 'Distance (GPS)',
                       render: (r: Attendance) => (
-                        <span className="text-slate-500">
+                        <span className="text-slate-500 font-medium">
                           {r.loginDistance != null ? `${r.loginDistance.toFixed(1)}m` : '--'}
                         </span>
                       ),

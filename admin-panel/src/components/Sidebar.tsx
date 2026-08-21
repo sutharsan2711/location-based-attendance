@@ -5,10 +5,13 @@ import {
   LayoutDashboard,
   Users,
   CalendarDays,
+  Clock,
+  FileCheck,
   MapPin,
   FileText,
   Map,
   LogOut,
+  Sliders,
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
@@ -20,7 +23,10 @@ const Sidebar: React.FC = () => {
   const adminMenu = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Employees', path: '/employees', icon: Users },
-    { name: 'Attendance Logs', path: '/attendance', icon: CalendarDays },
+    { name: 'Attendance & Grid', path: '/attendance', icon: CalendarDays },
+    { name: 'Permission Requests', path: '/requests/permissions', icon: Clock },
+    { name: 'Leave Requests', path: '/requests/leaves', icon: FileCheck },
+    { name: 'Office Timing', path: '/settings/timing', icon: Sliders },
     { name: 'Location Settings', path: '/settings/location', icon: MapPin },
     { name: 'Reports', path: '/reports', icon: FileText },
   ];

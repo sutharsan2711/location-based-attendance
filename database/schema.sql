@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- 2. Company Location Settings Table
+-- 2. Company Location & Office Timing Settings Table
 CREATE TABLE IF NOT EXISTS company_location (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     company_name VARCHAR(100) NOT NULL,
@@ -26,6 +26,9 @@ CREATE TABLE IF NOT EXISTS company_location (
     longitude DOUBLE NOT NULL,
     allowed_radius DOUBLE NOT NULL DEFAULT 50.0, -- in meters
     max_gps_accuracy DOUBLE NOT NULL DEFAULT 100.0, -- in meters
+    office_login_time TIME NOT NULL DEFAULT '09:00:00',
+    office_logout_time TIME NOT NULL DEFAULT '18:00:00',
+    grace_period_minutes INT NOT NULL DEFAULT 15,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -46,10 +49,43 @@ CREATE TABLE IF NOT EXISTS attendance (
     logout_accuracy DOUBLE NULL DEFAULT NULL,
     logout_distance DOUBLE NULL DEFAULT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'NOT_LOGGED_IN', -- NOT_LOGGED_IN, LOGGED_IN, COMPLETED
+    timing_status VARCHAR(20) NOT NULL DEFAULT 'PRESENT', -- PRESENT, LATE, PERMISSION, LEAVE, ABSENT
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (employee_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE KEY uk_employee_date (employee_id, attendance_date)
+);
+
+-- 4. Permission Requests Table
+CREATE TABLE IF NOT EXISTS permission_requests (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT NOT NULL,
+    permission_date DATE NOT NULL,
+    from_time TIME NOT NULL,
+    to_time TIME NOT NULL,
+    reason VARCHAR(255) NOT NULL,
+    remarks VARCHAR(255) NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING', -- PENDING, APPROVED, REJECTED
+    admin_remarks VARCHAR(255) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 5. Leave Requests Table
+CREATE TABLE IF NOT EXISTS leave_requests (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT NOT NULL,
+    leave_type VARCHAR(50) NOT NULL, -- CASUAL_LEAVE, SICK_LEAVE, PERSONAL_LEAVE, OTHER
+    from_date DATE NOT NULL,
+    to_date DATE NOT NULL,
+    reason VARCHAR(255) NOT NULL,
+    remarks VARCHAR(255) NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING', -- PENDING, APPROVED, REJECTED
+    admin_remarks VARCHAR(255) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Indexes for fast query retrieval
@@ -58,3 +94,11 @@ CREATE INDEX idx_users_employee_code ON users(employee_code);
 CREATE INDEX idx_attendance_employee_id ON attendance(employee_id);
 CREATE INDEX idx_attendance_date ON attendance(attendance_date);
 CREATE INDEX idx_attendance_status ON attendance(status);
+CREATE INDEX idx_attendance_timing_status ON attendance(timing_status);
+CREATE INDEX idx_permission_employee ON permission_requests(employee_id);
+CREATE INDEX idx_permission_date ON permission_requests(permission_date);
+CREATE INDEX idx_permission_status ON permission_requests(status);
+CREATE INDEX idx_leave_employee ON leave_requests(employee_id);
+CREATE INDEX idx_leave_dates ON leave_requests(from_date, to_date);
+CREATE INDEX idx_leave_status ON leave_requests(status);
+

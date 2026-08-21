@@ -37,6 +37,12 @@ public class AttendanceServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private com.company.attendance.repository.PermissionRequestRepository permissionRepository;
+
+    @Mock
+    private com.company.attendance.repository.LeaveRequestRepository leaveRepository;
+
     @InjectMocks
     private AttendanceService attendanceService;
 

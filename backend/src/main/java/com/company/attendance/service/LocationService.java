@@ -33,6 +33,16 @@ public class LocationService {
         location.setAllowedRadius(request.getAllowedRadius());
         location.setMaxGpsAccuracy(request.getMaxGpsAccuracy());
 
+        if (request.getOfficeLoginTime() != null) {
+            location.setOfficeLoginTime(request.getOfficeLoginTime());
+        }
+        if (request.getOfficeLogoutTime() != null) {
+            location.setOfficeLogoutTime(request.getOfficeLogoutTime());
+        }
+        if (request.getGracePeriodMinutes() != null) {
+            location.setGracePeriodMinutes(request.getGracePeriodMinutes());
+        }
+
         return locationRepository.save(location);
     }
 }

@@ -22,8 +22,9 @@ const Navbar: React.FC = () => {
 
   // Dynamic breadcrumb title based on path
   let pageTitle = 'Home';
-  if (location.pathname.includes('/engage')) pageTitle = 'Engage';
-  else if (location.pathname.includes('/attendance')) pageTitle = 'Attendance / Swipes';
+  if (location.pathname.includes('/attendance')) pageTitle = 'Attendance / Swipes';
+  else if (location.pathname.includes('/leaves')) pageTitle = 'Leaves';
+  else if (location.pathname.includes('/permissions')) pageTitle = 'Permissions';
   else if (location.pathname.includes('/profile')) pageTitle = 'My Profile';
 
   const handleLogout = () => {
@@ -61,16 +62,16 @@ const Navbar: React.FC = () => {
                 <Calendar className="h-4 w-4 text-blue-600" /> View Swipe Logs
               </button>
               <button
+                onClick={() => { navigate('/employee/leaves'); setShowQuickLinks(false); }}
+                className="w-full text-left flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50"
+              >
+                <Calendar className="h-4 w-4 text-indigo-600" /> Apply Leaves
+              </button>
+              <button
                 onClick={() => { navigate('/employee/profile'); setShowQuickLinks(false); }}
                 className="w-full text-left flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50"
               >
                 <FileText className="h-4 w-4 text-emerald-600" /> Employee Info
-              </button>
-              <button
-                onClick={() => { navigate('/employee/engage'); setShowQuickLinks(false); }}
-                className="w-full text-left flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50"
-              >
-                <Layers className="h-4 w-4 text-indigo-600" /> Company Feed
               </button>
             </div>
           )}

@@ -7,6 +7,7 @@ interface CardProps {
   action?: ReactNode;
   className?: string;
   glass?: boolean;
+  onClick?: () => void;
 }
 
 const Card: React.FC<CardProps> = ({
@@ -16,13 +17,14 @@ const Card: React.FC<CardProps> = ({
   action,
   className = '',
   glass = false,
+  onClick,
 }) => {
   const cardStyle = glass
     ? 'glass rounded-3xl shadow-xl'
     : 'bg-white border border-slate-100 rounded-3xl shadow-sm';
 
   return (
-    <div className={`${cardStyle} p-6 transition-all duration-300 ${className}`}>
+    <div onClick={onClick} className={`${cardStyle} p-6 transition-all duration-300 ${className}`}>
       {(title || subtitle || action) && (
         <div className="flex items-center justify-between border-b border-slate-100/50 pb-4 mb-5">
           <div>

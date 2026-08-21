@@ -1,6 +1,7 @@
 package com.company.attendance.entity;
 
 import com.company.attendance.enums.AttendanceStatus;
+import com.company.attendance.enums.AttendanceTimingStatus;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -56,6 +57,10 @@ public class Attendance {
     @Column(nullable = false, length = 20)
     private AttendanceStatus status = AttendanceStatus.NOT_LOGGED_IN;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "timing_status", nullable = false, length = 20)
+    private AttendanceTimingStatus timingStatus = AttendanceTimingStatus.PRESENT;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
@@ -69,12 +74,23 @@ public class Attendance {
         this.employee = employee;
         this.attendanceDate = attendanceDate;
         this.status = status;
+        this.timingStatus = AttendanceTimingStatus.PRESENT;
+    }
+
+    public Attendance(User employee, LocalDate attendanceDate, AttendanceStatus status, AttendanceTimingStatus timingStatus) {
+        this.employee = employee;
+        this.attendanceDate = attendanceDate;
+        this.status = status;
+        this.timingStatus = timingStatus != null ? timingStatus : AttendanceTimingStatus.PRESENT;
     }
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        if (timingStatus == null) {
+            timingStatus = AttendanceTimingStatus.PRESENT;
+        }
     }
 
     @PreUpdate
@@ -125,9 +141,13 @@ public class Attendance {
     public AttendanceStatus getStatus() { return status; }
     public void setStatus(AttendanceStatus status) { this.status = status; }
 
+    public AttendanceTimingStatus getTimingStatus() { return timingStatus; }
+    public void setTimingStatus(AttendanceTimingStatus timingStatus) { this.timingStatus = timingStatus; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }
+

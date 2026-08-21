@@ -42,6 +42,14 @@ public class AdminController {
         return ResponseEntity.ok(dashboardService.getAttendanceReport(employeeId, status, startDate, endDate));
     }
 
+    @GetMapping("/attendance-monthly")
+    public ResponseEntity<Map<String, Object>> getMonthlyAttendance(
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Long employeeId) {
+        return ResponseEntity.ok(dashboardService.getMonthlyAttendanceGrid(year, month, employeeId));
+    }
+
     @GetMapping("/attendance-report/csv")
     public void exportAttendanceReportCsv(
             @RequestParam(required = false) Long employeeId,
@@ -60,10 +68,10 @@ public class AdminController {
         // BOM for Excel UTF-8 compliance
         writer.write('\ufeff');
         // Write CSV Header
-        writer.println("Employee Code,Employee Name,Date,Login Time,Login Distance,Logout Time,Logout Distance,Working Hours,Status");
+        writer.println("Employee Code,Employee Name,Date,Login Time,Login Distance,Logout Time,Logout Distance,Working Hours,Punch Status,Timing Status");
 
         for (Map<String, Object> row : data) {
-            writer.println(String.format("\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"",
+            writer.println(String.format("\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"",
                     row.getOrDefault("employeeCode", ""),
                     row.getOrDefault("employeeName", ""),
                     row.getOrDefault("date", ""),
@@ -72,10 +80,12 @@ public class AdminController {
                     row.getOrDefault("logoutTime", ""),
                     row.getOrDefault("logoutDistance", ""),
                     row.getOrDefault("workingHours", ""),
-                    row.getOrDefault("status", "")
+                    row.getOrDefault("status", ""),
+                    row.getOrDefault("displayStatus", row.getOrDefault("timingStatus", "Present"))
             ));
         }
         writer.flush();
         writer.close();
     }
 }
+

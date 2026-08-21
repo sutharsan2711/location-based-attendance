@@ -9,11 +9,7 @@ import { calculateDistance } from '../../utils/locationUtils';
 import { formatTime, formatDate } from '../../utils/dateUtils';
 import Loading from '../../components/Loading';
 import {
-  ReviewIllustration,
-  PayslipIllustration,
   TrackIllustration,
-  ITFolderIcon,
-  POIIcon,
 } from '../../components/GreythrIllustrations';
 import {
   ArrowRight,
@@ -22,8 +18,8 @@ import {
   AlertTriangle,
   X,
   Clock,
-  Radio,
   RefreshCw,
+  Calendar,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -229,52 +225,13 @@ const EmployeeDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* ── Main 3-Column greytHR Dashboard Grid ── */}
+      {/* ── Main Dashboard Grid ── */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
         
-        {/* ════════ COLUMN 1 (Left 4 cols) ════════ */}
-        <div className="md:col-span-4 space-y-4">
+        {/* ════════ COLUMN 1: Attendance Punch & Status (5 cols) ════════ */}
+        <div className="md:col-span-5 space-y-4">
           
-          {/* Card 1: Review */}
-          <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md">
-            <h2 className="text-xs font-bold text-slate-700">Review</h2>
-            <div className="flex flex-col items-center justify-center py-6 text-center">
-              <ReviewIllustration className="w-20 h-20 mb-3" />
-              <p className="text-xs text-slate-500 font-medium">Hurrah! You've nothing to review.</p>
-            </div>
-          </div>
-
-          {/* Card 2: Quick Access */}
-          <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md">
-            <h2 className="text-xs font-bold text-slate-700 mb-4">Quick Access</h2>
-            <div className="grid grid-cols-2 gap-3 items-center">
-              <div className="space-y-2.5 text-xs text-slate-600 font-medium">
-                <div className="hover:text-blue-600 cursor-pointer transition-colors">Reimbursement Payslip</div>
-                <div className="hover:text-blue-600 cursor-pointer transition-colors">IT Statement</div>
-                <div className="hover:text-blue-600 cursor-pointer transition-colors">YTD Reports</div>
-                <div className="hover:text-blue-600 cursor-pointer transition-colors">Loan Statement</div>
-              </div>
-              <div className="p-3 bg-amber-50/70 border border-amber-100 rounded-lg text-[11px] text-slate-600 leading-relaxed">
-                Use quick access to view important salary details.
-              </div>
-            </div>
-          </div>
-
-          {/* Card 3: Track */}
-          <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md">
-            <h2 className="text-xs font-bold text-slate-700">Track</h2>
-            <div className="flex flex-col items-center justify-center py-5 text-center">
-              <TrackIllustration className="w-24 h-20 mb-2" />
-              <p className="text-xs text-slate-500 font-medium">All good! You've nothing new to track.</p>
-            </div>
-          </div>
-
-        </div>
-
-        {/* ════════ COLUMN 2 (Center 4 cols) ════════ */}
-        <div className="md:col-span-4 space-y-4">
-          
-          {/* Card 4: Attendance / Swipe In-Out Card (greytHR style) */}
+          {/* Attendance / Swipe In-Out Card */}
           <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md relative overflow-hidden">
             {/* Header Date & Shift */}
             <div className="flex items-start justify-between">
@@ -301,15 +258,63 @@ const EmployeeDashboard: React.FC = () => {
               </div>
             </div>
 
+            {/* Today's Attendance Details Box */}
+            <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 grid grid-cols-3 gap-2 text-center">
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">Login</span>
+                <span className="text-xs font-bold text-slate-800 font-mono">
+                  {attendance.loginTime ? formatTime(attendance.loginTime) : '--'}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">Logout</span>
+                <span className="text-xs font-bold text-slate-800 font-mono">
+                  {attendance.logoutTime ? formatTime(attendance.logoutTime) : '--'}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">Hours</span>
+                <span className="text-xs font-bold text-slate-800 font-mono">
+                  {attendance.loginTime && attendance.logoutTime
+                    ? (() => {
+                        const diff = new Date(attendance.logoutTime).getTime() - new Date(attendance.loginTime).getTime();
+                        if (diff <= 0) return '--';
+                        const h = Math.floor(diff / (1000 * 60 * 60));
+                        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                      })()
+                    : '--'}
+                </span>
+              </div>
+            </div>
+
             {/* Attendance state helper banner */}
-            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px]">
+            <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px]">
               <span className="text-slate-500 font-medium">
                 Status:{' '}
-                <span className="font-bold text-slate-700">
-                  {attendance.status === 'NOT_LOGGED_IN' && 'Not Signed In'}
-                  {attendance.status === 'LOGGED_IN' && `Signed In at ${attendance.loginTime ? formatTime(attendance.loginTime) : ''}`}
-                  {attendance.status === 'COMPLETED' && 'Day Completed'}
-                </span>
+                {attendance.timingStatus === 'LEAVE' ? (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                    On Leave
+                  </span>
+                ) : attendance.timingStatus === 'PERMISSION' ? (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                    Permission
+                  </span>
+                ) : attendance.timingStatus === 'LATE' ? (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                    Late
+                  </span>
+                ) : attendance.status === 'LOGGED_IN' ? (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                    Working
+                  </span>
+                ) : attendance.status === 'COMPLETED' ? (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Present
+                  </span>
+                ) : (
+                  <span className="font-bold text-slate-600">Not Signed In</span>
+                )}
               </span>
               <button
                 onClick={checkCurrentLocation}
@@ -322,7 +327,7 @@ const EmployeeDashboard: React.FC = () => {
             </div>
 
             {/* Bottom Actions Row: "View Swipes" + "Sign In / Sign Out" Button */}
-            <div className="mt-5 flex items-center justify-between">
+            <div className="mt-4 flex items-center justify-between">
               <button
                 onClick={() => setShowSwipesModal(true)}
                 className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors"
@@ -366,30 +371,104 @@ const EmployeeDashboard: React.FC = () => {
             )}
           </div>
 
-          {/* Card 5: Payslip */}
+          {/* Track card */}
           <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md">
-            <h2 className="text-xs font-bold text-slate-700">Payslip</h2>
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <PayslipIllustration className="w-24 h-24 mb-3" />
-              <p className="text-xs text-slate-500 font-medium max-w-xs leading-relaxed">
-                Uh oh! Your Payslip will show up here after the release of Payroll.
-              </p>
+            <h2 className="text-xs font-bold text-slate-700">Track</h2>
+            <div className="flex flex-col items-center justify-center py-5 text-center">
+              <TrackIllustration className="w-24 h-20 mb-2" />
+              <p className="text-xs text-slate-500 font-medium">All good! You've nothing new to track.</p>
             </div>
           </div>
 
         </div>
 
-        {/* ════════ COLUMN 3 (Right 4 cols) ════════ */}
+        {/* ════════ COLUMN 2: Requests & Leaves (4 cols) ════════ */}
         <div className="md:col-span-4 space-y-4">
           
-          {/* Card 6: Upcoming Holidays */}
+          {/* Permission Requests Section */}
           <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <Clock className="h-4 w-4 text-blue-600" /> Permission
+              </h2>
+              <button
+                onClick={() => navigate('/employee/permissions')}
+                className="text-[11px] font-semibold text-blue-600 hover:underline"
+              >
+                My Requests
+              </button>
+            </div>
+            <p className="text-[11px] text-slate-500 mb-3 leading-relaxed">
+              Need temporary time off during work hours? Apply for permission.
+            </p>
+            <button
+              onClick={() => navigate('/employee/permissions')}
+              className="w-full py-2 px-3 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
+            >
+              Apply Permission <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          {/* Leave Section */}
+          <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <Calendar className="h-4 w-4 text-blue-600" /> Leave
+              </h2>
+              <button
+                onClick={() => navigate('/employee/leaves')}
+                className="text-[11px] font-semibold text-blue-600 hover:underline"
+              >
+                My Leaves
+              </button>
+            </div>
+            <p className="text-[11px] text-slate-500 mb-3 leading-relaxed">
+              Planning time off? Apply for casual, sick, or personal leave.
+            </p>
+            <button
+              onClick={() => navigate('/employee/leaves')}
+              className="w-full py-2 px-3 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
+            >
+              Apply Leave <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+        </div>
+
+        {/* ════════ COLUMN 3: Quick Access & Holidays (3 cols) ════════ */}
+        <div className="md:col-span-3 space-y-4">
+          
+          {/* Quick Access */}
+          <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md">
+            <h2 className="text-xs font-bold text-slate-700 mb-3">Quick Access</h2>
+            <div className="space-y-2.5 text-xs text-slate-600 font-medium">
+              <div onClick={() => navigate('/employee/attendance')} className="hover:text-blue-600 cursor-pointer transition-colors flex items-center justify-between py-1 border-b border-slate-100">
+                <span>Attendance History</span>
+                <ArrowRight className="h-3 w-3 text-slate-400" />
+              </div>
+              <div onClick={() => navigate('/employee/leaves')} className="hover:text-blue-600 cursor-pointer transition-colors flex items-center justify-between py-1 border-b border-slate-100">
+                <span>Apply Leave</span>
+                <ArrowRight className="h-3 w-3 text-slate-400" />
+              </div>
+              <div onClick={() => navigate('/employee/permissions')} className="hover:text-blue-600 cursor-pointer transition-colors flex items-center justify-between py-1 border-b border-slate-100">
+                <span>Apply Permission</span>
+                <ArrowRight className="h-3 w-3 text-slate-400" />
+              </div>
+              <div onClick={() => navigate('/employee/profile')} className="hover:text-blue-600 cursor-pointer transition-colors flex items-center justify-between py-1">
+                <span>My Profile</span>
+                <ArrowRight className="h-3 w-3 text-slate-400" />
+              </div>
+            </div>
+          </div>
+
+          {/* Upcoming Holidays */}
+          <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md">
+            <div className="flex items-center justify-between mb-3">
               <h2 className="text-xs font-bold text-slate-700">Upcoming Holidays</h2>
               <ArrowRight className="h-4 w-4 text-slate-400 hover:text-slate-700 cursor-pointer transition-colors" />
             </div>
 
-            <div className="space-y-3.5 text-xs">
+            <div className="space-y-3 text-xs">
               <div className="border-b border-slate-100 pb-2">
                 <p className="text-[11px] font-bold text-slate-800">01 Sep <span className="font-medium text-slate-400">Tuesday</span></p>
                 <p className="text-xs text-slate-500 font-medium mt-0.5">Vinayakar Chathurthi</p>
@@ -400,37 +479,10 @@ const EmployeeDashboard: React.FC = () => {
                 <p className="text-xs text-slate-500 font-medium mt-0.5">Krishna Jayanthi</p>
               </div>
 
-              <div className="border-b border-slate-100 pb-2">
+              <div className="pb-1">
                 <p className="text-[11px] font-bold text-slate-800">01 Oct <span className="font-medium text-slate-400">Thursday</span></p>
                 <p className="text-xs text-slate-500 font-medium mt-0.5">Gandhi Jayanthi</p>
               </div>
-
-              <div>
-                <p className="text-[11px] font-bold text-slate-800">19 Oct <span className="font-medium text-slate-400">Monday</span></p>
-                <p className="text-xs text-slate-500 font-medium mt-0.5">Ayutha Pooja</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 7: IT Declaration */}
-          <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all hover:shadow-md">
-            <h2 className="text-xs font-bold text-slate-700 mb-2">IT Declaration</h2>
-            <div className="flex items-center gap-3">
-              <ITFolderIcon className="w-9 h-9 shrink-0" />
-              <p className="text-[11px] text-slate-500 font-medium leading-tight">
-                Hold on! You can submit your Income Tax (IT) declaration once released.
-              </p>
-            </div>
-          </div>
-
-          {/* Card 8: POI */}
-          <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all hover:shadow-md">
-            <h2 className="text-xs font-bold text-slate-700 mb-2">POI</h2>
-            <div className="flex items-center gap-3">
-              <POIIcon className="w-9 h-9 shrink-0" />
-              <p className="text-[11px] text-slate-500 font-medium leading-tight">
-                Hold on! You can submit your Proof of Investments (POI) once released.
-              </p>
             </div>
           </div>
 

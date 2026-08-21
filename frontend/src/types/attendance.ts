@@ -15,6 +15,9 @@ export interface Attendance {
   logoutAccuracy?: number;
   logoutDistance?: number;
   status: 'NOT_LOGGED_IN' | 'LOGGED_IN' | 'COMPLETED';
+  timingStatus?: 'PRESENT' | 'LATE' | 'PERMISSION' | 'LEAVE' | 'ABSENT' | 'WORKING';
+  displayStatus?: string;
+  workingHours?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -32,4 +35,6 @@ export interface AttendanceResponse {
   allowedRadius?: number;
   time?: string;
   status?: 'NOT_LOGGED_IN' | 'LOGGED_IN' | 'COMPLETED';
+  timingStatus?: string;
 }
+

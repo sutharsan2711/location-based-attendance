@@ -56,6 +56,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/location").hasAnyRole("ADMIN", "EMPLOYEE")
                 .requestMatchers("/attendance/employee/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/attendance").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/permissions").hasAnyRole("ADMIN", "EMPLOYEE")
+                .requestMatchers(HttpMethod.GET, "/permissions/my").hasAnyRole("ADMIN", "EMPLOYEE")
+                .requestMatchers(HttpMethod.POST, "/leaves").hasAnyRole("ADMIN", "EMPLOYEE")
+                .requestMatchers(HttpMethod.GET, "/leaves/my").hasAnyRole("ADMIN", "EMPLOYEE")
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

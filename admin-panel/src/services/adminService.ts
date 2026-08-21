@@ -1,14 +1,22 @@
 import api from '../utils/api';
+import { MonthlyAttendanceData } from '../types/attendance';
+
+export interface DashboardStats {
+  totalEmployees: number;
+  activeEmployees: number;
+  presentToday: number;
+  todayLogin: number;
+  todayLogout: number;
+  currentlyWorking: number;
+  lateToday: number;
+  onLeaveToday: number;
+  pendingPermissionRequests: number;
+  pendingLeaveRequests: number;
+  absent: number;
+}
 
 export const adminService = {
-  getStats: async (): Promise<{
-    totalEmployees: number;
-    activeEmployees: number;
-    todayLogin: number;
-    todayLogout: number;
-    currentlyWorking: number;
-    absent: number;
-  }> => {
+  getStats: async (): Promise<DashboardStats> => {
     const response = await api.get('/admin/dashboard');
     return response.data;
   },
@@ -34,6 +42,20 @@ export const adminService = {
     return response.data;
   },
 
+  getMonthlyAttendance: async (filters?: {
+    year?: number;
+    month?: number;
+    employeeId?: number;
+  }): Promise<MonthlyAttendanceData> => {
+    const params = new URLSearchParams();
+    if (filters?.year) params.append('year', String(filters.year));
+    if (filters?.month) params.append('month', String(filters.month));
+    if (filters?.employeeId) params.append('employeeId', String(filters.employeeId));
+
+    const response = await api.get<MonthlyAttendanceData>('/admin/attendance-monthly', { params });
+    return response.data;
+  },
+
   exportCsv: async (filters: {
     employeeId?: number;
     status?: string;
@@ -53,3 +75,4 @@ export const adminService = {
     return response.data;
   }
 };
+

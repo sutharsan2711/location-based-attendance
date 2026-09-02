@@ -55,8 +55,8 @@ const AppRoutes: React.FC = () => {
       <Route element={<DashboardLayout />}>
         <Route path="/" element={<HomeRedirect />} />
 
-        {/* Employee-only Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['EMPLOYEE']} />}>
+        {/* Employee, Trainee and Intern Staff Routes */}
+        <Route element={<ProtectedRoute allowedRoles={['EMPLOYEE', 'TRAINEE', 'INTERN']} />}>
           <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
           <Route path="/employee/attendance" element={<AttendanceHistory />} />
           <Route path="/employee/permissions" element={<EmployeePermissions />} />

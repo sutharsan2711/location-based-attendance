@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import Loading from '../components/Loading';
 
 interface ProtectedRouteProps {
-  allowedRoles?: ('ADMIN' | 'EMPLOYEE')[];
+  allowedRoles?: ('ADMIN' | 'EMPLOYEE' | 'TRAINEE' | 'INTERN' | string)[];
 }
 
 const ADMIN_PANEL_URL = 'http://localhost:5200';

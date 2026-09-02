@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { employeeService } from '../../services/employeeService';
 import { attendanceService } from '../../services/attendanceService';
 import { Employee, EmployeeProfileInfo } from '../../types/employee';
@@ -30,6 +30,9 @@ import {
   AlertTriangle,
   Code2,
   RefreshCw,
+  Search,
+  Award,
+  Users,
 } from 'lucide-react';
 
 const defaultProfileData: EmployeeProfileInfo = {
@@ -136,6 +139,10 @@ const Employees: React.FC = () => {
   const [showHistoryModal, setShowHistoryModal] = useState<boolean>(false);
   const [historyLogs, setHistoryLogs] = useState<Attendance[]>([]);
   const [historyLoading, setHistoryLoading] = useState<boolean>(false);
+
+  // Filters State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState<'ALL' | 'EMPLOYEE' | 'TRAINEE' | 'INTERN' | 'ADMIN'>('ALL');
 
   // Basic Form state
   const [formCode, setFormCode] = useState('');
@@ -511,6 +518,34 @@ const Employees: React.FC = () => {
     },
   ];
 
+  const filteredEmployees = useMemo(() => {
+    return employees.filter(emp => {
+      const q = searchQuery.toLowerCase().trim();
+      const matchesSearch = !q || 
+        emp.employeeCode.toLowerCase().includes(q) ||
+        emp.name.toLowerCase().includes(q) ||
+        emp.email.toLowerCase().includes(q) ||
+        (emp.phone && emp.phone.includes(q)) ||
+        (emp.department && emp.department.toLowerCase().includes(q));
+
+      if (!matchesSearch) return false;
+
+      if (roleFilter !== 'ALL') {
+        const r = (emp.role || 'EMPLOYEE').toUpperCase();
+        if (r !== roleFilter) return false;
+      }
+
+      return true;
+    });
+  }, [employees, searchQuery, roleFilter]);
+
+  // Statistics
+  const totalStaffCount = employees.length;
+  const employeesCount = employees.filter(e => (e.role || 'EMPLOYEE').toUpperCase() === 'EMPLOYEE').length;
+  const traineesCount = employees.filter(e => (e.role || '').toUpperCase() === 'TRAINEE').length;
+  const internsCount = employees.filter(e => (e.role || '').toUpperCase() === 'INTERN').length;
+  const adminCount = employees.filter(e => (e.role || '').toUpperCase() === 'ADMIN').length;
+
   if (loading) return <Loading fullScreen message="Loading employees profiles..." />;
 
   return (
@@ -540,13 +575,124 @@ const Employees: React.FC = () => {
         </div>
       </div>
 
+      {/* ── Summary KPI Cards (Staff Breakdown) ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
+        <div 
+          onClick={() => setRoleFilter('ALL')}
+          className={`bg-white rounded-2xl p-4 border transition-all cursor-pointer shadow-xs flex flex-col justify-between ${
+            roleFilter === 'ALL' ? 'border-indigo-500 ring-2 ring-indigo-100' : 'border-slate-200/80 hover:border-slate-300'
+          }`}
+        >
+          <div className="flex items-center justify-between text-slate-500">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Total Staff</span>
+            <Users className="h-4 w-4 text-indigo-600" />
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-black text-slate-900">{totalStaffCount}</span>
+            <span className="text-[10px] text-slate-500 font-medium">Headcount</span>
+          </div>
+        </div>
+
+        <div 
+          onClick={() => setRoleFilter('EMPLOYEE')}
+          className={`bg-white rounded-2xl p-4 border transition-all cursor-pointer shadow-xs flex flex-col justify-between ${
+            roleFilter === 'EMPLOYEE' ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-200/80 hover:border-slate-300'
+          }`}
+        >
+          <div className="flex items-center justify-between text-slate-500">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Employees</span>
+            <Award className="h-4 w-4 text-blue-600" />
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-black text-blue-700">{employeesCount}</span>
+            <span className="text-[10px] text-blue-600 font-medium">Permanent</span>
+          </div>
+        </div>
+
+        <div 
+          onClick={() => setRoleFilter('TRAINEE')}
+          className={`bg-white rounded-2xl p-4 border transition-all cursor-pointer shadow-xs flex flex-col justify-between ${
+            roleFilter === 'TRAINEE' ? 'border-purple-500 ring-2 ring-purple-100' : 'border-slate-200/80 hover:border-slate-300'
+          }`}
+        >
+          <div className="flex items-center justify-between text-slate-500">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Trainees</span>
+            <Award className="h-4 w-4 text-purple-600" />
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-black text-purple-700">{traineesCount}</span>
+            <span className="text-[10px] text-purple-600 font-medium">Trainee Team</span>
+          </div>
+        </div>
+
+        <div 
+          onClick={() => setRoleFilter('INTERN')}
+          className={`bg-white rounded-2xl p-4 border transition-all cursor-pointer shadow-xs flex flex-col justify-between ${
+            roleFilter === 'INTERN' ? 'border-teal-500 ring-2 ring-teal-100' : 'border-slate-200/80 hover:border-slate-300'
+          }`}
+        >
+          <div className="flex items-center justify-between text-slate-500">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Interns</span>
+            <GraduationCap className="h-4 w-4 text-teal-600" />
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-black text-teal-700">{internsCount}</span>
+            <span className="text-[10px] text-teal-600 font-medium">Internship</span>
+          </div>
+        </div>
+
+        <div 
+          onClick={() => setRoleFilter('ADMIN')}
+          className={`bg-white rounded-2xl p-4 border transition-all cursor-pointer shadow-xs flex flex-col justify-between ${
+            roleFilter === 'ADMIN' ? 'border-indigo-500 ring-2 ring-indigo-100' : 'border-slate-200/80 hover:border-slate-300'
+          }`}
+        >
+          <div className="flex items-center justify-between text-slate-500">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Admins</span>
+            <ShieldAlert className="h-4 w-4 text-indigo-600" />
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-black text-indigo-700">{adminCount}</span>
+            <span className="text-[10px] text-indigo-600 font-medium">Management</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Toolbar & Filters ── */}
+      <div className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search by code, name, email, department..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-blue-500 transition-colors"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value as any)}
+            className="text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:bg-white outline-none cursor-pointer w-full sm:w-auto"
+          >
+            <option value="ALL">All Roles ({totalStaffCount})</option>
+            <option value="EMPLOYEE">Employees Only ({employeesCount})</option>
+            <option value="TRAINEE">Trainees Only ({traineesCount})</option>
+            <option value="INTERN">Interns Only ({internsCount})</option>
+            <option value="ADMIN">Admins Only ({adminCount})</option>
+          </select>
+        </div>
+      </div>
+
       {error ? (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-800">
           {error}
         </div>
       ) : (
         <Card>
-          <Table data={employees} columns={columns} keyExtractor={(row) => row.id} />
+          <Table data={filteredEmployees} columns={columns} keyExtractor={(row) => row.id} />
         </Card>
       )}
 

@@ -5,7 +5,7 @@ export interface User {
   employeeCode?: string;
   department?: string;
   profileData?: string;
-  role: 'ADMIN' | 'EMPLOYEE';
+  role: 'ADMIN' | 'EMPLOYEE' | 'TRAINEE' | 'INTERN' | string;
 }
 
 export interface LoginResponse {

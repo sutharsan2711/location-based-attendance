@@ -29,6 +29,7 @@ import {
   Trash2,
   AlertTriangle,
   Code2,
+  RefreshCw,
 } from 'lucide-react';
 
 const defaultProfileData: EmployeeProfileInfo = {
@@ -464,12 +465,22 @@ const Employees: React.FC = () => {
             Employees Management
           </h1>
           <p className="text-sm text-slate-400">
-            Manage employee accounts, fill detailed HRMS profile information, and track records
+            Manage employee accounts, fill detailed HRMS profile information, and track records ({employees.length} Total Staff)
           </p>
         </div>
-        <Button variant="primary" size="md" onClick={openAddModal} className="font-bold py-2.5 rounded-xl">
-          <UserPlus className="mr-2 h-4 w-4" /> Add Employee
-        </Button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={fetchEmployees}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+            title="Refresh Employee List"
+          >
+            <RefreshCw className="h-4 w-4" />
+            <span>Refresh List</span>
+          </button>
+          <Button variant="primary" size="md" onClick={openAddModal} className="font-bold py-2.5 rounded-xl">
+            <UserPlus className="mr-2 h-4 w-4" /> Add Employee
+          </Button>
+        </div>
       </div>
 
       {error ? (

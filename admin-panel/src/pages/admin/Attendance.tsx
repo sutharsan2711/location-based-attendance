@@ -77,7 +77,7 @@ const Attendance: React.FC = () => {
   const fetchFiltersData = useCallback(async () => {
     try {
       const employeesData = await employeeService.getAll();
-      setEmployees(employeesData.filter((e) => e.role === 'EMPLOYEE'));
+      setEmployees(employeesData.filter((e) => e.role !== 'ADMIN'));
     } catch (err) {
       console.error('Failed to load filter dropdowns', err);
     }

@@ -15,7 +15,7 @@ export interface Attendance {
   logoutAccuracy?: number;
   logoutDistance?: number;
   status: 'NOT_LOGGED_IN' | 'LOGGED_IN' | 'COMPLETED';
-  timingStatus?: 'PRESENT' | 'LATE' | 'PERMISSION' | 'LEAVE' | 'ABSENT' | 'WORKING';
+  timingStatus?: 'PRESENT' | 'LATE' | 'PERMISSION' | 'LEAVE' | 'ABSENT' | 'WORKING' | 'ON_TIME';
   displayStatus?: string;
   workingHours?: string;
   createdAt?: string;

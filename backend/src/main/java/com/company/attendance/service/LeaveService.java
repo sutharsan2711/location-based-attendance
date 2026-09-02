@@ -120,7 +120,7 @@ public class LeaveService {
         List<User> employees = userRepository.findAll();
         List<LeaveBalanceSummaryResponse> summaries = new ArrayList<>();
         for (User emp : employees) {
-            if (emp.getRole().name().equals("EMPLOYEE")) {
+            if (!emp.getRole().name().equals("ADMIN")) {
                 summaries.add(buildEmployeeLeaveSummary(emp, year));
             }
         }

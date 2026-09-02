@@ -95,20 +95,20 @@ export const MASTER_19_EMPLOYEES: Employee[] = [
   { id: 4, employeeCode: 'ECLCE2015', name: 'Manimegalai B', email: 'manimegalai@company.com', phone: '9876543203', role: 'EMPLOYEE', status: 'ACTIVE', department: 'Employee', createdAt: '2025-08-01T09:00:00Z', updatedAt: '2025-08-01T09:00:00Z' },
   { id: 5, employeeCode: 'ECLCE2016', name: 'Gopinath', email: 'gopinath@company.com', phone: '9876543204', role: 'EMPLOYEE', status: 'ACTIVE', department: 'Employee', createdAt: '2025-12-01T09:00:00Z', updatedAt: '2025-12-01T09:00:00Z' },
   { id: 6, employeeCode: 'ECLCE2017', name: 'Dhanuja G T', email: 'dhanuja@company.com', phone: '9876543205', role: 'EMPLOYEE', status: 'ACTIVE', department: 'Employee', createdAt: '2025-09-01T09:00:00Z', updatedAt: '2025-09-01T09:00:00Z' },
-  { id: 7, employeeCode: 'ECLCT3009', name: 'Kanishkaa S', email: 'kanishkaa@company.com', phone: '9876543206', role: 'EMPLOYEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2025-09-01T09:00:00Z', updatedAt: '2025-09-01T09:00:00Z' },
-  { id: 8, employeeCode: 'ECLCT3010', name: 'Kanchana Mala V G', email: 'kanchanamala@company.com', phone: '9876543207', role: 'EMPLOYEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2025-09-01T09:00:00Z', updatedAt: '2025-09-01T09:00:00Z' },
-  { id: 9, employeeCode: 'ECLCT3014', name: 'Prabavathi', email: 'prabavathi@company.com', phone: '9876543208', role: 'EMPLOYEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2025-11-01T09:00:00Z', updatedAt: '2025-11-01T09:00:00Z' },
-  { id: 10, employeeCode: 'ECLCT3019', name: 'Dhivyadharshini', email: 'dhivyadharshini@company.com', phone: '9876543209', role: 'EMPLOYEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2026-02-01T09:00:00Z', updatedAt: '2026-02-01T09:00:00Z' },
-  { id: 11, employeeCode: 'ECLCT3020', name: 'Abinaya', email: 'abinaya@company.com', phone: '9876543210', role: 'EMPLOYEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2026-02-01T09:00:00Z', updatedAt: '2026-02-01T09:00:00Z' },
-  { id: 12, employeeCode: 'ECLCT3021', name: 'Swetha', email: 'swetha@company.com', phone: '9876543211', role: 'EMPLOYEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2026-02-01T09:00:00Z', updatedAt: '2026-02-01T09:00:00Z' },
-  { id: 13, employeeCode: 'ECLCT3022', name: 'Kavyasree', email: 'kavyasree@company.com', phone: '9876543212', role: 'EMPLOYEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2026-03-01T09:00:00Z', updatedAt: '2026-03-01T09:00:00Z' },
-  { id: 14, employeeCode: 'ECLCT3023', name: 'Vijayashanthi', email: 'vijayashanthi@company.com', phone: '9876543213', role: 'EMPLOYEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2026-03-01T09:00:00Z', updatedAt: '2026-03-01T09:00:00Z' },
-  { id: 15, employeeCode: 'ECLCT3024', name: 'Merlin', email: 'merlin@company.com', phone: '9876543214', role: 'EMPLOYEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2026-04-01T09:00:00Z', updatedAt: '2026-04-01T09:00:00Z' },
-  { id: 16, employeeCode: 'ECLCT3025', name: 'Deeksha', email: 'deeksha@company.com', phone: '9876543215', role: 'EMPLOYEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2026-04-01T09:00:00Z', updatedAt: '2026-04-01T09:00:00Z' },
-  { id: 17, employeeCode: 'ECLCT3026', name: 'Monisha', email: 'monisha@company.com', phone: '9876543216', role: 'EMPLOYEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2026-04-01T09:00:00Z', updatedAt: '2026-04-01T09:00:00Z' },
-  { id: 18, employeeCode: 'ECLCT4017', name: 'Rubella V', email: 'rubella@company.com', phone: '9876543217', role: 'EMPLOYEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2026-02-01T09:00:00Z', updatedAt: '2026-02-01T09:00:00Z' },
-  { id: 19, employeeCode: 'ECLCT4021', name: 'Deepika', email: 'deepika@company.com', phone: '9876543218', role: 'EMPLOYEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2026-04-01T09:00:00Z', updatedAt: '2026-04-01T09:00:00Z' },
-  { id: 20, employeeCode: 'ECLCI4023', name: 'Mahalakhmi', email: 'mahalakhmi@company.com', phone: '9876543219', role: 'EMPLOYEE', status: 'ACTIVE', department: 'Intern', createdAt: '2026-07-01T09:00:00Z', updatedAt: '2026-07-01T09:00:00Z' },
+  { id: 7, employeeCode: 'ECLCT3009', name: 'Kanishkaa S', email: 'kanishkaa@company.com', phone: '9876543206', role: 'TRAINEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2025-09-01T09:00:00Z', updatedAt: '2025-09-01T09:00:00Z' },
+  { id: 8, employeeCode: 'ECLCT3010', name: 'Kanchana Mala V G', email: 'kanchanamala@company.com', phone: '9876543207', role: 'TRAINEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2025-09-01T09:00:00Z', updatedAt: '2025-09-01T09:00:00Z' },
+  { id: 9, employeeCode: 'ECLCT3014', name: 'Prabavathi', email: 'prabavathi@company.com', phone: '9876543208', role: 'TRAINEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2025-11-01T09:00:00Z', updatedAt: '2025-11-01T09:00:00Z' },
+  { id: 10, employeeCode: 'ECLCT3019', name: 'Dhivyadharshini', email: 'dhivyadharshini@company.com', phone: '9876543209', role: 'TRAINEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2026-02-01T09:00:00Z', updatedAt: '2026-02-01T09:00:00Z' },
+  { id: 11, employeeCode: 'ECLCT3020', name: 'Abinaya', email: 'abinaya@company.com', phone: '9876543210', role: 'TRAINEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2026-02-01T09:00:00Z', updatedAt: '2026-02-01T09:00:00Z' },
+  { id: 12, employeeCode: 'ECLCT3021', name: 'Swetha', email: 'swetha@company.com', phone: '9876543211', role: 'TRAINEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2026-02-01T09:00:00Z', updatedAt: '2026-02-01T09:00:00Z' },
+  { id: 13, employeeCode: 'ECLCT3022', name: 'Kavyasree', email: 'kavyasree@company.com', phone: '9876543212', role: 'TRAINEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2026-03-01T09:00:00Z', updatedAt: '2026-03-01T09:00:00Z' },
+  { id: 14, employeeCode: 'ECLCT3023', name: 'Vijayashanthi', email: 'vijayashanthi@company.com', phone: '9876543213', role: 'TRAINEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2026-03-01T09:00:00Z', updatedAt: '2026-03-01T09:00:00Z' },
+  { id: 15, employeeCode: 'ECLCT3024', name: 'Merlin', email: 'merlin@company.com', phone: '9876543214', role: 'TRAINEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2026-04-01T09:00:00Z', updatedAt: '2026-04-01T09:00:00Z' },
+  { id: 16, employeeCode: 'ECLCT3025', name: 'Deeksha', email: 'deeksha@company.com', phone: '9876543215', role: 'TRAINEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2026-04-01T09:00:00Z', updatedAt: '2026-04-01T09:00:00Z' },
+  { id: 17, employeeCode: 'ECLCT3026', name: 'Monisha', email: 'monisha@company.com', phone: '9876543216', role: 'TRAINEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2026-04-01T09:00:00Z', updatedAt: '2026-04-01T09:00:00Z' },
+  { id: 18, employeeCode: 'ECLCT4017', name: 'Rubella V', email: 'rubella@company.com', phone: '9876543217', role: 'TRAINEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2026-02-01T09:00:00Z', updatedAt: '2026-02-01T09:00:00Z' },
+  { id: 19, employeeCode: 'ECLCT4021', name: 'Deepika', email: 'deepika@company.com', phone: '9876543218', role: 'TRAINEE', status: 'ACTIVE', department: 'Trainee', createdAt: '2026-04-01T09:00:00Z', updatedAt: '2026-04-01T09:00:00Z' },
+  { id: 20, employeeCode: 'ECLCI4023', name: 'Mahalakhmi', email: 'mahalakhmi@company.com', phone: '9876543219', role: 'INTERN', status: 'ACTIVE', department: 'Intern', createdAt: '2026-07-01T09:00:00Z', updatedAt: '2026-07-01T09:00:00Z' },
 ];
 
 const Employees: React.FC = () => {
@@ -143,7 +143,7 @@ const Employees: React.FC = () => {
   const [formEmail, setFormEmail] = useState('');
   const [formPhone, setFormPhone] = useState('');
   const [formPassword, setFormPassword] = useState('');
-  const [formRole, setFormRole] = useState<'ADMIN' | 'EMPLOYEE'>('EMPLOYEE');
+  const [formRole, setFormRole] = useState<string>('EMPLOYEE');
   const [formStatus, setFormStatus] = useState<'ACTIVE' | 'INACTIVE'>('ACTIVE');
   const [formDepartment, setFormDepartment] = useState<string>('IT');
   const [formError, setFormError] = useState<string | null>(null);
@@ -409,14 +409,36 @@ const Employees: React.FC = () => {
       },
     },
     {
-      header: 'Role',
-      render: (row: Employee) => (
-        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold ${
-          row.role === 'ADMIN' ? 'bg-indigo-50 text-indigo-600' : 'bg-blue-50 text-blue-600'
-        }`}>
-          {row.role}
-        </span>
-      ),
+      header: 'Role / Type',
+      render: (row: Employee) => {
+        const r = (row.role || 'EMPLOYEE').toUpperCase();
+        if (r === 'ADMIN') {
+          return (
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+              ADMIN
+            </span>
+          );
+        }
+        if (r === 'TRAINEE') {
+          return (
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
+              TRAINEE
+            </span>
+          );
+        }
+        if (r === 'INTERN') {
+          return (
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-teal-50 text-teal-700 border border-teal-200">
+              INTERN
+            </span>
+          );
+        }
+        return (
+          <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+            EMPLOYEE
+          </span>
+        );
+      },
     },
     {
       header: 'Status',
@@ -1338,14 +1360,16 @@ const Employees: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Role</label>
+                  <label className="font-semibold text-slate-700 block mb-1">Role / Staff Type</label>
                   <select
                     value={formRole}
                     onChange={(e) => setFormRole(e.target.value as any)}
                     className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white"
                   >
-                    <option value="EMPLOYEE">EMPLOYEE</option>
-                    <option value="ADMIN">ADMIN</option>
+                    <option value="EMPLOYEE">EMPLOYEE (Permanent Employee)</option>
+                    <option value="TRAINEE">TRAINEE</option>
+                    <option value="INTERN">INTERN</option>
+                    <option value="ADMIN">ADMIN (Administrator)</option>
                   </select>
                 </div>
               </div>

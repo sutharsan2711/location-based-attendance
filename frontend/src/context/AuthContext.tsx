@@ -25,15 +25,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (storedToken && storedUser) {
         try {
+          const parsed = JSON.parse(storedUser);
           setToken(storedToken);
-          setUser(JSON.parse(storedUser));
+          setUser(parsed);
           
-          // Verify token and refresh user info from backend
-          const response = await api.get<User>('/auth/me');
-          setUser(response.data);
-          localStorage.setItem('user', JSON.stringify(response.data));
+          // Verify token and refresh user info from backend in background
+          try {
+            const response = await api.get<User>('/auth/me');
+            if (response && response.data) {
+              setUser(response.data);
+              localStorage.setItem('user', JSON.stringify(response.data));
+            }
+          } catch (apiErr) {
+            console.warn('Background user refresh skipped', apiErr);
+          }
         } catch (error) {
-          console.error('Failed to verify token', error);
+          console.error('Failed to parse stored user', error);
           logout();
         }
       }

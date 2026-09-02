@@ -23,12 +23,17 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      // If we are not on the login page, redirect
-      if (!window.location.pathname.endsWith('/login')) {
-        window.location.href = '/login';
+    const isLoginRequest = error.config?.url?.includes('/auth/login');
+    const isMeRequest = error.config?.url?.includes('/auth/me');
+
+    if (!isLoginRequest && !isMeRequest && error.response && error.response.status === 401) {
+      const token = localStorage.getItem('token');
+      if (token && !token.startsWith('mock-jwt-token')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        if (!window.location.pathname.endsWith('/login')) {
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);

@@ -45,6 +45,16 @@ public class LeaveController {
         return ResponseEntity.ok(leaveService.getAllLeaves(employeeId, status, startDate, endDate));
     }
 
+    @PostMapping("/admin/leaves/direct")
+    public ResponseEntity<LeaveRequest> recordDirectLeave(@Valid @RequestBody com.company.attendance.dto.AdminRecordLeaveRequest request) {
+        return ResponseEntity.ok(leaveService.recordAdminLeave(request));
+    }
+
+    @PostMapping("/admin/leaves/record-unapplied")
+    public ResponseEntity<LeaveRequest> recordUnappliedLeave(@Valid @RequestBody com.company.attendance.dto.AdminRecordLeaveRequest request) {
+        return ResponseEntity.ok(leaveService.recordAdminLeave(request));
+    }
+
     @PatchMapping("/admin/leaves/{id}/status")
     public ResponseEntity<LeaveRequest> updateLeaveStatus(
             @PathVariable Long id,

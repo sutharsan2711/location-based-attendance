@@ -88,6 +88,20 @@ CREATE TABLE IF NOT EXISTS leave_requests (
     FOREIGN KEY (employee_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- 6. Holidays Table
+CREATE TABLE IF NOT EXISTS holidays (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    holiday_date DATE NOT NULL,
+    day_of_week VARCHAR(30) NULL,
+    holiday_type VARCHAR(50) NOT NULL DEFAULT 'Public Holiday',
+    description VARCHAR(500) NULL,
+    is_optional BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_holiday_date_name (holiday_date, name)
+);
+
 -- Indexes for fast query retrieval
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_employee_code ON users(employee_code);
@@ -101,4 +115,5 @@ CREATE INDEX idx_permission_status ON permission_requests(status);
 CREATE INDEX idx_leave_employee ON leave_requests(employee_id);
 CREATE INDEX idx_leave_dates ON leave_requests(from_date, to_date);
 CREATE INDEX idx_leave_status ON leave_requests(status);
+CREATE INDEX idx_holiday_date ON holidays(holiday_date);
 

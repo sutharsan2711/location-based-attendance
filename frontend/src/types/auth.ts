@@ -1,7 +1,10 @@
 export interface User {
   id: number;
-  name: String;
+  name: string;
   email: string;
+  employeeCode?: string;
+  department?: string;
+  profileData?: string;
   role: 'ADMIN' | 'EMPLOYEE';
 }
 

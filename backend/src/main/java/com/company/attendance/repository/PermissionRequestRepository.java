@@ -24,10 +24,14 @@ public interface PermissionRequestRepository extends JpaRepository<PermissionReq
            "(:status IS NULL OR p.status = :status) AND " +
            "(:startDate IS NULL OR p.permissionDate >= :startDate) AND " +
            "(:endDate IS NULL OR p.permissionDate <= :endDate) " +
-           "ORDER BY p.permissionDate DESC, p.createdAt DESC")
+           "ORDER BY CASE WHEN p.status = 'PENDING' THEN 0 ELSE 1 END, p.createdAt DESC, p.id DESC")
     List<PermissionRequest> findByFilters(
             @Param("employeeId") Long employeeId,
             @Param("status") RequestStatus status,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM PermissionRequest p WHERE p.employee.id = :employeeId")
+    void deleteByEmployeeId(@Param("employeeId") Long employeeId);
 }

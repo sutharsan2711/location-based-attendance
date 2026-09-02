@@ -27,17 +27,20 @@ public class DashboardService {
     private final AttendanceRepository attendanceRepository;
     private final PermissionRequestRepository permissionRepository;
     private final LeaveRequestRepository leaveRepository;
+    private final com.company.attendance.repository.HolidayRepository holidayRepository;
 
     private static final ZoneId KOLKATA_ZONE = ZoneId.of("Asia/Kolkata");
 
     public DashboardService(UserRepository userRepository,
                             AttendanceRepository attendanceRepository,
                             PermissionRequestRepository permissionRepository,
-                            LeaveRequestRepository leaveRepository) {
+                            LeaveRequestRepository leaveRepository,
+                            com.company.attendance.repository.HolidayRepository holidayRepository) {
         this.userRepository = userRepository;
         this.attendanceRepository = attendanceRepository;
         this.permissionRepository = permissionRepository;
         this.leaveRepository = leaveRepository;
+        this.holidayRepository = holidayRepository;
     }
 
     public Map<String, Object> getDashboardStats() {
@@ -211,7 +214,24 @@ public class DashboardService {
         List<PermissionRequest> approvedPermissions = permissionRepository
                 .findByFilters(null, RequestStatus.APPROVED, startOfMonth, endOfMonth);
 
+        // Fetch all holidays in this month
+        List<com.company.attendance.entity.Holiday> monthlyHolidays = holidayRepository
+                .findByHolidayDateBetweenOrderByHolidayDateAsc(startOfMonth, endOfMonth);
+
         DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("hh:mm a");
+        DateTimeFormatter shortTimeFmt = DateTimeFormatter.ofPattern("H.mm");
+
+        // Calculate general working days in the month (excluding Sundays & Company Holidays)
+        int totalWorkingDays = 0;
+        for (int d = 1; d <= daysInMonth; d++) {
+            LocalDate dt = yearMonth.atDay(d);
+            boolean isSun = dt.getDayOfWeek() == DayOfWeek.SUNDAY;
+            boolean isHol = monthlyHolidays.stream().anyMatch(h -> h.getHolidayDate().equals(dt));
+            if (!isSun && !isHol) {
+                totalWorkingDays++;
+            }
+        }
+        if (totalWorkingDays == 0) totalWorkingDays = daysInMonth;
 
         List<Map<String, Object>> employeeRows = new ArrayList<>();
 
@@ -227,6 +247,9 @@ public class DashboardService {
             int leaveCount = 0;
             int absentCount = 0;
             int weekOffCount = 0;
+            int holidayCount = 0;
+
+            String earliestLogin = null;
 
             Map<String, Object> daysMap = new HashMap<>();
 
@@ -236,14 +259,19 @@ public class DashboardService {
                 String key = emp.getId() + "_" + dateStr;
 
                 boolean isSunday = currentDate.getDayOfWeek() == DayOfWeek.SUNDAY;
+                boolean isSaturday = currentDate.getDayOfWeek() == DayOfWeek.SATURDAY;
                 boolean isFuture = currentDate.isAfter(today);
 
+                Optional<com.company.attendance.entity.Holiday> holidayOpt = monthlyHolidays.stream()
+                        .filter(h -> h.getHolidayDate().equals(currentDate))
+                        .findFirst();
+
                 // 1. Check Leave
-                boolean isOnLeave = approvedLeaves.stream().anyMatch(l ->
+                Optional<LeaveRequest> leaveOpt = approvedLeaves.stream().filter(l ->
                         l.getEmployee().getId().equals(emp.getId()) &&
                         !currentDate.isBefore(l.getFromDate()) &&
                         !currentDate.isAfter(l.getToDate())
-                );
+                ).findFirst();
 
                 // 2. Check Permission
                 boolean hasPermission = approvedPermissions.stream().anyMatch(p ->
@@ -260,12 +288,43 @@ public class DashboardService {
                 String logoutTime = "--";
                 String workingHours = "--";
 
-                if (isOnLeave) {
-                    code = "LV";
-                    statusName = "Leave";
+                if (leaveOpt.isPresent()) {
+                    LeaveRequest lv = leaveOpt.get();
                     leaveCount++;
+                    switch (lv.getLeaveType()) {
+                        case CASUAL_LEAVE:
+                            code = "CL";
+                            statusName = "Casual Leave";
+                            break;
+                        case SICK_LEAVE:
+                            code = "SL";
+                            statusName = "Sick Leave";
+                            break;
+                        case LOSS_OF_PAY:
+                            code = "AB";
+                            statusName = "Loss of Pay";
+                            break;
+                        case WORK_FROM_HOME:
+                            code = "WFH";
+                            statusName = "Work From Home";
+                            break;
+                        case COMP_OFF:
+                            code = "CO";
+                            statusName = "Comp Off";
+                            break;
+                        case PERSONAL_LEAVE:
+                            code = "Spl Leave";
+                            statusName = "Special Leave";
+                            break;
+                        default:
+                            code = "Leave";
+                            statusName = "Leave";
+                    }
                 } else if (att != null) {
-                    if (att.getLoginTime() != null) loginTime = att.getLoginTime().format(timeFmt);
+                    if (att.getLoginTime() != null) {
+                        loginTime = att.getLoginTime().format(timeFmt);
+                        if (earliestLogin == null) earliestLogin = att.getLoginTime().format(shortTimeFmt);
+                    }
                     if (att.getLogoutTime() != null) logoutTime = att.getLogoutTime().format(timeFmt);
                     if (att.getLoginTime() != null && att.getLogoutTime() != null) {
                         Duration duration = Duration.between(att.getLoginTime(), att.getLogoutTime());
@@ -273,13 +332,15 @@ public class DashboardService {
                     }
 
                     if (att.getTimingStatus() == AttendanceTimingStatus.LATE) {
-                        code = "L";
+                        code = "P";
                         statusName = "Late";
                         lateCount++;
+                        presentCount++;
                     } else if (att.getTimingStatus() == AttendanceTimingStatus.PERMISSION || hasPermission) {
-                        code = "PR";
+                        code = "P";
                         statusName = "Permission";
                         permissionCount++;
+                        presentCount++;
                     } else {
                         code = "P";
                         statusName = "Present";
@@ -289,6 +350,11 @@ public class DashboardService {
                     code = "PR";
                     statusName = "Permission";
                     permissionCount++;
+                    presentCount++;
+                } else if (holidayOpt.isPresent()) {
+                    code = "HD";
+                    statusName = holidayOpt.get().getName();
+                    holidayCount++;
                 } else if (isSunday) {
                     code = "WO";
                     statusName = "Week Off";
@@ -300,7 +366,7 @@ public class DashboardService {
                     code = "--";
                     statusName = "Not Logged In";
                 } else {
-                    code = "A";
+                    code = "AB";
                     statusName = "Absent";
                     absentCount++;
                 }
@@ -313,17 +379,36 @@ public class DashboardService {
                 dayDetail.put("loginTime", loginTime);
                 dayDetail.put("logoutTime", logoutTime);
                 dayDetail.put("workingHours", workingHours);
+                dayDetail.put("isSunday", isSunday);
+                dayDetail.put("isSaturday", isSaturday);
+                dayDetail.put("isHoliday", holidayOpt.isPresent());
 
                 daysMap.put(String.valueOf(day), dayDetail);
             }
 
             row.put("days", daysMap);
+            String dept = emp.getDepartment();
+            String teamLoginTime = "8.45";
+            if ("IT".equalsIgnoreCase(dept)) teamLoginTime = "9.00";
+            else if ("EDTECH".equalsIgnoreCase(dept)) teamLoginTime = "8.45";
+            else if ("BUSINESS_SOLUTION".equalsIgnoreCase(dept) || "BUSINESS".equalsIgnoreCase(dept)) teamLoginTime = "8.45";
+
+            row.put("department", dept != null ? dept : "IT");
+            row.put("loginTime", teamLoginTime);
+            row.put("workingDays", totalWorkingDays);
+            row.put("presentDays", presentCount);
+            row.put("leaveDays", leaveCount + (absentCount > 0 && leaveCount == 0 ? absentCount : 0));
             row.put("totalPresent", presentCount);
             row.put("totalLate", lateCount);
             row.put("totalPermission", permissionCount);
             row.put("totalLeave", leaveCount);
             row.put("totalAbsent", absentCount);
             row.put("totalWeekOff", weekOffCount);
+            row.put("totalHoliday", holidayCount);
+
+            double percentage = totalWorkingDays > 0 ? ((double) presentCount / totalWorkingDays) * 100.0 : 100.0;
+            if (percentage > 100.0) percentage = 100.0;
+            row.put("attendancePercentage", Math.round(percentage * 10.0) / 10.0);
 
             employeeRows.add(row);
         }
@@ -332,6 +417,7 @@ public class DashboardService {
         result.put("year", targetYear);
         result.put("month", targetMonth);
         result.put("daysInMonth", daysInMonth);
+        result.put("workingDays", totalWorkingDays);
         result.put("employees", employeeRows);
 
         return result;

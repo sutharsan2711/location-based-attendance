@@ -39,10 +39,14 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
            "(:status IS NULL OR l.status = :status) AND " +
            "(:startDate IS NULL OR l.toDate >= :startDate) AND " +
            "(:endDate IS NULL OR l.fromDate <= :endDate) " +
-           "ORDER BY l.fromDate DESC, l.createdAt DESC")
+           "ORDER BY CASE WHEN l.status = 'PENDING' THEN 0 ELSE 1 END, l.createdAt DESC, l.id DESC")
     List<LeaveRequest> findByFilters(
             @Param("employeeId") Long employeeId,
             @Param("status") RequestStatus status,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM LeaveRequest l WHERE l.employee.id = :employeeId")
+    void deleteByEmployeeId(@Param("employeeId") Long employeeId);
 }

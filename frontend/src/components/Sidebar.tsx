@@ -89,7 +89,7 @@ const Sidebar: React.FC = () => {
         <div>
           <button
             onClick={() => toggleMenu('Attendance')}
-            className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
+            className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all cursor-pointer"
           >
             <div className="flex items-center gap-3">
               <CheckCircle className="h-4 w-4 shrink-0 text-blue-600" />
@@ -119,29 +119,19 @@ const Sidebar: React.FC = () => {
               >
                 View Swipes & History
               </NavLink>
-              <NavLink
-                to="/employee/permissions"
-                className={({ isActive }) =>
-                  `block py-1 transition-colors ${
-                    isActive ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-blue-600'
-                  }`
-                }
-              >
-                Permission Requests
-              </NavLink>
             </div>
           )}
         </div>
 
-        {/* Leave (Collapsible) */}
+        {/* Leave & Permissions (Collapsible - Open by Default) */}
         <div>
           <button
             onClick={() => toggleMenu('Leave')}
-            className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
+            className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all cursor-pointer"
           >
             <div className="flex items-center gap-3">
               <Calendar className="h-4 w-4 shrink-0 text-slate-500" />
-              <span>Leave</span>
+              <span className="font-semibold text-slate-800">Leave & Permissions</span>
             </div>
             {openMenus['Leave'] ? <ChevronUp className="h-3 w-3 text-slate-400" /> : <ChevronDown className="h-3 w-3 text-slate-400" />}
           </button>
@@ -156,7 +146,7 @@ const Sidebar: React.FC = () => {
                   }`
                 }
               >
-                Leave Apply
+                Apply & Request History
               </NavLink>
               <NavLink
                 to="/employee/leaves/balances"

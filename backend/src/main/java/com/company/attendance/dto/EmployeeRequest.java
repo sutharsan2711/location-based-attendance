@@ -29,6 +29,8 @@ public class EmployeeRequest {
     @NotNull(message = "Status is required")
     private UserStatus status;
 
+    private String department;
+
     private String profileData;
 
     // Getters and Setters
@@ -52,6 +54,9 @@ public class EmployeeRequest {
 
     public UserStatus getStatus() { return status; }
     public void setStatus(UserStatus status) { this.status = status; }
+
+    public String getDepartment() { return department; }
+    public void setDepartment(String department) { this.department = department; }
 
     public String getProfileData() { return profileData; }
     public void setProfileData(String profileData) { this.profileData = profileData; }

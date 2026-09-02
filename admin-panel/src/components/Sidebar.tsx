@@ -12,6 +12,7 @@ import {
   Map,
   LogOut,
   Sliders,
+  CalendarRange,
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
@@ -24,8 +25,8 @@ const Sidebar: React.FC = () => {
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Employees', path: '/employees', icon: Users },
     { name: 'Attendance & Grid', path: '/attendance', icon: CalendarDays },
-    { name: 'Permission Requests', path: '/requests/permissions', icon: Clock },
-    { name: 'Leave Requests', path: '/requests/leaves', icon: FileCheck },
+    { name: 'Leave & Permissions', path: '/requests', icon: FileCheck },
+    { name: 'Holiday Calendar', path: '/settings/holidays', icon: CalendarRange },
     { name: 'Office Timing', path: '/settings/timing', icon: Sliders },
     { name: 'Location Settings', path: '/settings/location', icon: MapPin },
     { name: 'Reports', path: '/reports', icon: FileText },

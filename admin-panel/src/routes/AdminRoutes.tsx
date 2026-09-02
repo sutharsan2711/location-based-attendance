@@ -14,6 +14,7 @@ import LocationSettings from '../pages/admin/LocationSettings';
 import AdminTimingSettings from '../pages/admin/AdminTimingSettings';
 import AdminPermissionRequests from '../pages/admin/AdminPermissionRequests';
 import AdminLeaveRequests from '../pages/admin/AdminLeaveRequests';
+import AdminHolidayCalendar from '../pages/admin/AdminHolidayCalendar';
 import Reports from '../pages/admin/Reports';
 
 const HomeRedirect: React.FC = () => {
@@ -43,8 +44,11 @@ const AdminRoutes: React.FC = () => {
           <Route path="/dashboard" element={<AdminDashboard />} />
           <Route path="/employees" element={<Employees />} />
           <Route path="/attendance" element={<Attendance />} />
+          <Route path="/requests" element={<AdminLeaveRequests />} />
           <Route path="/requests/permissions" element={<AdminPermissionRequests />} />
           <Route path="/requests/leaves" element={<AdminLeaveRequests />} />
+          <Route path="/settings/holidays" element={<AdminHolidayCalendar />} />
+          <Route path="/holidays" element={<AdminHolidayCalendar />} />
           <Route path="/settings/timing" element={<AdminTimingSettings />} />
           <Route path="/settings/location" element={<LocationSettings />} />
           <Route path="/reports" element={<Reports />} />

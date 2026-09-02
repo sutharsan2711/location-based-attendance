@@ -59,6 +59,32 @@ public class LeaveService {
         return leaveRepository.save(leave);
     }
 
+    @Transactional
+    public LeaveRequest recordAdminLeave(AdminRecordLeaveRequest request) {
+        User employee = userRepository.findById(request.getEmployeeId())
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with ID: " + request.getEmployeeId()));
+
+        if (request.getToDate().isBefore(request.getFromDate())) {
+            throw new IllegalArgumentException("To Date must be after or same as From Date.");
+        }
+
+        String note = "[Admin Noted / Direct Entry] " + (request.getAdminRemarks() != null ? request.getAdminRemarks().trim() : "Directly recorded by Admin");
+
+        LeaveRequest leave = new LeaveRequest(
+                employee,
+                request.getLeaveType(),
+                request.getFromDate(),
+                request.getToDate(),
+                request.getReason() != null ? request.getReason().trim() : "Unapplied Leave / Admin Recorded",
+                note
+        );
+
+        leave.setStatus(RequestStatus.APPROVED);
+        leave.setAdminRemarks(request.getAdminRemarks() != null ? request.getAdminRemarks().trim() : "Approved (Admin Direct Entry)");
+
+        return leaveRepository.save(leave);
+    }
+
     public List<LeaveRequest> getMyLeaves(String email) {
         User employee = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with email: " + email));

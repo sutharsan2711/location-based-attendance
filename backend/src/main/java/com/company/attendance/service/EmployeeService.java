@@ -16,10 +16,23 @@ public class EmployeeService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final com.company.attendance.repository.AttendanceRepository attendanceRepository;
+    private final com.company.attendance.repository.LeaveRequestRepository leaveRequestRepository;
+    private final com.company.attendance.repository.PermissionRequestRepository permissionRequestRepository;
+    private final com.company.attendance.repository.LeaveBalanceRepository leaveBalanceRepository;
 
-    public EmployeeService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public EmployeeService(UserRepository userRepository,
+                           PasswordEncoder passwordEncoder,
+                           com.company.attendance.repository.AttendanceRepository attendanceRepository,
+                           com.company.attendance.repository.LeaveRequestRepository leaveRequestRepository,
+                           com.company.attendance.repository.PermissionRequestRepository permissionRequestRepository,
+                           com.company.attendance.repository.LeaveBalanceRepository leaveBalanceRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.attendanceRepository = attendanceRepository;
+        this.leaveRequestRepository = leaveRequestRepository;
+        this.permissionRequestRepository = permissionRequestRepository;
+        this.leaveBalanceRepository = leaveBalanceRepository;
     }
 
     public List<User> getAllEmployees() {
@@ -50,6 +63,7 @@ public class EmployeeService {
         user.setPhone(request.getPhone() != null ? request.getPhone().trim() : null);
         user.setRole(request.getRole());
         user.setStatus(request.getStatus());
+        user.setDepartment(request.getDepartment() != null ? request.getDepartment().trim() : "IT");
         if (request.getProfileData() != null) {
             user.setProfileData(request.getProfileData());
         }
@@ -76,6 +90,9 @@ public class EmployeeService {
         user.setPhone(request.getPhone() != null ? request.getPhone().trim() : null);
         user.setRole(request.getRole());
         user.setStatus(request.getStatus());
+        if (request.getDepartment() != null) {
+            user.setDepartment(request.getDepartment().trim());
+        }
 
         if (request.getProfileData() != null) {
             user.setProfileData(request.getProfileData());
@@ -89,8 +106,14 @@ public class EmployeeService {
         return userRepository.save(user);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void deleteEmployee(Long id) {
         User user = getEmployeeById(id);
+        // Clean up dependent child records
+        attendanceRepository.deleteByEmployeeId(id);
+        leaveRequestRepository.deleteByEmployeeId(id);
+        permissionRequestRepository.deleteByEmployeeId(id);
+        leaveBalanceRepository.deleteByEmployeeId(id);
         userRepository.delete(user);
     }
 

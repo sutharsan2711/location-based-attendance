@@ -67,6 +67,7 @@ export interface Employee {
   name: string;
   email: string;
   phone?: string;
+  department?: string;
   role: 'ADMIN' | 'EMPLOYEE';
   status: 'ACTIVE' | 'INACTIVE';
   profileData?: string;
@@ -79,6 +80,7 @@ export interface EmployeeRequest {
   name: string;
   email: string;
   phone?: string;
+  department?: string;
   password?: string;
   role: 'ADMIN' | 'EMPLOYEE';
   status: 'ACTIVE' | 'INACTIVE';

@@ -105,11 +105,33 @@ public class AttendanceService {
         attendance.setLoginDistance(distance);
         attendance.setStatus(AttendanceStatus.LOGGED_IN);
 
-        // Calculate timing status (server-side, Asia/Kolkata)
         LocalTime loginLocalTime = now.toLocalTime();
-        LocalTime officeLoginTime = location.getOfficeLoginTime() != null ? location.getOfficeLoginTime() : LocalTime.of(9, 0);
-        int graceMinutes = location.getGracePeriodMinutes() != null ? location.getGracePeriodMinutes() : 15;
-        LocalTime lateThreshold = officeLoginTime.plusMinutes(graceMinutes);
+
+        // Determine Team Shift Timings for employee
+        String dept = employee.getDepartment();
+        if (dept == null && employee.getProfileData() != null) {
+            if (employee.getProfileData().toLowerCase().contains("edtech")) dept = "EDTECH";
+            else if (employee.getProfileData().toLowerCase().contains("business")) dept = "BUSINESS_SOLUTION";
+            else if (employee.getProfileData().toLowerCase().contains("it")) dept = "IT";
+        }
+        if (dept == null) dept = "IT";
+
+        LocalTime shiftLoginTime;
+        int graceMinutes;
+
+        if (dept.equalsIgnoreCase("EDTECH")) {
+            shiftLoginTime = location.getEdtechLoginTime() != null ? location.getEdtechLoginTime() : LocalTime.of(8, 45);
+            graceMinutes = location.getEdtechGraceMinutes() != null ? location.getEdtechGraceMinutes() : 15;
+        } else if (dept.equalsIgnoreCase("BUSINESS_SOLUTION") || dept.equalsIgnoreCase("BUSINESS") || dept.toLowerCase().contains("business")) {
+            shiftLoginTime = location.getBusinessLoginTime() != null ? location.getBusinessLoginTime() : LocalTime.of(8, 45);
+            graceMinutes = location.getBusinessGraceMinutes() != null ? location.getBusinessGraceMinutes() : 15;
+        } else {
+            // IT Team default
+            shiftLoginTime = location.getItLoginTime() != null ? location.getItLoginTime() : LocalTime.of(9, 0);
+            graceMinutes = location.getItGraceMinutes() != null ? location.getItGraceMinutes() : 15;
+        }
+
+        LocalTime lateThreshold = shiftLoginTime.plusMinutes(graceMinutes);
 
         // Check if employee has an approved permission for today that covers current login time
         List<PermissionRequest> approvedPermissions = permissionRepository

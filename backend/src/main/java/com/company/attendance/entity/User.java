@@ -36,6 +36,9 @@ public class User {
     @Column(nullable = false, length = 20)
     private UserStatus status = UserStatus.ACTIVE;
 
+    @Column(length = 50)
+    private String department = "IT";
+
     @Column(name = "profile_data", columnDefinition = "LONGTEXT")
     private String profileData;
 
@@ -93,6 +96,9 @@ public class User {
 
     public UserStatus getStatus() { return status; }
     public void setStatus(UserStatus status) { this.status = status; }
+
+    public String getDepartment() { return department; }
+    public void setDepartment(String department) { this.department = department; }
 
     public String getProfileData() { return profileData; }
     public void setProfileData(String profileData) { this.profileData = profileData; }

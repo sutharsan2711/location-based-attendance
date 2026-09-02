@@ -33,6 +33,19 @@ public class LocationRequest {
     private LocalTime officeLogoutTime;
     private Integer gracePeriodMinutes;
 
+    // Team Shift Timings
+    private LocalTime itLoginTime;
+    private LocalTime itLogoutTime;
+    private Integer itGraceMinutes;
+
+    private LocalTime edtechLoginTime;
+    private LocalTime edtechLogoutTime;
+    private Integer edtechGraceMinutes;
+
+    private LocalTime businessLoginTime;
+    private LocalTime businessLogoutTime;
+    private Integer businessGraceMinutes;
+
     // Getters and Setters
     public String getCompanyName() { return companyName; }
     public void setCompanyName(String companyName) { this.companyName = companyName; }
@@ -57,5 +70,31 @@ public class LocationRequest {
 
     public Integer getGracePeriodMinutes() { return gracePeriodMinutes; }
     public void setGracePeriodMinutes(Integer gracePeriodMinutes) { this.gracePeriodMinutes = gracePeriodMinutes; }
-}
 
+    public LocalTime getItLoginTime() { return itLoginTime; }
+    public void setItLoginTime(LocalTime itLoginTime) { this.itLoginTime = itLoginTime; }
+
+    public LocalTime getItLogoutTime() { return itLogoutTime; }
+    public void setItLogoutTime(LocalTime itLogoutTime) { this.itLogoutTime = itLogoutTime; }
+
+    public Integer getItGraceMinutes() { return itGraceMinutes; }
+    public void setItGraceMinutes(Integer itGraceMinutes) { this.itGraceMinutes = itGraceMinutes; }
+
+    public LocalTime getEdtechLoginTime() { return edtechLoginTime; }
+    public void setEdtechLoginTime(LocalTime edtechLoginTime) { this.edtechLoginTime = edtechLoginTime; }
+
+    public LocalTime getEdtechLogoutTime() { return edtechLogoutTime; }
+    public void setEdtechLogoutTime(LocalTime edtechLogoutTime) { this.edtechLogoutTime = edtechLogoutTime; }
+
+    public Integer getEdtechGraceMinutes() { return edtechGraceMinutes; }
+    public void setEdtechGraceMinutes(Integer edtechGraceMinutes) { this.edtechGraceMinutes = edtechGraceMinutes; }
+
+    public LocalTime getBusinessLoginTime() { return businessLoginTime; }
+    public void setBusinessLoginTime(LocalTime businessLoginTime) { this.businessLoginTime = businessLoginTime; }
+
+    public LocalTime getBusinessLogoutTime() { return businessLogoutTime; }
+    public void setBusinessLogoutTime(LocalTime businessLogoutTime) { this.businessLogoutTime = businessLogoutTime; }
+
+    public Integer getBusinessGraceMinutes() { return businessGraceMinutes; }
+    public void setBusinessGraceMinutes(Integer businessGraceMinutes) { this.businessGraceMinutes = businessGraceMinutes; }
+}

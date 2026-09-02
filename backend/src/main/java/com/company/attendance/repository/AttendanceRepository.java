@@ -38,4 +38,8 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
             @Param("status") AttendanceStatus status,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM Attendance a WHERE a.employee.id = :employeeId")
+    void deleteByEmployeeId(@Param("employeeId") Long employeeId);
 }

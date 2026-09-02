@@ -25,7 +25,10 @@ import {
   Landmark,
   Users as UsersIcon,
   Laptop,
-  CheckCircle2
+  CheckCircle2,
+  Trash2,
+  AlertTriangle,
+  Code2,
 } from 'lucide-react';
 
 const defaultProfileData: EmployeeProfileInfo = {
@@ -118,7 +121,29 @@ const Employees: React.FC = () => {
   const [formPassword, setFormPassword] = useState('');
   const [formRole, setFormRole] = useState<'ADMIN' | 'EMPLOYEE'>('EMPLOYEE');
   const [formStatus, setFormStatus] = useState<'ACTIVE' | 'INACTIVE'>('ACTIVE');
+  const [formDepartment, setFormDepartment] = useState<string>('IT');
   const [formError, setFormError] = useState<string | null>(null);
+
+  // Delete Modal state
+  const [deleteModalEmp, setDeleteModalEmp] = useState<Employee | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const handleDeleteEmployee = async () => {
+    if (!deleteModalEmp) return;
+    setDeleteLoading(true);
+    setDeleteError(null);
+    try {
+      await employeeService.delete(deleteModalEmp.id);
+      setDeleteModalEmp(null);
+      fetchEmployees();
+    } catch (err: any) {
+      console.error(err);
+      setDeleteError(err.response?.data?.message || 'Failed to delete employee account.');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   const fetchEmployees = async () => {
     try {
@@ -145,6 +170,7 @@ const Employees: React.FC = () => {
     setFormPassword('');
     setFormRole('EMPLOYEE');
     setFormStatus('ACTIVE');
+    setFormDepartment('IT');
     setFormError(null);
     setShowFormModal(true);
   };
@@ -158,6 +184,7 @@ const Employees: React.FC = () => {
     setFormPassword('');
     setFormRole(emp.role);
     setFormStatus(emp.status);
+    setFormDepartment(emp.department || 'IT');
     setFormError(null);
     setShowFormModal(true);
   };
@@ -231,6 +258,7 @@ const Employees: React.FC = () => {
       email: formEmail,
       phone: formPhone,
       password: formPassword || undefined,
+      department: formDepartment,
       role: formRole,
       status: formStatus,
     };
@@ -311,6 +339,40 @@ const Employees: React.FC = () => {
       render: (row: Employee) => <span className="text-slate-500">{row.phone || '--'}</span>,
     },
     {
+      header: 'Team / Shift',
+      render: (row: Employee) => {
+        let dept = row.department;
+        if (!dept && row.profileData) {
+          if (row.profileData.toLowerCase().includes('edtech')) dept = 'EDTECH';
+          else if (row.profileData.toLowerCase().includes('business')) dept = 'BUSINESS_SOLUTION';
+        }
+        dept = dept || 'IT';
+
+        if (dept.toUpperCase() === 'EDTECH') {
+          return (
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold bg-teal-50 text-teal-700 border border-teal-200">
+              <GraduationCap className="h-3.5 w-3.5" />
+              <span>EdTech (8:45-5:45)</span>
+            </span>
+          );
+        }
+        if (dept.toUpperCase() === 'BUSINESS_SOLUTION' || dept.toUpperCase() === 'BUSINESS') {
+          return (
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
+              <Briefcase className="h-3.5 w-3.5" />
+              <span>Business (8:45-5:45)</span>
+            </span>
+          );
+        }
+        return (
+          <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+            <Code2 className="h-3.5 w-3.5" />
+            <span>IT (9:00-6:30)</span>
+          </span>
+        );
+      },
+    },
+    {
       header: 'Role',
       render: (row: Employee) => (
         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold ${
@@ -371,6 +433,20 @@ const Employees: React.FC = () => {
           {/* View Attendance */}
           <Button variant="outline" size="sm" onClick={() => openHistoryModal(row)} title="View attendance history">
             <CalendarDays className="h-3.5 w-3.5" />
+          </Button>
+
+          {/* Delete Employee */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setDeleteModalEmp(row);
+              setDeleteError(null);
+            }}
+            className="hover:bg-rose-50 text-rose-600 border-rose-200 hover:border-rose-300 transition-colors cursor-pointer"
+            title="Delete Employee"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>
       ),
@@ -1203,6 +1279,19 @@ const Employees: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
+                  <label className="font-semibold text-slate-700 block mb-1">Assigned Team / Shift</label>
+                  <select
+                    value={formDepartment}
+                    onChange={(e) => setFormDepartment(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white"
+                  >
+                    <option value="IT">IT Team (09:00 AM - 06:30 PM)</option>
+                    <option value="EDTECH">EdTech Team (08:45 AM - 05:45 PM)</option>
+                    <option value="BUSINESS_SOLUTION">Business Solution (08:45 AM - 05:45 PM)</option>
+                  </select>
+                </div>
+
+                <div>
                   <label className="font-semibold text-slate-700 block mb-1">Role</label>
                   <select
                     value={formRole}
@@ -1213,18 +1302,18 @@ const Employees: React.FC = () => {
                     <option value="ADMIN">ADMIN</option>
                   </select>
                 </div>
+              </div>
 
-                <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Status</label>
-                  <select
-                    value={formStatus}
-                    onChange={(e) => setFormStatus(e.target.value as any)}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white"
-                  >
-                    <option value="ACTIVE">ACTIVE</option>
-                    <option value="INACTIVE">INACTIVE</option>
-                  </select>
-                </div>
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1">Account Status</label>
+                <select
+                  value={formStatus}
+                  onChange={(e) => setFormStatus(e.target.value as any)}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white"
+                >
+                  <option value="ACTIVE">ACTIVE</option>
+                  <option value="INACTIVE">INACTIVE</option>
+                </select>
               </div>
 
               <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
@@ -1349,6 +1438,84 @@ const Employees: React.FC = () => {
               </Button>
             </div>
           </Card>
+        </div>
+      )}
+
+      {/* ───────────────────────────────────────────────────────────── */}
+      {/* DELETE EMPLOYEE CONFIRMATION MODAL                            */}
+      {/* ───────────────────────────────────────────────────────────── */}
+      {deleteModalEmp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-slate-100 animate-scale-up">
+            <div className="flex items-center gap-3.5 pb-4 border-b border-slate-100">
+              <div className="h-11 w-11 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                <Trash2 className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900">Delete Employee Account</h3>
+                <p className="text-xs text-slate-400">Permanently remove employee records</p>
+              </div>
+            </div>
+
+            {deleteError && (
+              <div className="mt-4 flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-800">
+                <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            <div className="my-5 space-y-3 text-xs">
+              <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-slate-400 font-medium">Employee Name:</span>
+                  <span className="font-bold text-slate-800">{deleteModalEmp.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400 font-medium">Employee Code:</span>
+                  <span className="font-mono font-bold text-slate-800">{deleteModalEmp.employeeCode}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400 font-medium">Email:</span>
+                  <span className="text-slate-700">{deleteModalEmp.email}</span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-rose-50/60 border border-rose-100 text-rose-900 flex items-start gap-2.5">
+                <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
+                <p className="text-[11px] leading-relaxed">
+                  <strong>Warning:</strong> This action cannot be undone. All attendance punches, leave history, permission logs, and quota balances belonging to this employee will also be permanently deleted.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setDeleteModalEmp(null)}
+                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleteLoading}
+                onClick={handleDeleteEmployee}
+                className="px-5 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-lg shadow-rose-600/30 transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                {deleteLoading ? (
+                  <>
+                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-r-transparent" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>Confirm Delete</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -9,6 +9,7 @@ import Table from '../../components/Table';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Loading from '../../components/Loading';
+import { holidayService, Holiday } from '../../services/holidayService';
 import {
   Search,
   RefreshCw,
@@ -21,6 +22,11 @@ import {
   UserCheck,
   AlertCircle,
   ShieldAlert,
+  FileSpreadsheet,
+  Sun,
+  Coffee,
+  Sparkles,
+  Check,
 } from 'lucide-react';
 
 const Attendance: React.FC = () => {
@@ -48,6 +54,8 @@ const Attendance: React.FC = () => {
   const [monthlyEmployeeId, setMonthlyEmployeeId] = useState<string>('');
   const [monthlyData, setMonthlyData] = useState<MonthlyAttendanceData | null>(null);
   const [monthlyLoading, setMonthlyLoading] = useState<boolean>(false);
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
+  const [satActionLoading, setSatActionLoading] = useState<string | null>(null);
 
   const months = [
     { value: 1, name: 'January' },
@@ -74,6 +82,15 @@ const Attendance: React.FC = () => {
       console.error('Failed to load filter dropdowns', err);
     }
   }, []);
+
+  const fetchHolidays = useCallback(async () => {
+    try {
+      const data = await holidayService.getHolidays(selectedYear);
+      setHolidays(data);
+    } catch (err) {
+      console.error('Failed to load holidays', err);
+    }
+  }, [selectedYear]);
 
   const fetchAttendanceLogs = useCallback(async () => {
     setLoading(true);
@@ -114,6 +131,10 @@ const Attendance: React.FC = () => {
   useEffect(() => {
     fetchFiltersData();
   }, [fetchFiltersData]);
+
+  useEffect(() => {
+    fetchHolidays();
+  }, [fetchHolidays]);
 
   useEffect(() => {
     if (activeTab === 'daily') {
@@ -293,42 +314,67 @@ const Attendance: React.FC = () => {
     }
   };
 
-  // Display Format in Grid: 'time' (Login Time) | 'in_out' | 'hours' | 'status'
-  const [gridDisplayMode, setGridDisplayMode] = useState<'time' | 'in_out' | 'hours' | 'status'>('time');
+  // Display Format in Grid: 'excel_register' (User's Excel Sheet format) | 'time' (Login Time) | 'in_out' | 'hours' | 'status'
+  const [gridDisplayMode, setGridDisplayMode] = useState<'excel_register' | 'time' | 'in_out' | 'hours' | 'status'>('excel_register');
+
+  const handleExportExcel = () => {
+    if (!monthlyData) return;
+    import('../../utils/excelExport').then(({ exportMonthlyRegisterToExcel }) => {
+      exportMonthlyRegisterToExcel(monthlyData, selectedYear, selectedMonth);
+    });
+  };
 
   const exportMonthlyTimeMatrixCSV = () => {
     if (!monthlyData) return;
-    const daysHeader = Array.from({ length: monthlyData.daysInMonth }).map((_, i) => `Day ${i + 1}`);
-    const headers = ['Employee Code', 'Employee Name', ...daysHeader, 'Total Present', 'Total Late', 'Total Permission', 'Total Leave', 'Total Absent'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthAbbr = monthNames[selectedMonth - 1] || 'Mon';
+
+    const dayNames = Array.from({ length: monthlyData.daysInMonth }).map((_, i) => {
+      return new Date(selectedYear, selectedMonth - 1, i + 1).toLocaleString('en-US', { weekday: 'short' });
+    });
+    const dateLabels = Array.from({ length: monthlyData.daysInMonth }).map((_, i) => `${i + 1}-${monthAbbr}`);
+
+    const row1 = ['Login Time', 'Employee Code', 'Employee Name', ...dayNames, 'No .of Working days', 'No. Of Days Present', 'No of days Leave', 'Attendance %'];
+    const row2 = ['Login Time', 'Emp ID', 'Employee Name', ...dateLabels, 'Working days', 'Present', 'Leave', '%'];
 
     const rows = [
-      headers,
-      ...monthlyData.employees.map((emp) => {
+      row1,
+      row2,
+      ...monthlyData.employees.map((emp: any) => {
         const dayValues = Array.from({ length: monthlyData.daysInMonth }).map((_, i) => {
           const dayNum = i + 1;
           const dayDetail = emp.days[String(dayNum)];
           if (!dayDetail) return '--';
-          if (dayDetail.status === 'Leave') return 'Leave';
-          if (dayDetail.status === 'Week Off') return 'Week Off';
-          if (dayDetail.loginTime && dayDetail.loginTime !== '--') {
-            if (dayDetail.status === 'Late') return `${dayDetail.loginTime} (Late)`;
-            if (dayDetail.status === 'Permission') return `${dayDetail.loginTime} (Perm)`;
-            return dayDetail.loginTime;
-          }
-          if (dayDetail.status === 'Permission') return 'Permission';
-          if (dayDetail.status === 'Absent') return 'Absent';
-          return '--';
+          if (dayDetail.isHoliday || dayDetail.code === 'HD') return 'HD';
+          if (dayDetail.status === 'Week Off') return 'WO';
+          if (dayDetail.code === 'CL') return 'CL';
+          if (dayDetail.code === 'SL') return 'SL';
+          if (dayDetail.code === 'WFH') return 'WFH';
+          if (dayDetail.code === 'Spl Leave') return 'Spl Leave';
+          if (dayDetail.code === 'CO') return 'CO';
+          if (dayDetail.status === 'Leave' || dayDetail.code === 'LV') return 'Leave';
+          if (dayDetail.code === 'P' || dayDetail.status === 'Present') return 'P';
+          if (dayDetail.code === 'AB' || dayDetail.status === 'Absent') return 'AB';
+          if (dayDetail.status === 'Late') return 'P';
+          if (dayDetail.status === 'Permission') return 'P';
+          return dayDetail.code || 'P';
         });
 
+        const workingDays = emp.workingDays || (monthlyData as any).workingDays || 25;
+        const presentDays = emp.presentDays !== undefined ? emp.presentDays : emp.totalPresent;
+        const leaveDays = emp.leaveDays !== undefined ? emp.leaveDays : emp.totalLeave;
+        const attPercentage = emp.attendancePercentage !== undefined ? `${emp.attendancePercentage}%` : `${Math.round((presentDays / workingDays) * 100)}%`;
+        const loginTime = emp.loginTime || '8.45';
+
         return [
+          loginTime,
           emp.employeeCode,
           emp.employeeName,
           ...dayValues,
-          emp.totalPresent,
-          emp.totalLate,
-          emp.totalPermission,
-          emp.totalLeave,
-          emp.totalAbsent,
+          workingDays,
+          presentDays,
+          leaveDays,
+          attPercentage
         ];
       }),
     ];
@@ -338,10 +384,107 @@ const Attendance: React.FC = () => {
     const encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Monthly_Attendance_Time_Matrix_${selectedMonth}_${selectedYear}.csv`);
+    link.setAttribute('download', `Attendance_Register_${selectedMonth}_${selectedYear}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const daysInMonth = monthlyData?.daysInMonth || 31;
+  const monthAbbr = months.find((m) => m.value === selectedMonth)?.name.substring(0, 3) || 'Aug';
+
+  const dayHeaders = Array.from({ length: daysInMonth }).map((_, i) => {
+    const dayNum = i + 1;
+    const dt = new Date(selectedYear, selectedMonth - 1, dayNum);
+    const dayOfWeek = dt.toLocaleString('en-US', { weekday: 'short' });
+    const isSunday = dt.getDay() === 0;
+    const isSaturday = dt.getDay() === 6;
+
+    const monthStr = String(selectedMonth).padStart(2, '0');
+    const dayStr = String(dayNum).padStart(2, '0');
+    const dateStr = `${selectedYear}-${monthStr}-${dayStr}`;
+    const isHoliday = holidays.some((h) => h.holidayDate === dateStr);
+
+    return {
+      dayNum,
+      dayOfWeek,
+      dateLabel: `${dayNum}-${monthAbbr}`,
+      dateStr,
+      isSunday,
+      isSaturday,
+      isWeekend: isSunday || (isSaturday && isHoliday),
+      isHoliday,
+    };
+  });
+
+  const saturdaysInMonth = dayHeaders
+    .filter((d) => d.isSaturday)
+    .map((d, index) => {
+      const existingHoliday = holidays.find((h) => h.holidayDate === d.dateStr);
+      const isLeave = !!existingHoliday;
+      const ordinal = ['1st', '2nd', '3rd', '4th', '5th'][index] || `${index + 1}th`;
+      return {
+        ...d,
+        ordinal,
+        isLeave,
+        existingHoliday,
+      };
+    });
+
+  const handleToggleSaturday = async (sat: typeof saturdaysInMonth[0]) => {
+    setSatActionLoading(sat.dateStr);
+    try {
+      if (sat.isLeave && sat.existingHoliday) {
+        await holidayService.deleteHoliday(sat.existingHoliday.id);
+      } else {
+        await holidayService.createHoliday({
+          name: `${sat.ordinal} Saturday Off`,
+          holidayDate: sat.dateStr,
+          holidayType: 'Company Holiday',
+          description: `Scheduled ${sat.ordinal} Saturday Leave / Week Off`,
+          isOptional: false,
+        });
+      }
+      await fetchHolidays();
+      await fetchMonthlyData();
+    } catch (err: any) {
+      console.error('Failed to toggle Saturday status', err);
+      alert(err.response?.data?.message || 'Failed to update Saturday status.');
+    } finally {
+      setSatActionLoading(null);
+    }
+  };
+
+  const handleApplyPresetSaturdayPolicy = async (policy: '2nd_off' | '4th_off' | 'all_working' | 'all_off') => {
+    setSatActionLoading('batch');
+    try {
+      for (const sat of saturdaysInMonth) {
+        let shouldBeLeave = false;
+        if (policy === '2nd_off' && sat.ordinal === '2nd') shouldBeLeave = true;
+        if (policy === '4th_off' && sat.ordinal === '4th') shouldBeLeave = true;
+        if (policy === 'all_off') shouldBeLeave = true;
+        if (policy === 'all_working') shouldBeLeave = false;
+
+        if (shouldBeLeave && !sat.isLeave) {
+          await holidayService.createHoliday({
+            name: `${sat.ordinal} Saturday Off`,
+            holidayDate: sat.dateStr,
+            holidayType: 'Company Holiday',
+            description: `Scheduled ${sat.ordinal} Saturday Leave`,
+            isOptional: false,
+          });
+        } else if (!shouldBeLeave && sat.isLeave && sat.existingHoliday) {
+          await holidayService.deleteHoliday(sat.existingHoliday.id);
+        }
+      }
+      await fetchHolidays();
+      await fetchMonthlyData();
+    } catch (err: any) {
+      console.error('Failed to apply preset policy', err);
+      alert('Failed to update Saturday policy.');
+    } finally {
+      setSatActionLoading(null);
+    }
   };
 
   const renderCellContent = (dayDetail: any) => {
@@ -622,6 +765,123 @@ const Attendance: React.FC = () => {
       {/* ════════════════ TAB 2: MONTHLY ATTENDANCE GRID VIEW (DATE AS COLUMNS) ════════════════ */}
       {activeTab === 'monthly' && (
         <div className="space-y-6 animate-slide">
+          {/* ── 🏢 SATURDAY WORKING DAY & LEAVE CONTROLLER BAR ── */}
+          <div className="bg-gradient-to-br from-indigo-900 via-slate-900 to-slate-900 rounded-3xl p-5 md:p-6 text-white shadow-lg border border-indigo-500/30 space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <h3 className="text-sm font-extrabold text-white">
+                    Saturday Shift Policy & Manual Sheet Controls
+                  </h3>
+                </div>
+                <p className="text-xs text-indigo-200">
+                  Company Policy: <strong>3 Saturdays Working & 1 Saturday Leave</strong> for{' '}
+                  {months.find((m) => m.value === selectedMonth)?.name} {selectedYear}. Current:{' '}
+                  <span className="text-emerald-400 font-bold">
+                    {saturdaysInMonth.filter((s) => !s.isLeave).length} Working
+                  </span>{' '}
+                  &{' '}
+                  <span className="text-amber-300 font-bold">
+                    {saturdaysInMonth.filter((s) => s.isLeave).length} Leave / Off
+                  </span>.
+                </p>
+              </div>
+
+              {/* Quick Preset Buttons */}
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  disabled={!!satActionLoading}
+                  onClick={() => handleApplyPresetSaturdayPolicy('2nd_off')}
+                  className="px-3 py-1.5 rounded-xl bg-indigo-600/80 hover:bg-indigo-600 text-white font-bold text-[11px] border border-indigo-400/40 transition-all cursor-pointer active:scale-95 flex items-center gap-1"
+                >
+                  <Sparkles className="h-3 w-3 text-amber-300" />
+                  <span>Set 2nd Sat Off (3 Working)</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={!!satActionLoading}
+                  onClick={() => handleApplyPresetSaturdayPolicy('4th_off')}
+                  className="px-3 py-1.5 rounded-xl bg-indigo-600/80 hover:bg-indigo-600 text-white font-bold text-[11px] border border-indigo-400/40 transition-all cursor-pointer active:scale-95 flex items-center gap-1"
+                >
+                  <Sparkles className="h-3 w-3 text-amber-300" />
+                  <span>Set 4th Sat Off (3 Working)</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={!!satActionLoading}
+                  onClick={() => handleApplyPresetSaturdayPolicy('all_working')}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600/80 hover:bg-emerald-600 text-white font-bold text-[11px] border border-emerald-400/40 transition-all cursor-pointer active:scale-95"
+                >
+                  <span>All Sats Working</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Individual Saturday Toggle Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 pt-1">
+              {saturdaysInMonth.map((sat) => {
+                const isLoadingThis = satActionLoading === sat.dateStr || satActionLoading === 'batch';
+                return (
+                  <div
+                    key={sat.dateStr}
+                    className={`p-3 rounded-2xl border transition-all flex flex-col justify-between space-y-2 ${
+                      sat.isLeave
+                        ? 'bg-rose-950/40 border-rose-500/40 text-rose-200'
+                        : 'bg-emerald-950/40 border-emerald-500/40 text-emerald-200'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between text-[11px] font-bold">
+                        <span className="text-white">{sat.ordinal} Saturday</span>
+                        <span className="text-[10px] opacity-75">{sat.dateLabel}</span>
+                      </div>
+                      <div className="mt-1 flex items-center gap-1.5">
+                        {sat.isLeave ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                            <Coffee className="h-3 w-3" /> Leave / Off
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            <Sun className="h-3 w-3" /> Working Day
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={isLoadingThis}
+                      onClick={() => handleToggleSaturday(sat)}
+                      className={`w-full py-1.5 rounded-xl text-[11px] font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                        sat.isLeave
+                          ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20'
+                          : 'bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-600/20'
+                      }`}
+                    >
+                      {isLoadingThis ? (
+                        <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-r-transparent" />
+                      ) : sat.isLeave ? (
+                        <>
+                          <Check className="h-3.5 w-3.5 stroke-[3]" />
+                          <span>Set as Working Day</span>
+                        </>
+                      ) : (
+                        <>
+                          <Coffee className="h-3.5 w-3.5" />
+                          <span>Set as Leave / Off</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Controls Bar */}
           <Card className="p-4 bg-white border-slate-100">
             <div className="flex flex-wrap items-center justify-between gap-4">
@@ -681,27 +941,37 @@ const Attendance: React.FC = () => {
                   </select>
                 </div>
 
-                {/* Display Value Switcher: Login Time Only vs Others */}
+                {/* Display Value Switcher */}
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
-                    Cell Content
+                    View Format
                   </label>
                   <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
                     <button
-                      onClick={() => setGridDisplayMode('time')}
-                      className={`px-3 py-1.5 rounded-lg transition-all ${
-                        gridDisplayMode === 'time'
-                          ? 'bg-emerald-600 text-white shadow-sm'
+                      onClick={() => setGridDisplayMode('excel_register')}
+                      className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                        gridDisplayMode === 'excel_register'
+                          ? 'bg-[#107c41] text-white shadow-sm'
                           : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
-                      Login Time (09:15)
+                      📑 Excel Register (P/AB Sheet)
+                    </button>
+                    <button
+                      onClick={() => setGridDisplayMode('time')}
+                      className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                        gridDisplayMode === 'time'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      🕒 Login Time
                     </button>
                     <button
                       onClick={() => setGridDisplayMode('in_out')}
-                      className={`px-3 py-1.5 rounded-lg transition-all ${
+                      className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                         gridDisplayMode === 'in_out'
-                          ? 'bg-emerald-600 text-white shadow-sm'
+                          ? 'bg-indigo-600 text-white shadow-sm'
                           : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
@@ -709,43 +979,41 @@ const Attendance: React.FC = () => {
                     </button>
                     <button
                       onClick={() => setGridDisplayMode('hours')}
-                      className={`px-3 py-1.5 rounded-lg transition-all ${
+                      className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                         gridDisplayMode === 'hours'
-                          ? 'bg-emerald-600 text-white shadow-sm'
+                          ? 'bg-indigo-600 text-white shadow-sm'
                           : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
                       Hours
                     </button>
-                    <button
-                      onClick={() => setGridDisplayMode('status')}
-                      className={`px-3 py-1.5 rounded-lg transition-all ${
-                        gridDisplayMode === 'status'
-                          ? 'bg-emerald-600 text-white shadow-sm'
-                          : 'text-slate-600 hover:text-slate-900'
-                      }`}
-                    >
-                      Code (P/L)
-                    </button>
                   </div>
                 </div>
               </div>
 
-              {/* Export Time Matrix Button */}
-              <div className="flex items-center gap-3">
+              {/* Export Buttons */}
+              <div className="flex flex-wrap items-center gap-2.5">
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={exportMonthlyTimeMatrixCSV}
-                  className="font-bold py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center gap-1.5"
+                  onClick={handleExportExcel}
+                  className="font-bold py-2.5 px-4 rounded-xl bg-[#107c41] hover:bg-[#0b5e31] text-white shadow-sm flex items-center gap-1.5 cursor-pointer"
                 >
-                  <Download className="h-4 w-4" /> Export Date-Time Matrix CSV
+                  <FileSpreadsheet className="h-4 w-4" /> Download Excel Sheet (.xlsx)
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={exportMonthlyTimeMatrixCSV}
+                  className="font-bold py-2.5 px-3.5 rounded-xl border-slate-300 hover:bg-slate-50 text-slate-700 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Download className="h-4 w-4" /> CSV
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={fetchMonthlyData}
-                  className="py-2.5 px-3"
+                  className="py-2.5 px-3 cursor-pointer"
                 >
                   <RefreshCw className="h-4 w-4" />
                 </Button>
@@ -755,128 +1023,253 @@ const Attendance: React.FC = () => {
 
           {/* Monthly Matrix Grid */}
           {monthlyLoading ? (
-            <Loading fullScreen={false} message="Loading monthly attendance time matrix..." />
+            <Loading fullScreen={false} message="Loading monthly attendance register..." />
           ) : !monthlyData || monthlyData.employees.length === 0 ? (
             <Card className="p-8 text-center text-sm text-slate-500">
               No employee records found for {months.find((m) => m.value === selectedMonth)?.name}{' '}
               {selectedYear}.
             </Card>
           ) : (
-            <div className="rounded-2xl border border-slate-300 bg-white overflow-hidden shadow-lg font-mono">
+            <div className="rounded-2xl border border-slate-300 bg-white overflow-hidden shadow-xl font-sans">
               {/* Top Excel Green Bar */}
-              <div className="bg-[#107c41] text-white px-4 py-2 flex items-center justify-between text-xs font-bold font-sans">
-                <span className="flex items-center gap-2">
-                  📅 {months.find((m) => m.value === selectedMonth)?.name} {selectedYear} — Date Columns Time Matrix (Excel View)
+              <div className="bg-[#107c41] text-white px-5 py-3 flex items-center justify-between text-xs font-bold">
+                <span className="flex items-center gap-2 text-sm font-extrabold tracking-wide">
+                  <FileSpreadsheet className="h-4 w-4" /> {months.find((m) => m.value === selectedMonth)?.name} {selectedYear} — Monthly Attendance Register Spreadsheet
                 </span>
-                <span className="text-[10px] bg-emerald-800/80 px-2.5 py-0.5 rounded font-mono">
-                  {monthlyData.employees.length} Employees × {monthlyData.daysInMonth} Days
+                <span className="text-[11px] bg-emerald-900/60 border border-white/20 px-3 py-1 rounded-full font-mono font-bold">
+                  {monthlyData.employees.length} Employees • {monthlyData.daysInMonth} Days
                 </span>
               </div>
 
               <div className="overflow-x-auto custom-scrollbar">
-                <table className="w-full text-xs text-left border-collapse border border-slate-300 min-w-[1200px]">
-                  {/* Table Header with Day Columns */}
-                  <thead className="bg-[#f3f4f6] text-slate-700 font-bold sticky top-0 z-10 select-none">
-                    <tr className="border-b border-slate-300 text-center text-[11px]">
-                      <th className="p-3 sticky left-0 bg-[#e5e7eb] z-20 min-w-[190px] border-r border-slate-300 text-left font-sans text-slate-800">
-                        Employee (Rows)
+                <table className="w-full text-xs text-left border-collapse border border-slate-400 min-w-[1300px]">
+                  {/* TWO-TIER HEADER (Exact match to image) */}
+                  <thead className="sticky top-0 z-20 select-none">
+                    {/* Tier 1: Day of Week (Grey Background) */}
+                    <tr className="bg-[#7f7f7f] text-white text-center text-[11px] font-bold border-b border-slate-400">
+                      <th className="p-2.5 sticky left-0 bg-[#595959] z-30 min-w-[90px] border-r border-slate-400 text-center font-bold">
+                        Login Time
                       </th>
-                      {Array.from({ length: monthlyData.daysInMonth }).map((_, i) => (
-                        <th
-                          key={i + 1}
-                          className="p-1.5 text-center border-r border-slate-300 min-w-[55px] font-mono text-[11px] bg-slate-100 text-slate-800"
-                        >
-                          <span className="block font-bold">D{i + 1}</span>
-                          <span className="text-[9px] font-normal text-slate-500 font-sans block">
-                            {new Date(selectedYear, selectedMonth - 1, i + 1).toLocaleDateString('en-US', { weekday: 'narrow' })}
-                          </span>
-                        </th>
-                      ))}
-                      <th className="p-2 text-center bg-emerald-50 text-emerald-800 font-bold min-w-[45px] border-r border-slate-200">Pres</th>
-                      <th className="p-2 text-center bg-amber-50 text-amber-800 font-bold min-w-[45px] border-r border-slate-200">Late</th>
-                      <th className="p-2 text-center bg-indigo-50 text-indigo-800 font-bold min-w-[45px] border-r border-slate-200">Perm</th>
-                      <th className="p-2 text-center bg-rose-50 text-rose-800 font-bold min-w-[45px] border-r border-slate-200">Leave</th>
-                      <th className="p-2 text-center bg-red-50 text-red-700 font-bold min-w-[45px]">Abs</th>
+                      <th className="p-2.5 sticky left-[90px] bg-[#595959] z-30 min-w-[170px] border-r border-slate-400 text-left font-bold pl-3">
+                        Employee
+                      </th>
+                      {Array.from({ length: monthlyData.daysInMonth }).map((_, i) => {
+                        const dt = new Date(selectedYear, selectedMonth - 1, i + 1);
+                        const dayOfWeek = dt.toLocaleString('en-US', { weekday: 'short' });
+                        const isSunday = dt.getDay() === 0;
+                        const isSaturday = dt.getDay() === 6;
+
+                        return (
+                          <th
+                            key={`dow-${i + 1}`}
+                            className={`p-1.5 text-center border-r border-slate-400 min-w-[48px] font-bold text-[11px] ${
+                              isSunday || isSaturday ? 'bg-[#595959] text-amber-200' : 'bg-[#7f7f7f]'
+                            }`}
+                          >
+                            {dayOfWeek}
+                          </th>
+                        );
+                      })}
+                      {/* Summary Headers (Dark Black / Navy) */}
+                      <th className="p-2 text-center bg-[#000000] text-white font-bold min-w-[70px] border-r border-slate-400 text-[10px] leading-tight">
+                        No .of<br />Working days
+                      </th>
+                      <th className="p-2 text-center bg-[#000000] text-white font-bold min-w-[70px] border-r border-slate-400 text-[10px] leading-tight">
+                        No. Of<br />Days Present
+                      </th>
+                      <th className="p-2 text-center bg-[#000000] text-white font-bold min-w-[70px] border-r border-slate-400 text-[10px] leading-tight">
+                        No of<br />days Leave
+                      </th>
+                      <th className="p-2 text-center bg-[#000000] text-white font-bold min-w-[75px] text-[10px] leading-tight">
+                        Attendance<br />%
+                      </th>
+                    </tr>
+
+                    {/* Tier 2: Date Number (Green Background #a9d08e) */}
+                    <tr className="bg-[#a9d08e] text-slate-950 text-center text-[11px] font-extrabold border-b-2 border-slate-500">
+                      <th className="p-2 sticky left-0 bg-[#a9d08e] z-30 border-r border-slate-400 text-center text-[10px] font-mono">
+                        Time
+                      </th>
+                      <th className="p-2 sticky left-[90px] bg-[#a9d08e] z-30 border-r border-slate-400 text-left pl-3 text-[10px]">
+                        ID & Name
+                      </th>
+                      {Array.from({ length: monthlyData.daysInMonth }).map((_, i) => {
+                        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        const monthAbbr = monthNames[selectedMonth - 1] || 'Mon';
+
+                        return (
+                          <th
+                            key={`date-${i + 1}`}
+                            className="p-1 text-center border-r border-slate-400 min-w-[48px] text-[10px] font-bold font-mono text-slate-950"
+                          >
+                            {i + 1}-{monthAbbr}
+                          </th>
+                        );
+                      })}
+                      <th className="p-1 text-center bg-[#1f2937] text-white border-r border-slate-400 text-[9px] font-mono">Total</th>
+                      <th className="p-1 text-center bg-[#1f2937] text-white border-r border-slate-400 text-[9px] font-mono">P</th>
+                      <th className="p-1 text-center bg-[#1f2937] text-white border-r border-slate-400 text-[9px] font-mono">L</th>
+                      <th className="p-1 text-center bg-[#1f2937] text-white text-[9px] font-mono">%</th>
                     </tr>
                   </thead>
 
-                  {/* Table Body */}
-                  <tbody className="divide-y divide-slate-200 bg-white">
-                    {monthlyData.employees.map((emp) => (
-                      <tr key={emp.employeeId} className="hover:bg-blue-50/50 transition-colors">
-                        {/* Sticky Employee Name + Code */}
-                        <td className="p-3 sticky left-0 bg-white z-10 border-r border-slate-300 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
-                          <span className="font-bold text-slate-800 block text-xs truncate max-w-[170px] font-sans">
-                            {emp.employeeName}
-                          </span>
-                          <span className="text-[10px] text-slate-400 font-mono font-medium">
-                            {emp.employeeCode}
-                          </span>
-                        </td>
+                  {/* Table Body (Data Rows with Weekend Peach #f8cbad and Status Badges) */}
+                  <tbody className="divide-y divide-slate-300 bg-white font-mono text-xs">
+                    {monthlyData.employees.map((emp: any) => {
+                      const workingDays = emp.workingDays || (monthlyData as any).workingDays || 25;
+                      const presentDays = emp.presentDays !== undefined ? emp.presentDays : emp.totalPresent;
+                      const leaveDays = emp.leaveDays !== undefined ? emp.leaveDays : emp.totalLeave;
+                      const attPct = emp.attendancePercentage !== undefined ? emp.attendancePercentage : Math.round((presentDays / workingDays) * 100);
+                      const isLowAttendance = attPct < 75;
 
-                        {/* Day Columns (1..31) displaying Time */}
-                        {Array.from({ length: monthlyData.daysInMonth }).map((_, i) => {
-                          const dayNum = i + 1;
-                          const dayDetail = emp.days[String(dayNum)];
-                          const isWeekend =
-                            new Date(selectedYear, selectedMonth - 1, dayNum).getDay() === 0;
+                      return (
+                        <tr key={emp.employeeId} className="hover:bg-blue-50/70 transition-colors border-b border-slate-300">
+                          {/* Login Time Col (Col 1) */}
+                          <td className="p-2 sticky left-0 bg-white z-10 border-r border-slate-400 text-center font-bold text-slate-800 text-[11px] shadow-[1px_0_3px_rgba(0,0,0,0.05)]">
+                            {emp.loginTime || '8.45'}
+                          </td>
 
-                          return (
-                            <td
-                              key={dayNum}
-                              className={`p-1.5 text-center border-r border-slate-200 ${
-                                isWeekend ? 'bg-slate-50/70' : ''
-                              }`}
-                              title={`${emp.employeeName} - Day ${dayNum}: ${dayDetail?.status || 'N/A'} (Login: ${dayDetail?.loginTime || '--'}, Logout: ${dayDetail?.logoutTime || '--'})`}
-                            >
-                              {renderCellContent(dayDetail)}
-                            </td>
-                          );
-                        })}
+                          {/* Employee Name + Code (Col 2) */}
+                          <td className="p-2.5 sticky left-[90px] bg-white z-10 border-r border-slate-400 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.15)]">
+                            <span className="font-bold text-slate-900 block text-xs truncate max-w-[150px] font-sans">
+                              {emp.employeeName}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-mono font-medium">
+                              {emp.employeeCode}
+                            </span>
+                          </td>
 
-                        {/* Summary Counter Columns */}
-                        <td className="p-2 text-center font-bold text-emerald-700 bg-emerald-50/40 border-r border-slate-200">
-                          {emp.totalPresent}
-                        </td>
-                        <td className="p-2 text-center font-bold text-amber-700 bg-amber-50/40 border-r border-slate-200">
-                          {emp.totalLate}
-                        </td>
-                        <td className="p-2 text-center font-bold text-indigo-700 bg-indigo-50/40 border-r border-slate-200">
-                          {emp.totalPermission}
-                        </td>
-                        <td className="p-2 text-center font-bold text-rose-700 bg-rose-50/40 border-r border-slate-200">
-                          {emp.totalLeave}
-                        </td>
-                        <td className="p-2 text-center font-bold text-red-600 bg-red-50/40">
-                          {emp.totalAbsent}
-                        </td>
-                      </tr>
-                    ))}
+                          {/* Day Columns (P, AB, Spl Leave, WO, etc.) */}
+                          {Array.from({ length: monthlyData.daysInMonth }).map((_, i) => {
+                            const dayNum = i + 1;
+                            const dayDetail = emp.days[String(dayNum)];
+                            const dt = new Date(selectedYear, selectedMonth - 1, dayNum);
+                            const isSunday = dt.getDay() === 0;
+                            const isSaturday = dt.getDay() === 6;
+                            const isWeekend = isSunday || isSaturday;
+                            const isMidMonthRange = dayNum >= 25 && dayNum <= 28;
+
+                            // Determine Background
+                            let cellBg = '';
+                            if (isWeekend) {
+                              cellBg = 'bg-[#f8cbad] text-slate-800'; // Peach / Orange weekend column
+                            } else if (isMidMonthRange) {
+                              cellBg = 'bg-[#fff2cc] text-slate-900'; // Soft yellow mid-month highlight
+                            }
+
+                            // Render depending on mode
+                            let cellDisplay = '--';
+                            let cellColor = 'text-slate-800';
+
+                            if (gridDisplayMode === 'excel_register') {
+                              if (dayDetail) {
+                                if (dayDetail.isHoliday || dayDetail.code === 'HD') {
+                                  cellDisplay = 'HD';
+                                  cellColor = 'text-purple-700 font-bold';
+                                } else if (dayDetail.status === 'Week Off' || isSunday) {
+                                  cellDisplay = '';
+                                } else if (dayDetail.code === 'CL') {
+                                  cellDisplay = 'CL';
+                                  cellColor = 'text-indigo-800 font-bold';
+                                } else if (dayDetail.code === 'SL') {
+                                  cellDisplay = 'SL';
+                                  cellColor = 'text-amber-800 font-bold';
+                                } else if (dayDetail.code === 'WFH') {
+                                  cellDisplay = 'WFH';
+                                  cellColor = 'text-teal-800 font-bold';
+                                } else if (dayDetail.code === 'Spl Leave') {
+                                  cellDisplay = 'Spl Leave';
+                                  cellColor = 'text-rose-800 font-bold text-[10px]';
+                                } else if (dayDetail.code === 'CO') {
+                                  cellDisplay = 'CO';
+                                  cellColor = 'text-blue-800 font-bold';
+                                } else if (dayDetail.status === 'Leave' || dayDetail.code === 'LV') {
+                                  cellDisplay = 'Leave';
+                                  cellColor = 'text-rose-700 font-bold text-[10px]';
+                                } else if (dayDetail.code === 'P' || dayDetail.status === 'Present' || dayDetail.status === 'Late' || dayDetail.status === 'Permission') {
+                                  cellDisplay = 'P';
+                                  cellColor = 'text-slate-900 font-bold';
+                                } else if (dayDetail.code === 'AB' || dayDetail.status === 'Absent') {
+                                  cellDisplay = 'AB';
+                                  cellColor = 'text-red-700 font-extrabold';
+                                } else if (dayDetail.code === '--') {
+                                  cellDisplay = '';
+                                } else {
+                                  cellDisplay = dayDetail.code || 'P';
+                                }
+                              }
+                            } else {
+                              // Other modes (Time / In-Out / Hours)
+                              return (
+                                <td
+                                  key={dayNum}
+                                  className={`p-1 text-center border-r border-slate-300 ${cellBg}`}
+                                >
+                                  {renderCellContent(dayDetail)}
+                                </td>
+                              );
+                            }
+
+                            return (
+                              <td
+                                key={dayNum}
+                                className={`p-1.5 text-center border-r border-slate-300 font-sans text-xs ${cellBg}`}
+                                title={`${emp.employeeName} - Day ${dayNum}: ${dayDetail?.status || 'N/A'}`}
+                              >
+                                <span className={cellColor}>{cellDisplay}</span>
+                              </td>
+                            );
+                          })}
+
+                          {/* Summary Counter Columns */}
+                          <td className="p-2 text-center font-bold text-slate-800 bg-slate-50 border-r border-slate-400">
+                            {workingDays}
+                          </td>
+                          <td className="p-2 text-center font-bold text-slate-900 bg-emerald-50/50 border-r border-slate-400">
+                            {presentDays}
+                          </td>
+                          <td className="p-2 text-center font-bold text-rose-700 bg-rose-50/50 border-r border-slate-400">
+                            {leaveDays}
+                          </td>
+                          <td className={`p-2 text-center font-extrabold ${isLowAttendance ? 'text-red-600 bg-red-50' : 'text-slate-900 bg-slate-50'}`}>
+                            {attPct}%
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
 
               {/* Grid Legend Footer */}
-              <div className="bg-slate-50 border-t border-slate-200 p-3 flex flex-wrap items-center justify-between gap-3 text-xs font-sans text-slate-600">
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="font-bold text-slate-700">Legend:</span>
-                  <span className="flex items-center gap-1 font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[11px]">
-                    09:14 = Present
+              <div className="bg-slate-100 border-t border-slate-300 p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs font-sans text-slate-700">
+                <div className="flex flex-wrap items-center gap-4">
+                  <span className="font-extrabold text-slate-900">Sheet Color Legend:</span>
+                  <span className="flex items-center gap-1.5 font-bold">
+                    <span className="inline-block w-4 h-4 bg-white border border-slate-400 text-center font-bold text-[10px] leading-tight">P</span> Present
                   </span>
-                  <span className="flex items-center gap-1 font-mono font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-300 text-[11px]">
-                    09:45 [Late]
+                  <span className="flex items-center gap-1.5 font-bold">
+                    <span className="inline-block w-4 h-4 bg-white border border-slate-400 text-center font-bold text-red-600 text-[10px] leading-tight">AB</span> Absent
                   </span>
-                  <span className="flex items-center gap-1 font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 text-[11px]">
-                    09:15 [Perm]
+                  <span className="flex items-center gap-1.5 font-bold">
+                    <span className="inline-block w-4 h-4 bg-[#f8cbad] border border-slate-400 text-center text-[10px]"></span> Weekend (Sat/Sun)
                   </span>
-                  <span className="flex items-center gap-1 font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200 text-[11px]">
-                    Leave
+                  <span className="flex items-center gap-1.5 font-bold">
+                    <span className="inline-block w-4 h-4 bg-[#fff2cc] border border-slate-400 text-center text-[10px]"></span> Special Range
                   </span>
-                  <span className="flex items-center gap-1 font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-[11px]">
-                    WO = Week Off
+                  <span className="flex items-center gap-1.5 font-bold">
+                    <span className="inline-block px-1 bg-purple-50 text-purple-700 border border-purple-200 text-[10px] rounded">HD</span> Holiday
+                  </span>
+                  <span className="flex items-center gap-1.5 font-bold">
+                    <span className="inline-block px-1 bg-rose-50 text-rose-700 border border-rose-200 text-[10px] rounded">Spl Leave</span> Special / Leave
                   </span>
                 </div>
-                <span className="font-mono text-slate-400 text-[11px]">Excel-compatible Grid View</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded border border-red-200">
+                    &lt; 75% Attendance Alert
+                  </span>
+                  <span className="font-mono text-slate-500 text-[11px]">Exact Excel Register Format</span>
+                </div>
               </div>
             </div>
           )}

@@ -53,6 +53,16 @@ export interface LeaveCreatePayload {
   remarks?: string;
 }
 
+export interface AdminRecordLeavePayload {
+  employeeId: number;
+  leaveType: LeaveType;
+  fromDate: string;
+  toDate: string;
+  reason: string;
+  adminRemarks?: string;
+  isUnapplied?: boolean;
+}
+
 export interface RequestStatusUpdatePayload {
   status: 'APPROVED' | 'REJECTED';
   adminRemarks?: string;

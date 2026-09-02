@@ -49,6 +49,11 @@ export const requestService = {
     return response.data;
   },
 
+  recordDirectLeave: async (payload: import('../types/request').AdminRecordLeavePayload): Promise<LeaveRequest> => {
+    const response = await api.post<LeaveRequest>('/admin/leaves/direct', payload);
+    return response.data;
+  },
+
   getMyLeaves: async (): Promise<LeaveRequest[]> => {
     const response = await api.get<LeaveRequest[]>('/leaves/my');
     return response.data;

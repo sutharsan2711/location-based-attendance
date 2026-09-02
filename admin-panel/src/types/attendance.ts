@@ -52,6 +52,8 @@ export interface MonthlyEmployeeRow {
   employeeId: number;
   employeeName: string;
   employeeCode: string;
+  department?: string;
+  loginTime?: string;
   days: Record<string, MonthlyDayDetail>;
   totalPresent: number;
   totalLate: number;
@@ -59,12 +61,17 @@ export interface MonthlyEmployeeRow {
   totalLeave: number;
   totalAbsent: number;
   totalWeekOff: number;
+  workingDays?: number;
+  presentDays?: number;
+  leaveDays?: number;
+  attendancePercentage?: number;
 }
 
 export interface MonthlyAttendanceData {
   year: number;
   month: number;
   daysInMonth: number;
+  workingDays?: number;
   employees: MonthlyEmployeeRow[];
 }
 

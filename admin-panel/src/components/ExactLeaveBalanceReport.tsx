@@ -28,18 +28,42 @@ import {
 
 const currentYear = new Date().getFullYear();
 
+export const DEFAULT_EXACT_LEAVE_ROWS: ExactLeaveReportRow[] = [
+  { sNo: 1, employeeId: 'ECLCE2008', employeeName: 'Sasiprabha J', type: 'Employee', joinedMonth: 'Feb-25', totalLeave: 18, leaveTaken: 9, balance: 9, highlightRedTotal: true },
+  { sNo: 2, employeeId: 'ECLCE2014', employeeName: 'Sriram R', type: 'Employee', joinedMonth: 'Aug-25', totalLeave: 16, leaveTaken: 7, balance: 9 },
+  { sNo: 3, employeeId: 'ECLCE2015', employeeName: 'Manimegalai B', type: 'Employee', joinedMonth: 'Aug-25', totalLeave: 16, leaveTaken: 8.5, balance: 7.5 },
+  { sNo: 4, employeeId: 'ECLCE2016', employeeName: 'Gopinath', type: 'Employee', joinedMonth: 'Dec-25', totalLeave: 16, leaveTaken: 5.5, balance: 10.5 },
+  { sNo: 5, employeeId: 'ECLCE2017', employeeName: 'Dhanuja G T', type: 'Employee', joinedMonth: 'Sep-25', totalLeave: 16, leaveTaken: 7, balance: 9 },
+  { sNo: 6, employeeId: 'ECLCT3009', employeeName: 'Kanishkaa S', type: 'Trainee', joinedMonth: 'Sep-25', totalLeave: 14, leaveTaken: 7.5, balance: 6.5 },
+  { sNo: 7, employeeId: 'ECLCT3010', employeeName: 'Kanchana Mala V G', type: 'Trainee', joinedMonth: 'Sep-25', totalLeave: 14, leaveTaken: 11, balance: 3 },
+  { sNo: 8, employeeId: 'ECLCT3014', employeeName: 'Prabavathi', type: 'Trainee', joinedMonth: 'Nov-25', totalLeave: 14, leaveTaken: 7.5, balance: 6.5 },
+  { sNo: 9, employeeId: 'ECLCT3019', employeeName: 'Dhivyadharshini', type: 'Trainee', joinedMonth: 'Feb-26', totalLeave: 13, leaveTaken: 8, balance: 5 },
+  { sNo: 10, employeeId: 'ECLCT3020', employeeName: 'Abinaya', type: 'Trainee', joinedMonth: 'Feb-26', totalLeave: 13, leaveTaken: 9, balance: 4 },
+  { sNo: 11, employeeId: 'ECLCT3021', employeeName: 'Swetha', type: 'Trainee', joinedMonth: 'Feb-26', totalLeave: 13, leaveTaken: 8, balance: 5 },
+  { sNo: 12, employeeId: 'ECLCT3022', employeeName: 'Kavyasree', type: 'Trainee', joinedMonth: 'Mar-26', totalLeave: 12, leaveTaken: 3, balance: 9 },
+  { sNo: 13, employeeId: 'ECLCT3023', employeeName: 'Vijayashanthi', type: 'Trainee', joinedMonth: 'Mar-26', totalLeave: 12, leaveTaken: 5.5, balance: 6.5 },
+  { sNo: 14, employeeId: 'ECLCT3024', employeeName: 'Merlin', type: 'Trainee', joinedMonth: 'Apr-26', totalLeave: 11, leaveTaken: 8, balance: 3 },
+  { sNo: 15, employeeId: 'ECLCT3025', employeeName: 'Deeksha', type: 'Trainee', joinedMonth: 'Apr-26', totalLeave: 11, leaveTaken: 5, balance: 6 },
+  { sNo: 16, employeeId: 'ECLCT3026', employeeName: 'Monisha', type: 'Trainee', joinedMonth: 'Apr-26', totalLeave: 11, leaveTaken: 6, balance: 5 },
+  { sNo: 17, employeeId: 'ECLCT4017', employeeName: 'Rubella V', type: 'Trainee', joinedMonth: 'Feb-26', totalLeave: 13, leaveTaken: 8, balance: 5 },
+  { sNo: 18, employeeId: 'ECLCT4021', employeeName: 'Deepika', type: 'Trainee', joinedMonth: 'Apr-26', totalLeave: 11, leaveTaken: 17, balance: -6, highlightYellowTaken: true },
+  { sNo: 19, employeeId: 'ECLCI4023', employeeName: 'Mahalakhmi', type: 'Intern', joinedMonth: 'Jul-26', totalLeave: 8, leaveTaken: 10, balance: -2 },
+];
+
 export const ExactLeaveBalanceReport: React.FC = () => {
   const [reportRows, setReportRows] = useState<ExactLeaveReportRow[]>(() => {
-    // Clear any previous mock data if present
-    const saved = localStorage.getItem('exact_leave_balance_report_v2');
+    const saved = localStorage.getItem('exact_leave_balance_report_v3');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
       } catch (e) {
-        return [];
+        // fallback
       }
     }
-    return [];
+    return DEFAULT_EXACT_LEAVE_ROWS;
   });
 
   const [loading, setLoading] = useState<boolean>(false);
@@ -162,13 +186,20 @@ export const ExactLeaveBalanceReport: React.FC = () => {
       highlightYellowTaken: r.leaveTaken >= 15,
     }));
     setReportRows(indexed);
-    localStorage.setItem('exact_leave_balance_report_v2', JSON.stringify(indexed));
+    localStorage.setItem('exact_leave_balance_report_v3', JSON.stringify(indexed));
+  };
+
+  const handleResetToDefault = () => {
+    if (window.confirm('Reset leave report table to default master records (19 employees)?')) {
+      setReportRows(DEFAULT_EXACT_LEAVE_ROWS);
+      localStorage.setItem('exact_leave_balance_report_v3', JSON.stringify(DEFAULT_EXACT_LEAVE_ROWS));
+    }
   };
 
   const handleClearAll = () => {
     if (window.confirm('Remove all employee records from this report view?')) {
       setReportRows([]);
-      localStorage.setItem('exact_leave_balance_report_v2', JSON.stringify([]));
+      localStorage.setItem('exact_leave_balance_report_v3', JSON.stringify([]));
     }
   };
 
@@ -401,6 +432,15 @@ export const ExactLeaveBalanceReport: React.FC = () => {
 
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={handleResetToDefault}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs border border-amber-200 transition-colors cursor-pointer"
+              title="Reset to 19 Master Employee Records"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              <span>Reset to Master List</span>
+            </button>
+
             <button
               onClick={syncFromSystemDatabase}
               disabled={loading}

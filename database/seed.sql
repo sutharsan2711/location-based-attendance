@@ -19,57 +19,37 @@ VALUES (
     'ACTIVE'
 );
 
--- 2. Insert 5 Sample Employees
-INSERT INTO users (employee_code, name, email, password, phone, role, status)
+-- 2. Insert 19 Master Employees
+INSERT INTO users (employee_code, name, email, password, phone, role, status, department, created_at)
 VALUES 
-(
-    'EMP001',
-    'John Doe',
-    'john@company.com',
-    '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', -- BCrypt hash of Password@123
-    '9876543210',
-    'EMPLOYEE',
-    'ACTIVE'
-),
-(
-    'EMP002',
-    'Jane Smith',
-    'jane@company.com',
-    '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', -- BCrypt hash of Password@123
-    '9876543211',
-    'EMPLOYEE',
-    'ACTIVE'
-),
-(
-    'EMP003',
-    'Bob Johnson',
-    'bob@company.com',
-    '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', -- BCrypt hash of Password@123
-    '9876543212',
-    'EMPLOYEE',
-    'ACTIVE'
-),
-(
-    'EMP004',
-    'Alice Williams',
-    'alice@company.com',
-    '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', -- BCrypt hash of Password@123
-    '9876543213',
-    'EMPLOYEE',
-    'ACTIVE'
-),
-(
-    'EMP005',
-    'Charlie Brown',
-    'charlie@company.com',
-    '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', -- BCrypt hash of Password@123
-    '9876543214',
-    'EMPLOYEE',
-    'ACTIVE'
-);
+('ECLCE2008', 'Sasiprabha J', 'sasiprabha@company.com', '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', '9876543201', 'EMPLOYEE', 'ACTIVE', 'Employee', '2025-02-01 09:00:00'),
+('ECLCE2014', 'Sriram R', 'sriram@company.com', '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', '9876543202', 'EMPLOYEE', 'ACTIVE', 'Employee', '2025-08-01 09:00:00'),
+('ECLCE2015', 'Manimegalai B', 'manimegalai@company.com', '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', '9876543203', 'EMPLOYEE', 'ACTIVE', 'Employee', '2025-08-01 09:00:00'),
+('ECLCE2016', 'Gopinath', 'gopinath@company.com', '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', '9876543204', 'EMPLOYEE', 'ACTIVE', 'Employee', '2025-12-01 09:00:00'),
+('ECLCE2017', 'Dhanuja G T', 'dhanuja@company.com', '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', '9876543205', 'EMPLOYEE', 'ACTIVE', 'Employee', '2025-09-01 09:00:00'),
+('ECLCT3009', 'Kanishkaa S', 'kanishkaa@company.com', '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', '9876543206', 'EMPLOYEE', 'ACTIVE', 'Trainee', '2025-09-01 09:00:00'),
+('ECLCT3010', 'Kanchana Mala V G', 'kanchanamala@company.com', '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', '9876543207', 'EMPLOYEE', 'ACTIVE', 'Trainee', '2025-09-01 09:00:00'),
+('ECLCT3014', 'Prabavathi', 'prabavathi@company.com', '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', '9876543208', 'EMPLOYEE', 'ACTIVE', 'Trainee', '2025-11-01 09:00:00'),
+('ECLCT3019', 'Dhivyadharshini', 'dhivyadharshini@company.com', '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', '9876543209', 'EMPLOYEE', 'ACTIVE', 'Trainee', '2026-02-01 09:00:00'),
+('ECLCT3020', 'Abinaya', 'abinaya@company.com', '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', '9876543210', 'EMPLOYEE', 'ACTIVE', 'Trainee', '2026-02-01 09:00:00'),
+('ECLCT3021', 'Swetha', 'swetha@company.com', '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', '9876543211', 'EMPLOYEE', 'ACTIVE', 'Trainee', '2026-02-01 09:00:00'),
+('ECLCT3022', 'Kavyasree', 'kavyasree@company.com', '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', '9876543212', 'EMPLOYEE', 'ACTIVE', 'Trainee', '2026-03-01 09:00:00'),
+('ECLCT3023', 'Vijayashanthi', 'vijayashanthi@company.com', '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', '9876543213', 'EMPLOYEE', 'ACTIVE', 'Trainee', '2026-03-01 09:00:00'),
+('ECLCT3024', 'Merlin', 'merlin@company.com', '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', '9876543214', 'EMPLOYEE', 'ACTIVE', 'Trainee', '2026-04-01 09:00:00'),
+('ECLCT3025', 'Deeksha', 'deeksha@company.com', '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', '9876543215', 'EMPLOYEE', 'ACTIVE', 'Trainee', '2026-04-01 09:00:00'),
+('ECLCT3026', 'Monisha', 'monisha@company.com', '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', '9876543216', 'EMPLOYEE', 'ACTIVE', 'Trainee', '2026-04-01 09:00:00'),
+('ECLCT4017', 'Rubella V', 'rubella@company.com', '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', '9876543217', 'EMPLOYEE', 'ACTIVE', 'Trainee', '2026-02-01 09:00:00'),
+('ECLCT4021', 'Deepika', 'deepika@company.com', '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', '9876543218', 'EMPLOYEE', 'ACTIVE', 'Trainee', '2026-04-01 09:00:00'),
+('ECLCI4023', 'Mahalakhmi', 'mahalakhmi@company.com', '$2b$12$Kq3vrnZt0xijZsI0PRcdk.bB9dp0IeiPXoJWYREqI0TD/NsLi4atq', '9876543219', 'EMPLOYEE', 'ACTIVE', 'Intern', '2026-07-01 09:00:00');
 
 -- 3. Insert Default Company Location & Timing Settings
-INSERT INTO company_location (company_name, latitude, longitude, allowed_radius, max_gps_accuracy, office_login_time, office_logout_time, grace_period_minutes)
+INSERT INTO company_location (
+    company_name, latitude, longitude, allowed_radius, max_gps_accuracy,
+    office_login_time, office_logout_time, grace_period_minutes,
+    it_login_time, it_logout_time, it_grace_minutes,
+    edtech_login_time, edtech_logout_time, edtech_grace_minutes,
+    business_login_time, business_logout_time, business_grace_minutes
+)
 VALUES (
     'ABC Technologies',
     11.078319,
@@ -78,7 +58,10 @@ VALUES (
     100.0, -- 100 meters max GPS accuracy
     '09:00:00',
     '18:00:00',
-    15
+    15,
+    '09:00:00', '18:30:00', 15,
+    '08:45:00', '17:45:00', 15,
+    '08:45:00', '17:45:00', 15
 );
 
 -- 4. Sample Permission Requests

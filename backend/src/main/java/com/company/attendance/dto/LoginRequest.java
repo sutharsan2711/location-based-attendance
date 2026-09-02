@@ -1,12 +1,10 @@
 package com.company.attendance.dto;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 public class LoginRequest {
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
+    @NotBlank(message = "Employee code or email is required")
     private String email;
 
     @NotBlank(message = "Password is required")

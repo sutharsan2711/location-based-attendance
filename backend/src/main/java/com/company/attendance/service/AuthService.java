@@ -57,6 +57,8 @@ public class AuthService {
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
+                user.getEmployeeCode(),
+                user.getDepartment(),
                 user.getRole()
         );
 
@@ -65,12 +67,15 @@ public class AuthService {
 
     public LoginResponse.UserDto getCurrentUser(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+                .or(() -> userRepository.findByEmployeeCode(email))
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email or code: " + email));
         
         return new LoginResponse.UserDto(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
+                user.getEmployeeCode(),
+                user.getDepartment(),
                 user.getRole()
         );
     }

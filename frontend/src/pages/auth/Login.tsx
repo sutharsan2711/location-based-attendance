@@ -3,20 +3,13 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/authService';
-import { KeyRound, User as UserIcon, AlertCircle, Eye, EyeOff, ShieldCheck, Sparkles } from 'lucide-react';
+import { KeyRound, User as UserIcon, AlertCircle, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import Button from '../../components/Button';
 
 interface LoginFormData {
   identifier: string;
   password: string;
 }
-
-const SAMPLE_EMPLOYEES = [
-  { code: 'ECLCE2008', name: 'Sasiprabha J (Emp)' },
-  { code: 'ECLCE2014', name: 'Sriram R (Emp)' },
-  { code: 'ECLCT3009', name: 'Kanishkaa S (Trainee)' },
-  { code: 'ECLCI4023', name: 'Mahalakhmi (Intern)' },
-];
 
 const MASTER_19_LOGIN_USERS: Record<string, { name: string; email: string; role: string; department: string }> = {
   'ECLCE2008': { name: 'Sasiprabha J', email: 'sasiprabha@company.com', role: 'EMPLOYEE', department: 'Employee' },
@@ -57,12 +50,11 @@ const Login: React.FC = () => {
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors },
   } = useForm<LoginFormData>({
     defaultValues: {
-      identifier: 'ECLCE2008',
-      password: '123456789'
+      identifier: '',
+      password: ''
     }
   });
 
@@ -111,11 +103,6 @@ const Login: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleQuickFill = (code: string) => {
-    setValue('identifier', code);
-    setValue('password', '123456789');
   };
 
   return (
@@ -221,28 +208,6 @@ const Login: React.FC = () => {
               <ShieldCheck className="mr-2 h-4 w-4" /> Sign In to Portal
             </Button>
           </form>
-
-          {/* Quick Fill Demo Helper */}
-          <div className="pt-4 border-t border-white/10">
-            <div className="flex items-center gap-1.5 mb-2.5 text-slate-400 text-xs font-semibold">
-              <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-              <span>Quick Fill Sample Employee ID:</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {SAMPLE_EMPLOYEES.map((emp) => (
-                <button
-                  key={emp.code}
-                  type="button"
-                  onClick={() => handleQuickFill(emp.code)}
-                  className="px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-left text-[11px] text-slate-300 transition-colors font-medium cursor-pointer truncate"
-                  title={`Click to fill ${emp.code}`}
-                >
-                  <span className="font-bold text-primary-400">{emp.code}</span>
-                  <div className="text-[10px] text-slate-400 truncate">{emp.name}</div>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </div>

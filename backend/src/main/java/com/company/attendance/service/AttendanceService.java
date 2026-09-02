@@ -54,7 +54,8 @@ public class AttendanceService {
     @Transactional
     public AttendanceResponse loginAttendance(String email, AttendanceRequest request) {
         User employee = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with email: " + email));
+                .or(() -> userRepository.findByEmployeeCode(email))
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with email/code: " + email));
 
         if (employee.getStatus() == UserStatus.INACTIVE) {
             throw new IllegalStateException("Your employee account is inactive.");
@@ -171,7 +172,8 @@ public class AttendanceService {
     @Transactional
     public AttendanceResponse logoutAttendance(String email, AttendanceRequest request) {
         User employee = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with email: " + email));
+                .or(() -> userRepository.findByEmployeeCode(email))
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with email/code: " + email));
 
         if (employee.getStatus() == UserStatus.INACTIVE) {
             throw new IllegalStateException("Your employee account is inactive.");
@@ -232,7 +234,8 @@ public class AttendanceService {
 
     public Attendance getTodayAttendance(String email) {
         User employee = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with email: " + email));
+                .or(() -> userRepository.findByEmployeeCode(email))
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with email/code: " + email));
         LocalDate today = LocalDate.now(KOLKATA_ZONE);
         return attendanceRepository.findByEmployeeIdAndAttendanceDate(employee.getId(), today)
                 .orElseGet(() -> new Attendance(employee, today, AttendanceStatus.NOT_LOGGED_IN));
@@ -240,7 +243,8 @@ public class AttendanceService {
 
     public List<Attendance> getEmployeeAttendanceHistory(String email) {
         User employee = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with email: " + email));
+                .or(() -> userRepository.findByEmployeeCode(email))
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with email/code: " + email));
         return attendanceRepository.findByEmployeeIdOrderByAttendanceDateDesc(employee.getId());
     }
 

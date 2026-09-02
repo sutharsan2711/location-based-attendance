@@ -27,9 +27,10 @@ public class AuthService {
     }
 
     public LoginResponse authenticate(LoginRequest request) {
-        // Find user first to perform active status check before password check or after
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UsernameNotFoundException("Invalid email or password"));
+        String identifier = request.getEmail() != null ? request.getEmail().trim() : "";
+        User user = userRepository.findByEmail(identifier)
+                .or(() -> userRepository.findByEmployeeCode(identifier))
+                .orElseThrow(() -> new UsernameNotFoundException("Invalid employee code/email or password"));
 
         if (user.getStatus() == UserStatus.INACTIVE) {
             throw new DisabledException("Your employee account is inactive.");
@@ -37,10 +38,10 @@ public class AuthService {
 
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+                    new UsernamePasswordAuthenticationToken(user.getEmail(), request.getPassword())
             );
         } catch (BadCredentialsException e) {
-            throw new BadCredentialsException("Invalid email or password");
+            throw new BadCredentialsException("Invalid employee code/email or password");
         }
 
         // Load spring user details (in our case we just use the user we found)

@@ -69,24 +69,20 @@ const AdminLogin: React.FC = () => {
               </div>
             )}
 
-            {/* Email */}
+            {/* Admin Code or Email */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                Admin Email
+                Admin Code / Email
               </label>
               <input
                 id="admin-email"
-                type="email"
-                placeholder="admin@eclearnix.com"
+                type="text"
+                placeholder="admin@eclearnix.com or EMP000"
                 className={`w-full rounded-2xl border bg-white/5 px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition-all focus:border-primary-500 focus:ring-1 focus:ring-primary-500 ${
                   errors.email ? 'border-rose-500/50' : 'border-white/10'
                 }`}
                 {...register('email', {
-                  required: 'Email is required',
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: 'Invalid email address',
-                  },
+                  required: 'Admin code or email is required',
                 })}
               />
               {errors.email && (

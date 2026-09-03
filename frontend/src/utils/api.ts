@@ -31,6 +31,7 @@ api.interceptors.response.use(
       if (token && !token.startsWith('mock-jwt-token')) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        localStorage.removeItem('login_time');
         if (!window.location.pathname.endsWith('/login')) {
           window.location.href = '/login';
         }

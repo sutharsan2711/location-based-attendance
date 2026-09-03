@@ -26,6 +26,7 @@ api.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('admin_token');
       localStorage.removeItem('admin_user');
+      localStorage.removeItem('admin_login_time');
       if (!window.location.pathname.endsWith('/login')) {
         window.location.href = '/login';
       }

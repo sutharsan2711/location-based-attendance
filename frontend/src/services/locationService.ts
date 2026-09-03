@@ -10,8 +10,8 @@ export const locationService = {
       return {
         id: 1,
         companyName: 'Main Office',
-        latitude: 11.0168,
-        longitude: 76.9558,
+        latitude: 11.078319,
+        longitude: 76.999745,
         allowedRadius: 500,
         maxGpsAccuracy: 100,
         itLoginTime: '09:00',
@@ -19,6 +19,20 @@ export const locationService = {
         edtechLoginTime: '08:45',
         edtechLogoutTime: '17:45',
       };
+    }
+  },
+
+  getAllLocations: async (): Promise<CompanyLocation[]> => {
+    try {
+      const response = await api.get<CompanyLocation[]>('/location/all');
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        return response.data;
+      }
+      const single = await locationService.getLocation();
+      return [single];
+    } catch {
+      const single = await locationService.getLocation();
+      return [single];
     }
   },
 

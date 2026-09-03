@@ -72,8 +72,33 @@ public class AttendanceService {
             }
         }
 
-        CompanyLocation location = locationRepository.findFirstByOrderByIdAsc()
-                .orElseThrow(() -> new ResourceNotFoundException("Company location settings not configured."));
+        List<CompanyLocation> locations = locationRepository.findAll();
+        if (locations.isEmpty()) {
+            throw new ResourceNotFoundException("Company location settings not configured.");
+        }
+
+        // Find nearest location and check if inside ANY location boundary
+        CompanyLocation matchedLocation = null;
+        double minDistance = Double.MAX_VALUE;
+        CompanyLocation nearestLocation = locations.get(0);
+
+        for (CompanyLocation loc : locations) {
+            double dist = DistanceCalculator.calculateDistance(
+                    request.getLatitude(), request.getLongitude(),
+                    loc.getLatitude(), loc.getLongitude()
+            );
+            if (dist < minDistance) {
+                minDistance = dist;
+                nearestLocation = loc;
+            }
+            if (dist <= loc.getAllowedRadius()) {
+                matchedLocation = loc;
+                minDistance = dist;
+                break;
+            }
+        }
+
+        CompanyLocation location = matchedLocation != null ? matchedLocation : nearestLocation;
 
         // Validate accuracy
         if (request.getAccuracy() > location.getMaxGpsAccuracy()) {
@@ -83,16 +108,10 @@ public class AttendanceService {
             );
         }
 
-        // Calculate distance
-        double distance = DistanceCalculator.calculateDistance(
-                request.getLatitude(), request.getLongitude(),
-                location.getLatitude(), location.getLongitude()
-        );
-
-        if (distance > location.getAllowedRadius()) {
+        if (matchedLocation == null) {
             throw new LocationValidationException(
-                    "You are outside the allowed office location.",
-                    distance, location.getAllowedRadius()
+                    "You are outside the allowed office location (" + String.format("%.1f", minDistance) + "m from " + nearestLocation.getCompanyName() + ").",
+                    minDistance, nearestLocation.getAllowedRadius()
             );
         }
 
@@ -103,7 +122,7 @@ public class AttendanceService {
         attendance.setLoginLatitude(request.getLatitude());
         attendance.setLoginLongitude(request.getLongitude());
         attendance.setLoginAccuracy(request.getAccuracy());
-        attendance.setLoginDistance(distance);
+        attendance.setLoginDistance(minDistance);
         attendance.setStatus(AttendanceStatus.LOGGED_IN);
 
         LocalTime loginLocalTime = now.toLocalTime();
@@ -161,7 +180,7 @@ public class AttendanceService {
         return new AttendanceResponse(
                 true,
                 statusMessage,
-                distance,
+                minDistance,
                 location.getAllowedRadius(),
                 now,
                 attendance.getStatus().name(),
@@ -188,8 +207,33 @@ public class AttendanceService {
             throw new IllegalStateException("You have already logged out today.");
         }
 
-        CompanyLocation location = locationRepository.findFirstByOrderByIdAsc()
-                .orElseThrow(() -> new ResourceNotFoundException("Company location settings not configured."));
+        List<CompanyLocation> locations = locationRepository.findAll();
+        if (locations.isEmpty()) {
+            throw new ResourceNotFoundException("Company location settings not configured.");
+        }
+
+        // Find nearest location and check if inside ANY location boundary
+        CompanyLocation matchedLocation = null;
+        double minDistance = Double.MAX_VALUE;
+        CompanyLocation nearestLocation = locations.get(0);
+
+        for (CompanyLocation loc : locations) {
+            double dist = DistanceCalculator.calculateDistance(
+                    request.getLatitude(), request.getLongitude(),
+                    loc.getLatitude(), loc.getLongitude()
+            );
+            if (dist < minDistance) {
+                minDistance = dist;
+                nearestLocation = loc;
+            }
+            if (dist <= loc.getAllowedRadius()) {
+                matchedLocation = loc;
+                minDistance = dist;
+                break;
+            }
+        }
+
+        CompanyLocation location = matchedLocation != null ? matchedLocation : nearestLocation;
 
         // Validate accuracy
         if (request.getAccuracy() > location.getMaxGpsAccuracy()) {
@@ -199,16 +243,10 @@ public class AttendanceService {
             );
         }
 
-        // Calculate distance
-        double distance = DistanceCalculator.calculateDistance(
-                request.getLatitude(), request.getLongitude(),
-                location.getLatitude(), location.getLongitude()
-        );
-
-        if (distance > location.getAllowedRadius()) {
+        if (matchedLocation == null) {
             throw new LocationValidationException(
-                    "You are outside the allowed office location.",
-                    distance, location.getAllowedRadius()
+                    "You are outside the allowed office location (" + String.format("%.1f", minDistance) + "m from " + nearestLocation.getCompanyName() + ").",
+                    minDistance, nearestLocation.getAllowedRadius()
             );
         }
 
@@ -217,7 +255,7 @@ public class AttendanceService {
         attendance.setLogoutLatitude(request.getLatitude());
         attendance.setLogoutLongitude(request.getLongitude());
         attendance.setLogoutAccuracy(request.getAccuracy());
-        attendance.setLogoutDistance(distance);
+        attendance.setLogoutDistance(minDistance);
         attendance.setStatus(AttendanceStatus.COMPLETED);
 
         attendanceRepository.save(attendance);
@@ -225,7 +263,7 @@ public class AttendanceService {
         return new AttendanceResponse(
                 true,
                 "Logout recorded successfully",
-                distance,
+                minDistance,
                 location.getAllowedRadius(),
                 now,
                 attendance.getStatus().name()

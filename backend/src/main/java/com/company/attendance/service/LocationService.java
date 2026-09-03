@@ -2,10 +2,12 @@ package com.company.attendance.service;
 
 import com.company.attendance.dto.LocationRequest;
 import com.company.attendance.entity.CompanyLocation;
+import com.company.attendance.exception.ResourceNotFoundException;
 import com.company.attendance.repository.CompanyLocationRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
+import java.util.List;
 
 @Service
 public class LocationService {
@@ -16,11 +18,45 @@ public class LocationService {
         this.locationRepository = locationRepository;
     }
 
+    public List<CompanyLocation> getAllLocations() {
+        List<CompanyLocation> locations = locationRepository.findAll();
+        if (locations.isEmpty()) {
+            locations.add(getCompanyLocation());
+        }
+        return locations;
+    }
+
+    public CompanyLocation getLocationById(Long id) {
+        return locationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Company location not found with id: " + id));
+    }
+
+    public CompanyLocation createLocation(LocationRequest request) {
+        CompanyLocation location = new CompanyLocation();
+        populateLocationFromRequest(location, request);
+        return locationRepository.save(location);
+    }
+
+    public CompanyLocation updateLocationById(Long id, LocationRequest request) {
+        CompanyLocation location = getLocationById(id);
+        populateLocationFromRequest(location, request);
+        return locationRepository.save(location);
+    }
+
+    public void deleteLocation(Long id) {
+        List<CompanyLocation> all = locationRepository.findAll();
+        if (all.size() <= 1) {
+            throw new IllegalStateException("Cannot delete the only company location. At least one location must exist.");
+        }
+        CompanyLocation location = getLocationById(id);
+        locationRepository.delete(location);
+    }
+
     public CompanyLocation getCompanyLocation() {
         return locationRepository.findFirstByOrderByIdAsc()
                 .orElseGet(() -> {
                     // Fallback default coordinates if database seed is missing
-                    CompanyLocation defaultLoc = new CompanyLocation("ABC Technologies", 11.123456, 78.123456, 50.0, 100.0);
+                    CompanyLocation defaultLoc = new CompanyLocation("ABC Technologies - Main Office", 11.078319, 76.999745, 50.0, 100.0);
                     defaultLoc.setItLoginTime(LocalTime.of(9, 0));
                     defaultLoc.setItLogoutTime(LocalTime.of(18, 30));
                     defaultLoc.setItGraceMinutes(15);
@@ -37,7 +73,11 @@ public class LocationService {
     public CompanyLocation updateCompanyLocation(LocationRequest request) {
         CompanyLocation location = locationRepository.findFirstByOrderByIdAsc()
                 .orElse(new CompanyLocation());
+        populateLocationFromRequest(location, request);
+        return locationRepository.save(location);
+    }
 
+    private void populateLocationFromRequest(CompanyLocation location, LocationRequest request) {
         location.setCompanyName(request.getCompanyName().trim());
         location.setLatitude(request.getLatitude());
         location.setLongitude(request.getLongitude());
@@ -86,7 +126,5 @@ public class LocationService {
         if (request.getBusinessGraceMinutes() != null) {
             location.setBusinessGraceMinutes(request.getBusinessGraceMinutes());
         }
-
-        return locationRepository.save(location);
     }
 }

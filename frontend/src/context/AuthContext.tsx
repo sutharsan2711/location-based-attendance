@@ -64,7 +64,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const loginTime = storedLoginTime ? parseInt(storedLoginTime, 10) : Date.now();
         const elapsed = Date.now() - loginTime;
 
-        if (elapsed >= SESSION_DURATION_MS) {
+        if (elapsed >= SESSION_DURATION_MS || storedToken.startsWith('mock-jwt-token')) {
           logout();
           setLoading(false);
           return;
@@ -80,15 +80,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setUser(parsed);
           scheduleAutoLogout(loginTime);
           
-          // Verify token and refresh user info from backend in background
+          // Verify user exists on backend and refresh profile info
           try {
             const response = await api.get<User>('/auth/me');
             if (response && response.data) {
               setUser(response.data);
               localStorage.setItem('user', JSON.stringify(response.data));
+            } else {
+              logout();
             }
-          } catch (apiErr) {
-            console.warn('Background user refresh skipped', apiErr);
+          } catch (apiErr: any) {
+            console.warn('User validation failed on backend, logging out', apiErr);
+            logout();
           }
         } catch (error) {
           console.error('Failed to parse stored user', error);
@@ -140,7 +143,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, updateUser }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        loading,
+        login,
+        logout,
+        updateUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

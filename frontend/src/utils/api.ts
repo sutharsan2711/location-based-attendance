@@ -24,17 +24,13 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const isLoginRequest = error.config?.url?.includes('/auth/login');
-    const isMeRequest = error.config?.url?.includes('/auth/me');
 
-    if (!isLoginRequest && !isMeRequest && error.response && error.response.status === 401) {
-      const token = localStorage.getItem('token');
-      if (token && !token.startsWith('mock-jwt-token')) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('login_time');
-        if (!window.location.pathname.endsWith('/login')) {
-          window.location.href = '/login';
-        }
+    if (!isLoginRequest && error.response && (error.response.status === 401 || error.response.status === 403)) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('login_time');
+      if (!window.location.pathname.endsWith('/login')) {
+        window.location.href = '/login';
       }
     }
     return Promise.reject(error);

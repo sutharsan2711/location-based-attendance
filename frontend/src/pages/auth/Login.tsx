@@ -11,28 +11,6 @@ interface LoginFormData {
   password: string;
 }
 
-const MASTER_19_LOGIN_USERS: Record<string, { name: string; email: string; role: string; department: string }> = {
-  'ECLCE2008': { name: 'Sasiprabha J', email: 'sasiprabha@company.com', role: 'EMPLOYEE', department: 'Employee' },
-  'ECLCE2014': { name: 'Sriram R', email: 'sriram@company.com', role: 'EMPLOYEE', department: 'Employee' },
-  'ECLCE2015': { name: 'Manimegalai B', email: 'manimegalai@company.com', role: 'EMPLOYEE', department: 'Employee' },
-  'ECLCE2016': { name: 'Gopinath', email: 'gopinath@company.com', role: 'EMPLOYEE', department: 'Employee' },
-  'ECLCE2017': { name: 'Dhanuja G T', email: 'dhanuja@company.com', role: 'EMPLOYEE', department: 'Employee' },
-  'ECLCT3009': { name: 'Kanishkaa S', email: 'kanishkaa@company.com', role: 'TRAINEE', department: 'Trainee' },
-  'ECLCT3010': { name: 'Kanchana Mala V G', email: 'kanchanamala@company.com', role: 'TRAINEE', department: 'Trainee' },
-  'ECLCT3014': { name: 'Prabavathi', email: 'prabavathi@company.com', role: 'TRAINEE', department: 'Trainee' },
-  'ECLCT3019': { name: 'Dhivyadharshini', email: 'dhivyadharshini@company.com', role: 'TRAINEE', department: 'Trainee' },
-  'ECLCT3020': { name: 'Abinaya', email: 'abinaya@company.com', role: 'TRAINEE', department: 'Trainee' },
-  'ECLCT3021': { name: 'Swetha', email: 'swetha@company.com', role: 'TRAINEE', department: 'Trainee' },
-  'ECLCT3022': { name: 'Kavyasree', email: 'kavyasree@company.com', role: 'TRAINEE', department: 'Trainee' },
-  'ECLCT3023': { name: 'Vijayashanthi', email: 'vijayashanthi@company.com', role: 'TRAINEE', department: 'Trainee' },
-  'ECLCT3024': { name: 'Merlin', email: 'merlin@company.com', role: 'TRAINEE', department: 'Trainee' },
-  'ECLCT3025': { name: 'Deeksha', email: 'deeksha@company.com', role: 'TRAINEE', department: 'Trainee' },
-  'ECLCT3026': { name: 'Monisha', email: 'monisha@company.com', role: 'TRAINEE', department: 'Trainee' },
-  'ECLCT4017': { name: 'Rubella V', email: 'rubella@company.com', role: 'TRAINEE', department: 'Trainee' },
-  'ECLCT4021': { name: 'Deepika', email: 'deepika@company.com', role: 'TRAINEE', department: 'Trainee' },
-  'ECLCI4023': { name: 'Mahalakhmi', email: 'mahalakhmi@company.com', role: 'INTERN', department: 'Intern' },
-};
-
 const Login: React.FC = () => {
   const { login, user } = useAuth();
   const navigate = useNavigate();
@@ -70,35 +48,10 @@ const Login: React.FC = () => {
       navigate(response.user.role === 'ADMIN' ? '/admin/dashboard' : '/employee/dashboard');
     } catch (err: any) {
       console.error(err);
-      
-      // Fallback for standalone/cloud frontend with password 123456789
-      if (password === '123456789' || password === 'password123') {
-        const codeKey = identifier.toUpperCase();
-        const matched = MASTER_19_LOGIN_USERS[codeKey] || {
-          name: codeKey.startsWith('ECLC') ? `Staff (${codeKey})` : 'Employee User',
-          email: identifier.includes('@') ? identifier : `${identifier.toLowerCase()}@company.com`,
-          role: codeKey.includes('CT') ? 'TRAINEE' : codeKey.includes('CI') ? 'INTERN' : 'EMPLOYEE',
-          department: codeKey.includes('CT') ? 'Trainee' : codeKey.includes('CI') ? 'Intern' : 'Employee',
-        };
-
-        const mockUser = {
-          id: 2,
-          name: matched.name,
-          email: matched.email,
-          employeeCode: codeKey,
-          department: matched.department,
-          role: matched.role
-        };
-        const mockToken = 'mock-jwt-token-emp-login-' + Date.now();
-        login(mockToken, mockUser as any);
-        navigate('/employee/dashboard');
-        return;
-      }
-
       if (err.response && err.response.data && err.response.data.message) {
         setError(err.response.data.message);
       } else {
-        setError('Invalid credentials. Please use your Employee Code (e.g. ECLCE2008) and password 123456789.');
+        setError('Invalid credentials or employee account not found in database.');
       }
     } finally {
       setLoading(false);

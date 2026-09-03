@@ -28,15 +28,13 @@ export const employeeService = {
   getAll: async (): Promise<Employee[]> => {
     try {
       const response = await api.get<Employee[]>('/employees');
-      if (response.data && Array.isArray(response.data) && response.data.length > 0) {
-        const filtered = response.data.filter(e => !['EMP001', 'EMP002', 'EMP003', 'EMP004', 'EMP005'].includes(e.employeeCode));
-        if (filtered.some(e => e.employeeCode.startsWith('ECL'))) {
-          return filtered;
-        }
+      if (response.data && Array.isArray(response.data)) {
+        return response.data.filter(e => e.role !== 'ADMIN' && !['EMP001', 'EMP002', 'EMP003', 'EMP004', 'EMP005'].includes(e.employeeCode));
       }
-      return MASTER_19_EMPLOYEES;
+      return [];
     } catch (e) {
-      return MASTER_19_EMPLOYEES;
+      console.error('Failed to fetch employees', e);
+      return [];
     }
   },
 

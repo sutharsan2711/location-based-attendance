@@ -115,7 +115,7 @@ export const MASTER_19_EMPLOYEES: Employee[] = [
 ];
 
 const Employees: React.FC = () => {
-  const [employees, setEmployees] = useState<Employee[]>(MASTER_19_EMPLOYEES);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -167,10 +167,10 @@ const Employees: React.FC = () => {
     try {
       await employeeService.delete(deleteModalEmp.id);
       setDeleteModalEmp(null);
-      fetchEmployees();
+      await fetchEmployees();
     } catch (err: any) {
       console.error(err);
-      // Local fallback removal
+      // Local removal
       setEmployees(prev => prev.filter(e => e.id !== deleteModalEmp.id));
       setDeleteModalEmp(null);
     } finally {
@@ -181,20 +181,10 @@ const Employees: React.FC = () => {
   const fetchEmployees = async () => {
     try {
       const data = await employeeService.getAll();
-      if (data && Array.isArray(data) && data.length > 0) {
-        // Filter out legacy dummy accounts EMP001 to EMP005
-        const clean = data.filter(e => !['EMP001', 'EMP002', 'EMP003', 'EMP004', 'EMP005'].includes(e.employeeCode));
-        if (clean.some(e => e.employeeCode.startsWith('ECL'))) {
-          setEmployees(clean);
-        } else {
-          setEmployees(MASTER_19_EMPLOYEES);
-        }
-      } else {
-        setEmployees(MASTER_19_EMPLOYEES);
-      }
+      setEmployees(data || []);
     } catch (err) {
-      console.error('Failed to load from backend, using master staff dataset', err);
-      setEmployees(MASTER_19_EMPLOYEES);
+      console.error('Failed to load employees from backend', err);
+      setEmployees([]);
     } finally {
       setLoading(false);
     }

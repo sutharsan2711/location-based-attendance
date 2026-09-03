@@ -2,6 +2,7 @@ package com.company.attendance.service;
 
 import com.company.attendance.dto.DatabaseResetRequest;
 import com.company.attendance.entity.CompanyLocation;
+import com.company.attendance.entity.User;
 import com.company.attendance.enums.Role;
 import com.company.attendance.repository.*;
 import org.springframework.stereotype.Service;
@@ -102,8 +103,11 @@ public class DatabaseResetService {
         leaveRequestRepository.deleteAllInBatch();
         leaveBalanceRepository.deleteAllInBatch();
 
-        long employeeCount = userRepository.findByRoleNot(Role.ADMIN).size();
-        userRepository.deleteByRoleNot(Role.ADMIN);
+        List<User> nonAdmins = userRepository.findByRoleNot(Role.ADMIN);
+        long employeeCount = nonAdmins.size();
+        if (!nonAdmins.isEmpty()) {
+            userRepository.deleteAllInBatch(nonAdmins);
+        }
 
         return Map.of(
                 "success", true,
@@ -121,8 +125,11 @@ public class DatabaseResetService {
         leaveBalanceRepository.deleteAllInBatch();
 
         // 2. Delete all non-admin employees
-        long employeeCount = userRepository.findByRoleNot(Role.ADMIN).size();
-        userRepository.deleteByRoleNot(Role.ADMIN);
+        List<User> nonAdmins = userRepository.findByRoleNot(Role.ADMIN);
+        long employeeCount = nonAdmins.size();
+        if (!nonAdmins.isEmpty()) {
+            userRepository.deleteAllInBatch(nonAdmins);
+        }
 
         // 3. Reset Company Locations to single clean default
         companyLocationRepository.deleteAllInBatch();

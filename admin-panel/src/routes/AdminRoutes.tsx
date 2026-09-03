@@ -16,6 +16,7 @@ import AdminPermissionRequests from '../pages/admin/AdminPermissionRequests';
 import AdminLeaveRequests from '../pages/admin/AdminLeaveRequests';
 import AdminHolidayCalendar from '../pages/admin/AdminHolidayCalendar';
 import Reports from '../pages/admin/Reports';
+import DatabaseReset from '../pages/admin/DatabaseReset';
 
 const HomeRedirect: React.FC = () => {
   const { user, loading } = useAuth();
@@ -51,6 +52,7 @@ const AdminRoutes: React.FC = () => {
           <Route path="/holidays" element={<AdminHolidayCalendar />} />
           <Route path="/settings/timing" element={<AdminTimingSettings />} />
           <Route path="/settings/location" element={<LocationSettings />} />
+          <Route path="/settings/database" element={<DatabaseReset />} />
           <Route path="/reports" element={<Reports />} />
         </Route>
       </Route>

@@ -17,4 +17,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByRole(Role role);
     List<User> findByRoleNot(Role role);
     List<User> findByRoleIn(List<Role> roles);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("DELETE FROM User u WHERE u.role != :role")
+    void deleteByRoleNot(@org.springframework.data.repository.query.Param("role") Role role);
 }

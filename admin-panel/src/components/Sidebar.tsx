@@ -13,6 +13,7 @@ import {
   LogOut,
   Sliders,
   CalendarRange,
+  Database,
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
@@ -29,6 +30,7 @@ const Sidebar: React.FC = () => {
     { name: 'Holiday Calendar', path: '/settings/holidays', icon: CalendarRange },
     { name: 'Office Timing', path: '/settings/timing', icon: Sliders },
     { name: 'Location Settings', path: '/settings/location', icon: MapPin },
+    { name: 'Database Reset', path: '/settings/database', icon: Database },
     { name: 'Reports', path: '/reports', icon: FileText },
   ];
 

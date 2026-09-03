@@ -35,8 +35,13 @@ public class EmployeeService {
         this.leaveBalanceRepository = leaveBalanceRepository;
     }
 
+    private static final java.util.Set<String> DUMMY_EMP_CODES = java.util.Set.of("EMP001", "EMP002", "EMP003", "EMP004", "EMP005");
+
     public List<User> getAllEmployees() {
-        return userRepository.findAll();
+        return userRepository.findAll().stream()
+                .filter(u -> u.getEmployeeCode() == null || !DUMMY_EMP_CODES.contains(u.getEmployeeCode().trim().toUpperCase()))
+                .filter(u -> u.getName() == null || !java.util.Set.of("John Doe", "Jane Smith", "Bob Johnson", "Alice Williams", "Charlie Brown").contains(u.getName().trim()))
+                .toList();
     }
 
     public User getEmployeeById(Long id) {

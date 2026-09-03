@@ -43,11 +43,27 @@ public class DashboardService {
         this.holidayRepository = holidayRepository;
     }
 
+    private static final Set<String> DUMMY_EMP_CODES = Set.of("EMP001", "EMP002", "EMP003", "EMP004", "EMP005");
+    private static final Set<String> DUMMY_EMP_NAMES = Set.of("John Doe", "Jane Smith", "Bob Johnson", "Alice Williams", "Charlie Brown");
+
+    private boolean isDummyEmployee(User u) {
+        if (u == null) return false;
+        if (u.getEmployeeCode() != null && DUMMY_EMP_CODES.contains(u.getEmployeeCode().trim().toUpperCase())) {
+            return true;
+        }
+        if (u.getName() != null && DUMMY_EMP_NAMES.contains(u.getName().trim())) {
+            return true;
+        }
+        return false;
+    }
+
     public Map<String, Object> getDashboardStats() {
         LocalDate today = LocalDate.now(KOLKATA_ZONE);
 
-        // Fetch all employees (excluding admin)
-        List<User> employees = userRepository.findByRole(Role.EMPLOYEE);
+        // Fetch all employees (excluding admin and legacy temporary accounts)
+        List<User> employees = userRepository.findByRoleNot(Role.ADMIN).stream()
+                .filter(u -> !isDummyEmployee(u))
+                .toList();
         long totalEmployees = employees.size();
         long activeEmployees = employees.stream().filter(u -> u.getStatus() == UserStatus.ACTIVE).count();
 
@@ -62,12 +78,14 @@ public class DashboardService {
         // Late today count
         List<Attendance> todayAttendances = attendanceRepository.findByAttendanceDate(today);
         long lateToday = todayAttendances.stream()
-                .filter(a -> a.getTimingStatus() == AttendanceTimingStatus.LATE)
+                .filter(a -> !isDummyEmployee(a.getEmployee()) && a.getTimingStatus() == AttendanceTimingStatus.LATE)
                 .count();
 
         // On leave today count
         List<LeaveRequest> approvedLeavesToday = leaveRepository.findApprovedLeavesForDate(today, RequestStatus.APPROVED);
-        long onLeaveToday = approvedLeavesToday.size();
+        long onLeaveToday = approvedLeavesToday.stream()
+                .filter(l -> !isDummyEmployee(l.getEmployee()))
+                .count();
 
         // Pending requests counts
         long pendingPermissionRequests = permissionRepository.countByStatus(RequestStatus.PENDING);
@@ -94,8 +112,9 @@ public class DashboardService {
     public List<Map<String, Object>> getAttendanceSummaryCharts() {
         List<Map<String, Object>> chartData = new ArrayList<>();
         LocalDate today = LocalDate.now(KOLKATA_ZONE);
-        long activeEmployees = userRepository.findByRole(Role.EMPLOYEE).stream()
-                .filter(u -> u.getStatus() == UserStatus.ACTIVE).count();
+        long activeEmployees = userRepository.findByRoleNot(Role.ADMIN).stream()
+                .filter(u -> !isDummyEmployee(u) && u.getStatus() == UserStatus.ACTIVE)
+                .count();
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
@@ -127,6 +146,9 @@ public class DashboardService {
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
 
         for (Attendance a : attendances) {
+            if (isDummyEmployee(a.getEmployee())) {
+                continue;
+            }
             Map<String, Object> record = new HashMap<>();
             record.put("id", a.getId());
             record.put("employeeId", a.getEmployee().getId());
@@ -185,14 +207,17 @@ public class DashboardService {
         LocalDate endOfMonth = yearMonth.atEndOfMonth();
         int daysInMonth = yearMonth.lengthOfMonth();
 
-        // Fetch target employees
+        // Fetch target employees (all staff roles: EMPLOYEE, TRAINEE, INTERN)
         List<User> employees;
         if (employeeId != null) {
             employees = userRepository.findById(employeeId)
+                    .filter(u -> !isDummyEmployee(u))
                     .map(Collections::singletonList)
                     .orElse(Collections.emptyList());
         } else {
-            employees = userRepository.findByRole(Role.EMPLOYEE);
+            employees = userRepository.findByRoleNot(Role.ADMIN).stream()
+                    .filter(u -> !isDummyEmployee(u))
+                    .toList();
         }
 
         // Fetch all attendance for this month

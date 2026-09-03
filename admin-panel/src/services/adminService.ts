@@ -52,8 +52,20 @@ export const adminService = {
     if (filters?.month) params.append('month', String(filters.month));
     if (filters?.employeeId) params.append('employeeId', String(filters.employeeId));
 
-    const response = await api.get<MonthlyAttendanceData>('/admin/attendance-monthly', { params });
-    return response.data;
+    try {
+      const response = await api.get<MonthlyAttendanceData>('/admin/attendance-monthly', { params });
+      if (response.data && Array.isArray(response.data.employees)) {
+        response.data.employees = response.data.employees.filter(
+          (e: any) =>
+            !['EMP001', 'EMP002', 'EMP003', 'EMP004', 'EMP005'].includes(e.employeeCode) &&
+            !['John Doe', 'Jane Smith', 'Bob Johnson', 'Alice Williams', 'Charlie Brown'].includes(e.employeeName)
+        );
+      }
+      return response.data;
+    } catch (err) {
+      console.error('Failed to get monthly attendance', err);
+      throw err;
+    }
   },
 
   exportCsv: async (filters: {

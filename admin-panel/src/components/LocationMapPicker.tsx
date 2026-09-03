@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Search, Crosshair, Sparkles } from 'lucide-react';
+import { Search, Crosshair, Sparkles, MapPin, X, Loader2, Check } from 'lucide-react';
 
 // Fix default Leaflet icon paths in Vite / React
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -10,6 +10,13 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
+
+interface LocationSearchResult {
+  name: string;
+  description: string;
+  latitude: number;
+  longitude: number;
+}
 
 interface LocationMapPickerProps {
   latitude: number;
@@ -33,6 +40,8 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searching, setSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<LocationSearchResult[]>([]);
+  const [showResultsDropdown, setShowResultsDropdown] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
 
   // Initialize Map
@@ -89,6 +98,7 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
       marker.setLatLng(e.latlng);
       circle.setLatLng(e.latlng);
       onChange(e.latlng.lat, e.latlng.lng);
+      setShowResultsDropdown(false);
     });
 
     mapInstanceRef.current = map;
@@ -128,42 +138,115 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
     }
   }, [radius]);
 
-  // Search Address with OpenStreetMap Nominatim
-  const handleSearchAddress = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
+  // Handle Jump to Coords helper
+  const jumpToCoordinates = (lat: number, lng: number, zoomLevel = 17) => {
+    if (mapInstanceRef.current && markerRef.current && circleRef.current) {
+      const latLng = new L.LatLng(lat, lng);
+      markerRef.current.setLatLng(latLng);
+      circleRef.current.setLatLng(latLng);
+      mapInstanceRef.current.setView(latLng, zoomLevel);
+    }
+    onChange(lat, lng);
+  };
+
+  // Multi-Engine Geocoding with Photon Komoot & Nominatim Fallback
+  const handleSearchAddress = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const query = searchQuery.trim();
+    if (!query) return;
 
     setSearching(true);
     setSearchError(null);
+    setSearchResults([]);
 
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          searchQuery.trim()
-        )}&limit=1`
-      );
-      const data = await response.json();
-
-      if (data && data.length > 0) {
-        const lat = parseFloat(data[0].lat);
-        const lng = parseFloat(data[0].lon);
-
-        if (mapInstanceRef.current && markerRef.current && circleRef.current) {
-          const latLng = new L.LatLng(lat, lng);
-          markerRef.current.setLatLng(latLng);
-          circleRef.current.setLatLng(latLng);
-          mapInstanceRef.current.setView(latLng, 17);
-        }
-        onChange(lat, lng);
-      } else {
-        setSearchError('Location not found. Please try a different query or street name.');
+    // Check if user entered direct coordinates like "11.0783, 76.9997"
+    const coordMatch = query.match(/^([-+]?\d{1,2}\.\d+)[,\s]+([-+]?\d{1,3}\.\d+)$/);
+    if (coordMatch) {
+      const lat = parseFloat(coordMatch[1]);
+      const lng = parseFloat(coordMatch[2]);
+      if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        jumpToCoordinates(lat, lng, 18);
+        setSearching(false);
+        setShowResultsDropdown(false);
+        return;
       }
-    } catch (err) {
-      console.error('Geocoding error', err);
-      setSearchError('Failed to search location. Please click on the map directly.');
-    } finally {
-      setSearching(false);
     }
+
+    const results: LocationSearchResult[] = [];
+
+    // Engine 1: Photon Komoot API (Fast, no CORS/User-Agent issues, high accuracy for POIs/streets)
+    try {
+      const photonRes = await fetch(
+        `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=6`
+      );
+      if (photonRes.ok) {
+        const photonData = await photonRes.json();
+        if (photonData?.features && Array.isArray(photonData.features)) {
+          for (const feat of photonData.features) {
+            const [lng, lat] = feat.geometry.coordinates;
+            const props = feat.properties || {};
+            const name = props.name || props.street || query;
+            const parts = [props.street, props.district, props.city, props.state, props.country]
+              .filter(Boolean);
+            const desc = parts.join(', ') || 'Matching Location';
+
+            results.push({
+              name,
+              description: desc,
+              latitude: lat,
+              longitude: lng,
+            });
+          }
+        }
+      }
+    } catch (photonErr) {
+      console.warn('Photon geocoding failed, trying Nominatim fallback', photonErr);
+    }
+
+    // Engine 2: OpenStreetMap Nominatim Fallback if results are empty
+    if (results.length === 0) {
+      try {
+        const nominatimRes = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+            query
+          )}&limit=6&addressdetails=1`
+        );
+        if (nominatimRes.ok) {
+          const nominatimData = await nominatimRes.json();
+          if (Array.isArray(nominatimData) && nominatimData.length > 0) {
+            for (const item of nominatimData) {
+              results.push({
+                name: item.display_name.split(',')[0] || query,
+                description: item.display_name,
+                latitude: parseFloat(item.lat),
+                longitude: parseFloat(item.lon),
+              });
+            }
+          }
+        }
+      } catch (nomErr) {
+        console.warn('Nominatim geocoding failed', nomErr);
+      }
+    }
+
+    setSearching(false);
+
+    if (results.length > 0) {
+      setSearchResults(results);
+      setShowResultsDropdown(true);
+
+      // Auto-jump to the top match
+      const topMatch = results[0];
+      jumpToCoordinates(topMatch.latitude, topMatch.longitude, 17);
+    } else {
+      setSearchError(`No matching locations found for "${query}". Try searching with a landmark, area name, or city.`);
+    }
+  };
+
+  const handleSelectResult = (res: LocationSearchResult) => {
+    jumpToCoordinates(res.latitude, res.longitude, 18);
+    setShowResultsDropdown(false);
+    setSearchQuery(res.name);
   };
 
   // Use Current GPS
@@ -177,14 +260,8 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
       (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-
-        if (mapInstanceRef.current && markerRef.current && circleRef.current) {
-          const latLng = new L.LatLng(lat, lng);
-          markerRef.current.setLatLng(latLng);
-          circleRef.current.setLatLng(latLng);
-          mapInstanceRef.current.setView(latLng, 18);
-        }
-        onChange(lat, lng);
+        jumpToCoordinates(lat, lng, 18);
+        setShowResultsDropdown(false);
       },
       (error) => {
         console.error(error);
@@ -195,49 +272,104 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 relative">
       {/* Map Search Bar & GPS Trigger */}
       <div className="flex flex-col sm:flex-row gap-2">
-        <form onSubmit={handleSearchAddress} className="flex-1 flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search address, landmark, or city (e.g. Peelamedu, Coimbatore)..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 outline-none focus:border-indigo-500 bg-white"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={searching}
-            className="px-3 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
-          >
-            {searching ? (
-              <span>Searching...</span>
-            ) : (
-              <>
-                <Search className="h-3.5 w-3.5" /> Search
-              </>
-            )}
-          </button>
-        </form>
+        <div className="relative flex-1">
+          <form onSubmit={handleSearchAddress} className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search address, area, or coordinates (e.g. Peelamedu, Coimbatore or 11.078, 76.999)..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  if (searchError) setSearchError(null);
+                }}
+                className="w-full pl-9 pr-8 py-2 text-xs rounded-xl border border-slate-200 outline-none focus:border-indigo-500 bg-white text-slate-800"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSearchResults([]);
+                    setShowResultsDropdown(false);
+                  }}
+                  className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={searching}
+              className="px-3.5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5 shrink-0"
+            >
+              {searching ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>Searching...</span>
+                </>
+              ) : (
+                <>
+                  <Search className="h-3.5 w-3.5" />
+                  <span>Search</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Search Results Dropdown */}
+          {showResultsDropdown && searchResults.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-2xl shadow-xl border border-slate-200 z-[1100] max-h-56 overflow-y-auto custom-scrollbar divide-y divide-slate-100">
+              <div className="px-3 py-1.5 bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-wide flex items-center justify-between">
+                <span>Matching Places ({searchResults.length})</span>
+                <button
+                  onClick={() => setShowResultsDropdown(false)}
+                  className="text-slate-400 hover:text-slate-600 text-xs font-bold"
+                >
+                  Close
+                </button>
+              </div>
+              {searchResults.map((item, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleSelectResult(item)}
+                  className="w-full text-left px-3.5 py-2 hover:bg-indigo-50/70 transition-all flex items-start gap-2.5 group cursor-pointer"
+                >
+                  <MapPin className="h-4 w-4 text-indigo-500 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-slate-800 truncate">{item.name}</p>
+                    <p className="text-[10px] text-slate-500 truncate">{item.description}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         <button
           type="button"
           onClick={handleUseCurrentLocation}
-          className="px-3 py-2 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+          className="px-3 py-2 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
         >
-          <Crosshair className="h-3.5 w-3.5 text-indigo-600 animate-spin-slow" />
+          <Crosshair className="h-3.5 w-3.5 text-indigo-600" />
           <span>My GPS</span>
         </button>
       </div>
 
       {searchError && (
-        <p className="text-xs text-rose-600 bg-rose-50 p-2 rounded-lg border border-rose-200">
-          {searchError}
-        </p>
+        <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs font-semibold text-amber-800 flex items-center justify-between">
+          <span>{searchError}</span>
+          <button onClick={() => setSearchError(null)} className="text-amber-700 hover:text-amber-900">
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
       )}
 
       {/* Map Container */}
@@ -280,7 +412,7 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
       )}
 
       <p className="text-[11px] text-slate-400 italic">
-        💡 Tip: Click anywhere on the map or drag the purple pin to set the exact office entrance coordinates.
+        💡 Tip: You can search any landmark, street, city, paste GPS coordinates, or drag the purple pin on the map.
       </p>
     </div>
   );

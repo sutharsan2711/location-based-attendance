@@ -308,10 +308,10 @@ const LocationSettings: React.FC = () => {
 
       {/* ══════════════ ADD / EDIT LOCATION MODAL WITH INTERACTIVE MAP ══════════════ */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden my-8 animate-scale">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-sm p-4 sm:p-6 flex min-h-full items-center justify-center">
+          <div className="relative bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh] my-auto animate-scale">
             {/* Modal Header */}
-            <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+            <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2.5">
                 <MapPin className="h-5 w-5 text-indigo-400" />
                 <h3 className="text-base font-extrabold text-white">
@@ -319,6 +319,7 @@ const LocationSettings: React.FC = () => {
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setShowModal(false)}
                 className="text-slate-400 hover:text-white p-1 rounded-lg transition-all cursor-pointer"
               >
@@ -326,8 +327,8 @@ const LocationSettings: React.FC = () => {
               </button>
             </div>
 
-            {/* Modal Body */}
-            <form onSubmit={handleFormSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto custom-scrollbar">
+            {/* Modal Body Form */}
+            <form id="location-modal-form" onSubmit={handleFormSubmit} className="overflow-y-auto p-5 sm:p-6 space-y-4 flex-1 custom-scrollbar">
               {formError && (
                 <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-800 flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
@@ -431,29 +432,30 @@ const LocationSettings: React.FC = () => {
                   />
                 </div>
               </div>
-
-              {/* Modal Actions */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowModal(false)}
-                  className="py-2.5 px-4 font-bold text-xs cursor-pointer"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="sm"
-                  loading={modalLoading}
-                  className="py-2.5 px-6 font-bold text-xs bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
-                >
-                  {editingLocation ? 'Save Changes' : 'Create Location'}
-                </Button>
-              </div>
             </form>
+
+            {/* Modal Sticky Footer */}
+            <div className="bg-slate-50 px-6 py-3.5 border-t border-slate-100 flex items-center justify-end gap-3 shrink-0">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowModal(false)}
+                className="py-2 px-4 font-bold text-xs cursor-pointer"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                form="location-modal-form"
+                variant="primary"
+                size="sm"
+                loading={modalLoading}
+                className="py-2 px-6 font-bold text-xs bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
+              >
+                {editingLocation ? 'Save Changes' : 'Create Location'}
+              </Button>
+            </div>
           </div>
         </div>
       )}

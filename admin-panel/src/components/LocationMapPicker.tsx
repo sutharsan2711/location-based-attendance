@@ -242,10 +242,10 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
 
       {/* Map Container */}
       <div className="relative rounded-2xl overflow-hidden border border-slate-200 shadow-inner">
-        <div ref={mapContainerRef} style={{ height: '320px', width: '100%' }} />
+        <div ref={mapContainerRef} style={{ height: '240px', width: '100%' }} />
 
         {/* Floating Quick Info Pill */}
-        <div className="absolute bottom-3 left-3 z-[1000] bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-md border border-slate-200/80 text-[11px] font-mono text-slate-700 flex items-center gap-2">
+        <div className="absolute bottom-2.5 left-2.5 z-[1000] bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-lg shadow-md border border-slate-200/80 text-[10px] font-mono text-slate-700 flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           <span>
             {latitude.toFixed(6)}, {longitude.toFixed(6)} • <strong>{radius}m</strong> Radius

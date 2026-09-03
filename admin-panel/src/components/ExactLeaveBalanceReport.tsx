@@ -28,45 +28,9 @@ import {
 
 const currentYear = new Date().getFullYear();
 
-export const DEFAULT_EXACT_LEAVE_ROWS: ExactLeaveReportRow[] = [
-  { sNo: 1, employeeId: 'ECLCE2008', employeeName: 'Sasiprabha J', type: 'Employee', joinedMonth: 'Feb-25', totalLeave: 18, leaveTaken: 9, balance: 9, highlightRedTotal: true },
-  { sNo: 2, employeeId: 'ECLCE2014', employeeName: 'Sriram R', type: 'Employee', joinedMonth: 'Aug-25', totalLeave: 16, leaveTaken: 7, balance: 9 },
-  { sNo: 3, employeeId: 'ECLCE2015', employeeName: 'Manimegalai B', type: 'Employee', joinedMonth: 'Aug-25', totalLeave: 16, leaveTaken: 8.5, balance: 7.5 },
-  { sNo: 4, employeeId: 'ECLCE2016', employeeName: 'Gopinath', type: 'Employee', joinedMonth: 'Dec-25', totalLeave: 16, leaveTaken: 5.5, balance: 10.5 },
-  { sNo: 5, employeeId: 'ECLCE2017', employeeName: 'Dhanuja G T', type: 'Employee', joinedMonth: 'Sep-25', totalLeave: 16, leaveTaken: 7, balance: 9 },
-  { sNo: 6, employeeId: 'ECLCT3009', employeeName: 'Kanishkaa S', type: 'Trainee', joinedMonth: 'Sep-25', totalLeave: 14, leaveTaken: 7.5, balance: 6.5 },
-  { sNo: 7, employeeId: 'ECLCT3010', employeeName: 'Kanchana Mala V G', type: 'Trainee', joinedMonth: 'Sep-25', totalLeave: 14, leaveTaken: 11, balance: 3 },
-  { sNo: 8, employeeId: 'ECLCT3014', employeeName: 'Prabavathi', type: 'Trainee', joinedMonth: 'Nov-25', totalLeave: 14, leaveTaken: 7.5, balance: 6.5 },
-  { sNo: 9, employeeId: 'ECLCT3019', employeeName: 'Dhivyadharshini', type: 'Trainee', joinedMonth: 'Feb-26', totalLeave: 13, leaveTaken: 8, balance: 5 },
-  { sNo: 10, employeeId: 'ECLCT3020', employeeName: 'Abinaya', type: 'Trainee', joinedMonth: 'Feb-26', totalLeave: 13, leaveTaken: 9, balance: 4 },
-  { sNo: 11, employeeId: 'ECLCT3021', employeeName: 'Swetha', type: 'Trainee', joinedMonth: 'Feb-26', totalLeave: 13, leaveTaken: 8, balance: 5 },
-  { sNo: 12, employeeId: 'ECLCT3022', employeeName: 'Kavyasree', type: 'Trainee', joinedMonth: 'Mar-26', totalLeave: 12, leaveTaken: 3, balance: 9 },
-  { sNo: 13, employeeId: 'ECLCT3023', employeeName: 'Vijayashanthi', type: 'Trainee', joinedMonth: 'Mar-26', totalLeave: 12, leaveTaken: 5.5, balance: 6.5 },
-  { sNo: 14, employeeId: 'ECLCT3024', employeeName: 'Merlin', type: 'Trainee', joinedMonth: 'Apr-26', totalLeave: 11, leaveTaken: 8, balance: 3 },
-  { sNo: 15, employeeId: 'ECLCT3025', employeeName: 'Deeksha', type: 'Trainee', joinedMonth: 'Apr-26', totalLeave: 11, leaveTaken: 5, balance: 6 },
-  { sNo: 16, employeeId: 'ECLCT3026', employeeName: 'Monisha', type: 'Trainee', joinedMonth: 'Apr-26', totalLeave: 11, leaveTaken: 6, balance: 5 },
-  { sNo: 17, employeeId: 'ECLCT4017', employeeName: 'Rubella V', type: 'Trainee', joinedMonth: 'Feb-26', totalLeave: 13, leaveTaken: 8, balance: 5 },
-  { sNo: 18, employeeId: 'ECLCT4021', employeeName: 'Deepika', type: 'Trainee', joinedMonth: 'Apr-26', totalLeave: 11, leaveTaken: 17, balance: -6, highlightYellowTaken: true },
-  { sNo: 19, employeeId: 'ECLCI4023', employeeName: 'Mahalakhmi', type: 'Intern', joinedMonth: 'Jul-26', totalLeave: 8, leaveTaken: 10, balance: -2 },
-];
-
 export const ExactLeaveBalanceReport: React.FC = () => {
-  const [reportRows, setReportRows] = useState<ExactLeaveReportRow[]>(() => {
-    const saved = localStorage.getItem('exact_leave_balance_report_v3');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        }
-      } catch (e) {
-        // fallback
-      }
-    }
-    return DEFAULT_EXACT_LEAVE_ROWS;
-  });
-
-  const [loading, setLoading] = useState<boolean>(false);
+  const [reportRows, setReportRows] = useState<ExactLeaveReportRow[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string>('ALL');
@@ -98,83 +62,84 @@ export const ExactLeaveBalanceReport: React.FC = () => {
   const syncFromSystemDatabase = useCallback(async () => {
     setLoading(true);
     try {
-      // Clear legacy storage
+      // Clear any legacy localStorage mock caches
       localStorage.removeItem('exact_leave_balance_report');
+      localStorage.removeItem('exact_leave_balance_report_v2');
+      localStorage.removeItem('exact_leave_balance_report_v3');
 
       const [emps, balanceData] = await Promise.all([
         employeeService.getAll().catch(() => []),
         requestService.getAllLeaveBalances(selectedYear).catch(() => []),
       ]);
 
-      if (emps && emps.length > 0) {
-        const rows: ExactLeaveReportRow[] = emps
-          .filter((e) => e.role === 'EMPLOYEE' || e.role === 'ADMIN')
-          .map((emp, index) => {
-            const summary = balanceData.find((b) => b.employeeId === emp.id);
-            let totalGranted = 0;
-            let totalConsumed = 0;
+      const activeStaff = (emps || []).filter((e) => e.role !== 'ADMIN');
 
-            if (summary && summary.balances) {
-              summary.balances.forEach((b) => {
-                totalGranted += b.granted || 0;
-                totalConsumed += b.consumed || 0;
-              });
-            } else {
-              totalGranted = 16;
-              totalConsumed = 0;
-            }
+      if (activeStaff && activeStaff.length > 0) {
+        const rows: ExactLeaveReportRow[] = activeStaff.map((emp, index) => {
+          const summary = (balanceData || []).find((b) => b.employeeId === emp.id);
+          let totalGranted = 0;
+          let totalConsumed = 0;
 
-            const bal = Number((totalGranted - totalConsumed).toFixed(1));
+          if (summary && summary.balances && summary.balances.length > 0) {
+            summary.balances.forEach((b) => {
+              totalGranted += b.granted || 0;
+              totalConsumed += b.consumed || 0;
+            });
+          } else {
+            totalGranted = 16;
+            totalConsumed = 0;
+          }
 
-            // Determine type
-            let empType: 'Employee' | 'Trainee' | 'Intern' = 'Employee';
+          const bal = Number((totalGranted - totalConsumed).toFixed(1));
+
+          // Determine type
+          let empType: 'Employee' | 'Trainee' | 'Intern' = 'Employee';
+          if (emp.role === 'TRAINEE') {
+            empType = 'Trainee';
+          } else if (emp.role === 'INTERN') {
+            empType = 'Intern';
+          } else {
             const dept = (emp.department || '').toUpperCase();
-            if (dept.includes('TRAINEE') || emp.name.toLowerCase().includes('trainee')) {
-              empType = 'Trainee';
-            } else if (dept.includes('INTERN') || emp.name.toLowerCase().includes('intern')) {
-              empType = 'Intern';
-            }
+            if (dept.includes('TRAINEE')) empType = 'Trainee';
+            else if (dept.includes('INTERN')) empType = 'Intern';
+          }
 
-            // Joined month
-            let joinedMonth = 'Jan-26';
-            if (emp.createdAt) {
-              const dt = new Date(emp.createdAt);
-              joinedMonth = dt.toLocaleString('en-US', { month: 'short' }) + '-' + String(dt.getFullYear()).slice(2);
-            }
+          // Joined month
+          let joinedMonth = 'Jan-26';
+          if (emp.createdAt) {
+            const dt = new Date(emp.createdAt);
+            joinedMonth = dt.toLocaleString('en-US', { month: 'short' }) + '-' + String(dt.getFullYear()).slice(2);
+          }
 
-            return {
-              sNo: index + 1,
-              employeeId: emp.employeeCode || `EMP${emp.id}`,
-              employeeName: emp.name || 'Employee',
-              type: empType,
-              joinedMonth,
-              totalLeave: totalGranted,
-              leaveTaken: totalConsumed,
-              balance: bal,
-              highlightRedTotal: totalGranted >= 18,
-              highlightYellowTaken: totalConsumed >= 15,
-            };
-          });
+          return {
+            sNo: index + 1,
+            employeeId: emp.employeeCode || `EMP${emp.id}`,
+            employeeName: emp.name || 'Employee',
+            type: empType,
+            joinedMonth,
+            totalLeave: totalGranted,
+            leaveTaken: totalConsumed,
+            balance: bal,
+            highlightRedTotal: totalGranted >= 18,
+            highlightYellowTaken: totalConsumed >= 15,
+          };
+        });
 
         setReportRows(rows);
-        localStorage.setItem('exact_leave_balance_report_v2', JSON.stringify(rows));
       } else {
         setReportRows([]);
-        localStorage.setItem('exact_leave_balance_report_v2', JSON.stringify([]));
       }
     } catch (err) {
-      console.error('Failed to sync from database', err);
+      console.error('Failed to sync leave balance report from database', err);
+      setReportRows([]);
     } finally {
       setLoading(false);
     }
   }, [selectedYear]);
 
-  // Initial load
+  // Initial load directly from live database
   useEffect(() => {
-    const saved = localStorage.getItem('exact_leave_balance_report_v2');
-    if (!saved || JSON.parse(saved).length === 0) {
-      syncFromSystemDatabase();
-    }
+    syncFromSystemDatabase();
   }, [syncFromSystemDatabase]);
 
   const saveRows = (newRows: ExactLeaveReportRow[]) => {
@@ -186,20 +151,15 @@ export const ExactLeaveBalanceReport: React.FC = () => {
       highlightYellowTaken: r.leaveTaken >= 15,
     }));
     setReportRows(indexed);
-    localStorage.setItem('exact_leave_balance_report_v3', JSON.stringify(indexed));
   };
 
   const handleResetToDefault = () => {
-    if (window.confirm('Reset leave report table to default master records (19 employees)?')) {
-      setReportRows(DEFAULT_EXACT_LEAVE_ROWS);
-      localStorage.setItem('exact_leave_balance_report_v3', JSON.stringify(DEFAULT_EXACT_LEAVE_ROWS));
-    }
+    syncFromSystemDatabase();
   };
 
   const handleClearAll = () => {
-    if (window.confirm('Remove all employee records from this report view?')) {
+    if (window.confirm('Clear all displayed rows from this report view?')) {
       setReportRows([]);
-      localStorage.setItem('exact_leave_balance_report_v3', JSON.stringify([]));
     }
   };
 

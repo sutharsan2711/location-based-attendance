@@ -14,7 +14,6 @@ import com.company.attendance.exception.LocationValidationException;
 import com.company.attendance.exception.ResourceNotFoundException;
 import com.company.attendance.repository.AttendanceRepository;
 import com.company.attendance.repository.CompanyLocationRepository;
-import com.company.attendance.repository.LeaveRequestRepository;
 import com.company.attendance.repository.PermissionRequestRepository;
 import com.company.attendance.repository.UserRepository;
 import com.company.attendance.util.DistanceCalculator;
@@ -35,21 +34,19 @@ public class AttendanceService {
     private final CompanyLocationRepository locationRepository;
     private final UserRepository userRepository;
     private final PermissionRequestRepository permissionRepository;
-    private final LeaveRequestRepository leaveRepository;
 
     private static final ZoneId KOLKATA_ZONE = ZoneId.of("Asia/Kolkata");
 
     public AttendanceService(AttendanceRepository attendanceRepository,
                              CompanyLocationRepository locationRepository,
                              UserRepository userRepository,
-                             PermissionRequestRepository permissionRepository,
-                             LeaveRequestRepository leaveRepository) {
+                             PermissionRequestRepository permissionRepository) {
         this.attendanceRepository = attendanceRepository;
         this.locationRepository = locationRepository;
         this.userRepository = userRepository;
         this.permissionRepository = permissionRepository;
-        this.leaveRepository = leaveRepository;
     }
+
 
     @Transactional
     public AttendanceResponse loginAttendance(String email, AttendanceRequest request) {

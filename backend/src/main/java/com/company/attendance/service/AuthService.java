@@ -8,10 +8,8 @@ import com.company.attendance.repository.UserRepository;
 import com.company.attendance.security.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,15 +21,14 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final JwtService jwtService;
-    private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthService(UserRepository userRepository, JwtService jwtService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
+    public AuthService(UserRepository userRepository, JwtService jwtService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.jwtService = jwtService;
-        this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
     }
+
 
     public LoginResponse authenticate(LoginRequest request) {
         String identifier = request.getEmail() != null ? request.getEmail().trim() : "";

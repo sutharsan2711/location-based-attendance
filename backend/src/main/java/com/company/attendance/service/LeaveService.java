@@ -4,9 +4,9 @@ import com.company.attendance.dto.*;
 import com.company.attendance.entity.LeaveBalance;
 import com.company.attendance.entity.LeaveRequest;
 import com.company.attendance.entity.User;
-import com.company.attendance.enums.LeaveType;
 import com.company.attendance.enums.RequestStatus;
 import com.company.attendance.enums.UserStatus;
+
 import com.company.attendance.exception.ResourceNotFoundException;
 import com.company.attendance.repository.LeaveBalanceRepository;
 import com.company.attendance.repository.LeaveRequestRepository;
@@ -153,10 +153,8 @@ public class LeaveService {
         LeaveBalance balance = leaveBalanceRepository.findByEmployeeIdAndYear(employee.getId(), targetYear)
                 .orElseGet(() -> leaveBalanceRepository.save(new LeaveBalance(employee, targetYear)));
 
-        LocalDate startOfYear = LocalDate.of(year, 1, 1);
-        LocalDate endOfYear = LocalDate.of(year, 12, 31);
-
         List<LeaveRequest> userLeaves = leaveRepository.findByEmployeeIdOrderByFromDateDesc(employee.getId());
+
 
         // Process leave buckets
         double lopConsumed = 0;

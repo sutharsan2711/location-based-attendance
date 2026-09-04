@@ -1,9 +1,24 @@
 import api from '../utils/api';
 import { LoginResponse } from '../types/auth';
 
+export interface LocationCoordinatesPayload {
+  latitude?: number;
+  longitude?: number;
+  accuracy?: number;
+}
+
 export const authService = {
-  login: async (email: string, password: string): Promise<LoginResponse> => {
-    const response = await api.post<LoginResponse>('/auth/login', { email, password });
+  login: async (
+    email: string,
+    password: string,
+    location?: LocationCoordinatesPayload
+  ): Promise<LoginResponse> => {
+    const payload = {
+      email,
+      password,
+      ...(location || {}),
+    };
+    const response = await api.post<LoginResponse>('/auth/login', payload);
     return response.data;
   },
 
@@ -17,3 +32,4 @@ export const authService = {
     return response.data;
   }
 };
+

@@ -1,9 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useGeolocation } from '../../hooks/useGeolocation';
 import { authService } from '../../services/authService';
-import { KeyRound, User as UserIcon, AlertCircle, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import {
+  KeyRound,
+  User as UserIcon,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  MapPin,
+  MapPinOff,
+  RefreshCw,
+  Info
+} from 'lucide-react';
 import Button from '../../components/Button';
 
 interface LoginFormData {
@@ -14,16 +26,49 @@ interface LoginFormData {
 const Login: React.FC = () => {
   const { login, user } = useAuth();
   const navigate = useNavigate();
+  const {
+    getCoordinates,
+    checkPermission,
+    permissionStatus,
+    error: geoError,
+    latitude,
+    longitude
+  } = useGeolocation();
+
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState<string>('Signing in...');
   const [showPassword, setShowPassword] = useState(false);
+  const [locPrompted, setLocPrompted] = useState(false);
 
   // If already logged in, redirect
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
       navigate(user.role === 'ADMIN' ? '/admin/dashboard' : '/employee/dashboard');
     }
   }, [user, navigate]);
+
+  // Check and prompt for location permission on mount
+  useEffect(() => {
+    const initLocation = async () => {
+      const status = await checkPermission();
+      if (status === 'granted') {
+        // Pre-fetch coordinates if permission is already granted
+        getCoordinates(true).catch(() => {});
+      }
+    };
+    initLocation();
+  }, [checkPermission, getCoordinates]);
+
+  const handleRequestLocation = async () => {
+    setError(null);
+    setLocPrompted(true);
+    try {
+      await getCoordinates(true);
+    } catch (err: any) {
+      setError(err.message || 'Location permission is required to sign in.');
+    }
+  };
 
   const {
     register,
@@ -43,20 +88,46 @@ const Login: React.FC = () => {
     const password = data.password.trim();
 
     try {
-      const response = await authService.login(identifier, password);
+      // 1. Mandatory Location Access Check: Acquire active GPS coordinates
+      setLoadingMessage('Verifying location access...');
+      let coords: { latitude: number; longitude: number; accuracy: number };
+
+      try {
+        coords = await getCoordinates(true);
+      } catch (locErr: any) {
+        setError(
+          locErr.message ||
+          'Location permission is required to sign in. Please allow location access in your browser.'
+        );
+        setLoading(false);
+        return; // Strictly stop login if location permission is not granted
+      }
+
+      // 2. Proceed with authentication with location payload
+      setLoadingMessage('Signing in to portal...');
+      const response = await authService.login(identifier, password, {
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        accuracy: coords.accuracy
+      });
+
       login(response.token, response.user);
       navigate(response.user.role === 'ADMIN' ? '/admin/dashboard' : '/employee/dashboard');
     } catch (err: any) {
       console.error(err);
       if (err.response && err.response.data && err.response.data.message) {
         setError(err.response.data.message);
-      } else {
+      } else if (!error) {
         setError('Invalid credentials or employee account not found in database.');
       }
     } finally {
       setLoading(false);
+      setLoadingMessage('Signing in...');
     }
   };
+
+  const isLocationDenied = permissionStatus === 'denied';
+  const isLocationGranted = permissionStatus === 'granted' || (latitude !== null && longitude !== null);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-900 px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -77,18 +148,59 @@ const Login: React.FC = () => {
         </div>
 
         {/* Card */}
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-7 sm:p-8 rounded-3xl shadow-2xl space-y-6">
-          <form noValidate className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-7 sm:p-8 rounded-3xl shadow-2xl space-y-5">
+          {/* Location Status Notice */}
+          {isLocationDenied ? (
+            <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs text-rose-300 space-y-2">
+              <div className="flex items-center gap-2 font-bold text-rose-400">
+                <MapPinOff className="h-4 w-4 shrink-0" />
+                <span>Location Access Required</span>
+              </div>
+              <p className="text-[11px] leading-relaxed text-rose-200/90">
+                You must grant browser location permission to sign in. Please click the site settings/lock icon in your browser URL bar, allow Location access, and click retry.
+              </p>
+              <button
+                type="button"
+                onClick={handleRequestLocation}
+                className="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500 text-white text-[11px] font-bold hover:bg-rose-600 transition-colors shadow"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Retry Location Access
+              </button>
+            </div>
+          ) : isLocationGranted ? (
+            <div className="flex items-center justify-between rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-3.5 py-2.5 text-xs text-emerald-300">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-emerald-400 shrink-0" />
+                <span className="font-medium">Location Access Granted</span>
+              </div>
+              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-semibold px-2 py-0.5 rounded-lg border border-emerald-500/30">
+                GPS Ready
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-start gap-2.5 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-3.5 text-xs text-amber-300">
+              <Info className="h-4 w-4 shrink-0 text-amber-400 mt-0.5" />
+              <div className="flex-1 space-y-1">
+                <p className="font-semibold text-amber-300">Location Verification Required</p>
+                <p className="text-[11px] text-amber-200/80 leading-tight">
+                  Your browser will request your device location when you sign in.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <form noValidate className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
             {/* Global Error */}
-            {error && (
+            {(error || geoError) && (
               <div className="flex items-center gap-2.5 rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-xs font-semibold text-rose-300">
                 <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
-                <span>{error}</span>
+                <span>{error || geoError}</span>
               </div>
             )}
 
             {/* Employee Code / Email Field */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <label htmlFor="identifier" className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
                 Employee Code / Email
               </label>
@@ -114,12 +226,14 @@ const Login: React.FC = () => {
             </div>
 
             {/* Password Field */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label htmlFor="password" className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
                   Password
                 </label>
-                <span className="text-[11px] text-slate-400 font-medium">Default: <code className="bg-white/10 px-1.5 py-0.5 rounded text-primary-300">123456789</code></span>
+                <span className="text-[11px] text-slate-400 font-medium">
+                  Default: <code className="bg-white/10 px-1.5 py-0.5 rounded text-primary-300">123456789</code>
+                </span>
               </div>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
@@ -156,9 +270,13 @@ const Login: React.FC = () => {
               size="lg"
               fullWidth
               loading={loading}
-              className="mt-6 bg-primary-500 hover:bg-primary-600 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-primary-500/25"
+              disabled={loading || isLocationDenied}
+              className={`mt-4 bg-primary-500 hover:bg-primary-600 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-primary-500/25 ${
+                isLocationDenied ? 'opacity-60 cursor-not-allowed hover:bg-primary-500' : ''
+              }`}
             >
-              <ShieldCheck className="mr-2 h-4 w-4" /> Sign In to Portal
+              <ShieldCheck className="mr-2 h-4 w-4" />
+              {loading ? loadingMessage : isLocationDenied ? 'Location Permission Required to Sign In' : 'Sign In to Portal'}
             </Button>
           </form>
         </div>
@@ -168,3 +286,4 @@ const Login: React.FC = () => {
 };
 
 export default Login;
+

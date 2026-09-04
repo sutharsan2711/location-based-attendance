@@ -6,6 +6,8 @@ import com.company.attendance.entity.User;
 import com.company.attendance.enums.UserStatus;
 import com.company.attendance.repository.UserRepository;
 import com.company.attendance.security.JwtService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -16,6 +18,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
     private final JwtService jwtService;
@@ -34,6 +38,12 @@ public class AuthService {
         User user = userRepository.findByEmail(identifier)
                 .or(() -> userRepository.findByEmployeeCode(identifier))
                 .orElseThrow(() -> new UsernameNotFoundException("Invalid employee code/email or password"));
+
+        if (request.getLatitude() != null && request.getLongitude() != null) {
+            log.info("User {} ({}) attempting sign-in from coordinates: lat={}, lng={}, accuracy={}",
+                    user.getName(), user.getEmployeeCode(), request.getLatitude(), request.getLongitude(), request.getAccuracy());
+        }
+
 
         if (user.getStatus() == UserStatus.INACTIVE) {
             throw new DisabledException("Your employee account is inactive.");

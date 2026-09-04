@@ -10,6 +10,7 @@ import {
   ChevronUp,
   Settings,
   User as UserIcon,
+  DollarSign,
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
@@ -182,11 +183,20 @@ const Sidebar: React.FC = () => {
           )}
         </div>
 
-        {/* Document Center */}
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 cursor-pointer">
-          <FileText className="h-4 w-4 shrink-0 text-slate-500" />
-          <span>Document Center</span>
-        </div>
+        {/* My Payroll */}
+        <NavLink
+          to="/employee/payroll"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all ${
+              isActive
+                ? 'bg-blue-50/80 text-blue-600 font-semibold'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+            }`
+          }
+        >
+          <DollarSign className="h-4 w-4 shrink-0" />
+          <span>My Payroll & Payslips</span>
+        </NavLink>
 
         {/* Profile */}
         <NavLink

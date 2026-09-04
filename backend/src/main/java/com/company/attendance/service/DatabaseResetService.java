@@ -19,6 +19,9 @@ public class DatabaseResetService {
     private final LeaveRequestRepository leaveRequestRepository;
     private final PermissionRequestRepository permissionRequestRepository;
     private final LeaveBalanceRepository leaveBalanceRepository;
+    private final PayrollRepository payrollRepository;
+    private final SalaryStructureRepository salaryStructureRepository;
+    private final SalaryHistoryRepository salaryHistoryRepository;
     private final UserRepository userRepository;
     private final CompanyLocationRepository companyLocationRepository;
 
@@ -27,6 +30,9 @@ public class DatabaseResetService {
             LeaveRequestRepository leaveRequestRepository,
             PermissionRequestRepository permissionRequestRepository,
             LeaveBalanceRepository leaveBalanceRepository,
+            PayrollRepository payrollRepository,
+            SalaryStructureRepository salaryStructureRepository,
+            SalaryHistoryRepository salaryHistoryRepository,
             UserRepository userRepository,
             CompanyLocationRepository companyLocationRepository
     ) {
@@ -34,6 +40,9 @@ public class DatabaseResetService {
         this.leaveRequestRepository = leaveRequestRepository;
         this.permissionRequestRepository = permissionRequestRepository;
         this.leaveBalanceRepository = leaveBalanceRepository;
+        this.payrollRepository = payrollRepository;
+        this.salaryStructureRepository = salaryStructureRepository;
+        this.salaryHistoryRepository = salaryHistoryRepository;
         this.userRepository = userRepository;
         this.companyLocationRepository = companyLocationRepository;
     }
@@ -102,6 +111,9 @@ public class DatabaseResetService {
         permissionRequestRepository.deleteAllInBatch();
         leaveRequestRepository.deleteAllInBatch();
         leaveBalanceRepository.deleteAllInBatch();
+        payrollRepository.deleteAllInBatch();
+        salaryHistoryRepository.deleteAllInBatch();
+        salaryStructureRepository.deleteAllInBatch();
 
         List<User> nonAdmins = userRepository.findByRoleNot(Role.ADMIN);
         long employeeCount = nonAdmins.size();
@@ -118,11 +130,14 @@ public class DatabaseResetService {
 
     @Transactional
     public Map<String, Object> executeFullSystemReset() {
-        // 1. Delete all attendance, permissions, leaves, balances
+        // 1. Delete all attendance, permissions, leaves, balances, payroll
         attendanceRepository.deleteAllInBatch();
         permissionRequestRepository.deleteAllInBatch();
         leaveRequestRepository.deleteAllInBatch();
         leaveBalanceRepository.deleteAllInBatch();
+        payrollRepository.deleteAllInBatch();
+        salaryHistoryRepository.deleteAllInBatch();
+        salaryStructureRepository.deleteAllInBatch();
 
         // 2. Delete all non-admin employees
         List<User> nonAdmins = userRepository.findByRoleNot(Role.ADMIN);

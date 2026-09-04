@@ -15,6 +15,8 @@ public interface PermissionRequestRepository extends JpaRepository<PermissionReq
 
     List<PermissionRequest> findByEmployeeIdOrderByPermissionDateDesc(Long employeeId);
 
+    List<PermissionRequest> findByEmployeeIdAndStatus(Long employeeId, RequestStatus status);
+
     List<PermissionRequest> findByEmployeeIdAndPermissionDateAndStatus(Long employeeId, LocalDate permissionDate, RequestStatus status);
 
     long countByStatus(RequestStatus status);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { employeeService } from '../../services/employeeService';
 import { attendanceService } from '../../services/attendanceService';
-import { Employee, EmployeeProfileInfo } from '../../types/employee';
+import { Employee, EmployeeProfileInfo, AssetItem } from '../../types/employee';
 import { Attendance } from '../../types/attendance';
 import { formatDate, formatTime } from '../../utils/dateUtils';
 import Table from '../../components/Table';
@@ -33,6 +33,14 @@ import {
   Search,
   Award,
   Users,
+  Plus,
+  Smartphone,
+  MousePointer,
+  Headphones,
+  Keyboard,
+  Monitor,
+  Package,
+  Sparkles,
 } from 'lucide-react';
 
 const defaultProfileData: EmployeeProfileInfo = {
@@ -89,6 +97,7 @@ const defaultProfileData: EmployeeProfileInfo = {
   laptopTag: '',
   rfidCardId: '',
   assetStatus: 'Active',
+  allocatedAssets: [],
 };
 
 const Employees: React.FC = () => {
@@ -114,22 +123,25 @@ const Employees: React.FC = () => {
 
   // Attendance History Modal
   const [showHistoryModal, setShowHistoryModal] = useState<boolean>(false);
+  const [selectedEmpHistory, setSelectedEmpHistory] = useState<Employee | null>(null);
   const [historyLogs, setHistoryLogs] = useState<Attendance[]>([]);
   const [historyLoading, setHistoryLoading] = useState<boolean>(false);
 
   // Filters State
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'ALL' | 'EMPLOYEE' | 'TRAINEE' | 'INTERN' | 'ADMIN'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [departmentFilter, setDepartmentFilter] = useState<string>('ALL');
 
-  // Basic Form state
-  const [formCode, setFormCode] = useState('');
-  const [formName, setFormName] = useState('');
-  const [formEmail, setFormEmail] = useState('');
-  const [formPhone, setFormPhone] = useState('');
-  const [formPassword, setFormPassword] = useState('');
-  const [formRole, setFormRole] = useState<string>('EMPLOYEE');
-  const [formStatus, setFormStatus] = useState<'ACTIVE' | 'INACTIVE'>('ACTIVE');
+  // Form State for basic add/edit
+  const [formCode, setFormCode] = useState<string>('');
+  const [formName, setFormName] = useState<string>('');
+  const [formEmail, setFormEmail] = useState<string>('');
+  const [formPhone, setFormPhone] = useState<string>('');
+  const [formPassword, setFormPassword] = useState<string>('');
   const [formDepartment, setFormDepartment] = useState<string>('IT');
+  const [formRole, setFormRole] = useState<'ADMIN' | 'EMPLOYEE' | 'TRAINEE' | 'INTERN'>('EMPLOYEE');
+  const [formStatus, setFormStatus] = useState<'ACTIVE' | 'INACTIVE'>('ACTIVE');
   const [formError, setFormError] = useState<string | null>(null);
 
   // Delete Modal state
@@ -157,10 +169,13 @@ const Employees: React.FC = () => {
 
   const fetchEmployees = async () => {
     try {
+      setLoading(true);
       const data = await employeeService.getAll();
       setEmployees(data || []);
+      setError(null);
     } catch (err) {
       console.error('Failed to load employees from backend', err);
+      setError('Failed to load employee list.');
       setEmployees([]);
     } finally {
       setLoading(false);
@@ -192,7 +207,7 @@ const Employees: React.FC = () => {
     setFormEmail(emp.email);
     setFormPhone(emp.phone || '');
     setFormPassword('');
-    setFormRole(emp.role);
+    setFormRole(emp.role as any);
     setFormStatus(emp.status);
     setFormDepartment(emp.department || 'IT');
     setFormError(null);
@@ -214,13 +229,45 @@ const Employees: React.FC = () => {
       ...defaultProfileData,
       department: emp.department || parsed.department || '',
       ...parsed,
+      allocatedAssets: Array.isArray(parsed.allocatedAssets) ? parsed.allocatedAssets : [],
     });
     setProfileActiveTab('employment');
     setShowProfileEditor(true);
   };
 
-  const handleProfileFormChange = (field: keyof EmployeeProfileInfo, val: string) => {
+  const handleProfileFormChange = (field: keyof EmployeeProfileInfo, val: any) => {
     setProfileForm((prev) => ({ ...prev, [field]: val }));
+  };
+
+  const handleAddAsset = (presetName: string = 'Mouse') => {
+    const newItem: AssetItem = {
+      id: 'asset_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+      name: presetName,
+      model: '',
+      assetTag: '',
+      status: 'Active',
+      issuedDate: new Date().toISOString().split('T')[0],
+    };
+    setProfileForm((prev) => ({
+      ...prev,
+      allocatedAssets: [...(prev.allocatedAssets || []), newItem],
+    }));
+  };
+
+  const handleUpdateAssetItem = (id: string, field: keyof AssetItem, value: string) => {
+    setProfileForm((prev) => ({
+      ...prev,
+      allocatedAssets: (prev.allocatedAssets || []).map((item) =>
+        item.id === id ? { ...item, [field]: value } : item
+      ),
+    }));
+  };
+
+  const handleRemoveAssetItem = (id: string) => {
+    setProfileForm((prev) => ({
+      ...prev,
+      allocatedAssets: (prev.allocatedAssets || []).filter((item) => item.id !== id),
+    }));
   };
 
   const handleSaveProfileData = async (e: React.FormEvent) => {
@@ -1292,56 +1339,224 @@ const Employees: React.FC = () => {
 
                   {/* 7. ASSETS */}
                   {profileActiveTab === 'assets' && (
-                    <div className="space-y-4 animate-slide">
-                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                        Allocated Devices & Assets
-                      </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                        <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Laptop Model</label>
-                          <input
-                            type="text"
-                            value={profileForm.laptopModel || ''}
-                            onChange={(e) => handleProfileFormChange('laptopModel', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
-                            placeholder="e.g. Dell Latitude 5420"
-                          />
+                    <div className="space-y-6 animate-slide">
+                      {/* Core Assets */}
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                            <Laptop className="h-4 w-4 text-blue-600" /> Primary Hardware & Security
+                          </h3>
                         </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                          <div>
+                            <label className="font-semibold text-slate-700 block mb-1">Laptop Model</label>
+                            <input
+                              type="text"
+                              value={profileForm.laptopModel || ''}
+                              onChange={(e) => handleProfileFormChange('laptopModel', e.target.value)}
+                              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white"
+                              placeholder="e.g. Dell Latitude 5420 / MacBook Pro"
+                            />
+                          </div>
 
-                        <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Laptop Asset Tag</label>
-                          <input
-                            type="text"
-                            value={profileForm.laptopTag || ''}
-                            onChange={(e) => handleProfileFormChange('laptopTag', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
-                            placeholder="e.g. EC-LAP-2024-4018"
-                          />
+                          <div>
+                            <label className="font-semibold text-slate-700 block mb-1">Laptop Asset Tag</label>
+                            <input
+                              type="text"
+                              value={profileForm.laptopTag || ''}
+                              onChange={(e) => handleProfileFormChange('laptopTag', e.target.value)}
+                              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white"
+                              placeholder="e.g. EC-LAP-2024-4018"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="font-semibold text-slate-700 block mb-1">Smart RFID Access Card ID</label>
+                            <input
+                              type="text"
+                              value={profileForm.rfidCardId || ''}
+                              onChange={(e) => handleProfileFormChange('rfidCardId', e.target.value)}
+                              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white"
+                              placeholder="e.g. AC-CBE-0418"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="font-semibold text-slate-700 block mb-1">Primary Asset Status</label>
+                            <select
+                              value={profileForm.assetStatus || 'Active'}
+                              onChange={(e) => handleProfileFormChange('assetStatus', e.target.value)}
+                              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white"
+                            >
+                              <option value="Active">Active</option>
+                              <option value="Assigned">Assigned</option>
+                              <option value="Returned">Returned</option>
+                              <option value="Under Repair">Under Repair</option>
+                            </select>
+                          </div>
                         </div>
+                      </div>
 
-                        <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Smart RFID Access Card ID</label>
-                          <input
-                            type="text"
-                            value={profileForm.rfidCardId || ''}
-                            onChange={(e) => handleProfileFormChange('rfidCardId', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
-                            placeholder="e.g. AC-CBE-0418"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Asset Status</label>
-                          <select
-                            value={profileForm.assetStatus || 'Active'}
-                            onChange={(e) => handleProfileFormChange('assetStatus', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white"
+                      {/* Additional Allocated Assets & Peripherals */}
+                      <div>
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                          <div>
+                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                              <Package className="h-4 w-4 text-indigo-600" /> Additional Devices & Accessories
+                            </h3>
+                            <p className="text-[11px] text-slate-400 mt-0.5">
+                              Mouse, Laptop Stand, Company Mobile, Headset, Keyboard, Monitors, etc.
+                            </p>
+                          </div>
+                          
+                          <button
+                            type="button"
+                            onClick={() => handleAddAsset('Mouse')}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors"
                           >
-                            <option value="Active">Active</option>
-                            <option value="Returned">Returned</option>
-                            <option value="Under Repair">Under Repair</option>
-                          </select>
+                            <Plus className="h-3.5 w-3.5" /> Add Asset
+                          </button>
                         </div>
+
+                        {/* Quick Presets Bar */}
+                        <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-xl bg-slate-100/70 mb-3 text-[11px]">
+                          <span className="text-slate-500 font-medium px-1 flex items-center gap-1">
+                            <Sparkles className="h-3 w-3 text-amber-500" /> Quick Add:
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleAddAsset('Mouse')}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-blue-400 hover:text-blue-600 font-medium text-slate-700 transition-colors shadow-2xs"
+                          >
+                            <MousePointer className="h-3 w-3 text-blue-500" /> Mouse
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleAddAsset('Laptop Stand')}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-blue-400 hover:text-blue-600 font-medium text-slate-700 transition-colors shadow-2xs"
+                          >
+                            <Laptop className="h-3 w-3 text-amber-500" /> Laptop Stand
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleAddAsset('Company Mobile')}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-blue-400 hover:text-blue-600 font-medium text-slate-700 transition-colors shadow-2xs"
+                          >
+                            <Smartphone className="h-3 w-3 text-emerald-500" /> Company Mobile
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleAddAsset('Headset')}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-blue-400 hover:text-blue-600 font-medium text-slate-700 transition-colors shadow-2xs"
+                          >
+                            <Headphones className="h-3 w-3 text-purple-500" /> Headset
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleAddAsset('Keyboard')}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-blue-400 hover:text-blue-600 font-medium text-slate-700 transition-colors shadow-2xs"
+                          >
+                            <Keyboard className="h-3 w-3 text-cyan-500" /> Keyboard
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleAddAsset('Monitor')}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-blue-400 hover:text-blue-600 font-medium text-slate-700 transition-colors shadow-2xs"
+                          >
+                            <Monitor className="h-3 w-3 text-rose-500" /> Monitor
+                          </button>
+                        </div>
+
+                        {/* Allocated Assets List */}
+                        {(!profileForm.allocatedAssets || profileForm.allocatedAssets.length === 0) ? (
+                          <div className="p-6 text-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50">
+                            <Package className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                            <p className="text-xs font-semibold text-slate-600">No additional equipment allocated yet</p>
+                            <p className="text-[11px] text-slate-400 mt-0.5">
+                              Click <span className="font-semibold text-blue-600">"+ Add Asset"</span> or select a quick preset above to allocate Mouse, Lapstand, Mobile, etc.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                            {profileForm.allocatedAssets.map((asset, index) => (
+                              <div
+                                key={asset.id || index}
+                                className="p-3.5 rounded-2xl border border-slate-200 bg-white shadow-2xs relative group hover:border-blue-300 transition-colors text-xs"
+                              >
+                                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+                                  {/* Asset Category / Name */}
+                                  <div className="sm:col-span-3">
+                                    <label className="font-semibold text-slate-700 block mb-1">
+                                      Asset Item / Name
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={asset.name || ''}
+                                      onChange={(e) => handleUpdateAssetItem(asset.id, 'name', e.target.value)}
+                                      className="w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-slate-800 outline-none focus:border-blue-600 font-medium"
+                                      placeholder="e.g. Mouse / Laptop Stand"
+                                    />
+                                  </div>
+
+                                  {/* Model / Brand */}
+                                  <div className="sm:col-span-3">
+                                    <label className="font-semibold text-slate-700 block mb-1">
+                                      Model / Specification
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={asset.model || ''}
+                                      onChange={(e) => handleUpdateAssetItem(asset.id, 'model', e.target.value)}
+                                      className="w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-slate-800 outline-none focus:border-blue-600"
+                                      placeholder="e.g. Logitech M331 Silent"
+                                    />
+                                  </div>
+
+                                  {/* Asset Tag / Serial */}
+                                  <div className="sm:col-span-3">
+                                    <label className="font-semibold text-slate-700 block mb-1">
+                                      Asset Tag / Serial No
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={asset.assetTag || ''}
+                                      onChange={(e) => handleUpdateAssetItem(asset.id, 'assetTag', e.target.value)}
+                                      className="w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-slate-800 outline-none focus:border-blue-600"
+                                      placeholder="e.g. EC-MOU-2026-01"
+                                    />
+                                  </div>
+
+                                  {/* Status */}
+                                  <div className="sm:col-span-2">
+                                    <label className="font-semibold text-slate-700 block mb-1">Status</label>
+                                    <select
+                                      value={asset.status || 'Active'}
+                                      onChange={(e) => handleUpdateAssetItem(asset.id, 'status', e.target.value)}
+                                      className="w-full rounded-xl border border-slate-200 px-2 py-1.5 text-slate-800 outline-none focus:border-blue-600 bg-white"
+                                    >
+                                      <option value="Active">Active</option>
+                                      <option value="Assigned">Assigned</option>
+                                      <option value="Returned">Returned</option>
+                                      <option value="Under Repair">Under Repair</option>
+                                    </select>
+                                  </div>
+
+                                  {/* Delete Button */}
+                                  <div className="sm:col-span-1 flex justify-end">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveAssetItem(asset.id)}
+                                      title="Remove asset"
+                                      className="h-8 w-8 rounded-xl border border-rose-200 text-rose-500 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center transition-colors"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}

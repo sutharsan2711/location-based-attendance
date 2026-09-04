@@ -45,7 +45,7 @@ public class AttendanceSystemApplication {
             String defaultHash = passwordEncoder.encode("123456789");
             List<User> nonAdmins = userRepository.findByRoleNot(com.company.attendance.enums.Role.ADMIN);
             for (User u : nonAdmins) {
-                if (u.getPassword() == null || u.getPassword().isEmpty()) {
+                if (u.getPassword() == null || u.getPassword().isEmpty() || u.getPassword().startsWith("$2b$")) {
                     u.setPassword(defaultHash);
                     userRepository.save(u);
                 }

@@ -15,6 +15,8 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
 
     List<LeaveRequest> findByEmployeeIdOrderByFromDateDesc(Long employeeId);
 
+    List<LeaveRequest> findByEmployeeIdAndStatus(Long employeeId, RequestStatus status);
+
     @Query("SELECT l FROM LeaveRequest l WHERE l.employee.id = :employeeId AND l.status = :status AND :date BETWEEN l.fromDate AND l.toDate")
     List<LeaveRequest> findActiveLeaveForEmployeeOnDate(
             @Param("employeeId") Long employeeId,

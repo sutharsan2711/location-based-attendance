@@ -262,6 +262,35 @@ const EmployeeDashboard: React.FC = () => {
   const formattedWeekday = currentTime.toLocaleDateString('en-IN', { weekday: 'long' });
   const formattedTime = currentTime.toTimeString().split(' ')[0]; // e.g. 13:14:49
 
+  // ── 4. Live Elapsed / Stopped Work Timer ──
+  const getWorkingDuration = () => {
+    if (!attendance?.loginTime) return '--';
+
+    try {
+      const loginTimestamp = new Date(attendance.loginTime).getTime();
+      if (isNaN(loginTimestamp)) return '--';
+
+      let diffMs = 0;
+      if (attendance.logoutTime) {
+        // User has logged out: timer is stopped and frozen at exact logout time
+        const logoutTimestamp = new Date(attendance.logoutTime).getTime();
+        diffMs = Math.max(0, logoutTimestamp - loginTimestamp);
+      } else if (attendance.status === 'LOGGED_IN' || !attendance.logoutTime) {
+        // User is currently logged in: timer is running live every second
+        diffMs = Math.max(0, currentTime.getTime() - loginTimestamp);
+      }
+
+      const totalSeconds = Math.floor(diffMs / 1000);
+      const hrs = Math.floor(totalSeconds / 3600);
+      const mins = Math.floor((totalSeconds % 3600) / 60);
+      const secs = totalSeconds % 60;
+
+      return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    } catch {
+      return '--';
+    }
+  };
+
   return (
     <div className="space-y-4 max-w-7xl mx-auto pb-8">
       {/* ── Status Alerts (if any) ── */}
@@ -336,18 +365,15 @@ const EmployeeDashboard: React.FC = () => {
                   {attendance.logoutTime ? formatTime(attendance.logoutTime) : '--'}
                 </span>
               </div>
-              <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">Hours</span>
-                <span className="text-xs font-bold text-slate-800 font-mono">
-                  {attendance.loginTime && attendance.logoutTime
-                    ? (() => {
-                        const diff = new Date(attendance.logoutTime).getTime() - new Date(attendance.loginTime).getTime();
-                        if (diff <= 0) return '--';
-                        const h = Math.floor(diff / (1000 * 60 * 60));
-                        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-                      })()
-                    : '--'}
+              <div className={`p-1 rounded-lg ${attendance.status === 'LOGGED_IN' ? 'bg-blue-50/80 border border-blue-200/60' : attendance.status === 'COMPLETED' ? 'bg-emerald-50/80 border border-emerald-200/60' : ''}`}>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide flex items-center justify-center gap-1">
+                  {attendance.status === 'LOGGED_IN' ? 'Live Hours' : 'Hours'}
+                  {attendance.status === 'LOGGED_IN' && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse" />
+                  )}
+                </span>
+                <span className={`text-xs font-bold font-mono ${attendance.status === 'LOGGED_IN' ? 'text-blue-700' : attendance.status === 'COMPLETED' ? 'text-emerald-700' : 'text-slate-800'}`}>
+                  {getWorkingDuration()}
                 </span>
               </div>
             </div>
@@ -592,6 +618,13 @@ const EmployeeDashboard: React.FC = () => {
                 <span className="text-slate-500 font-medium">Attendance Status</span>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-700">
                   {attendance.status}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                <span className="text-slate-500 font-medium">Work Duration</span>
+                <span className="font-bold text-slate-800 font-mono">
+                  {getWorkingDuration()}
+                  {attendance.status === 'LOGGED_IN' && ' (Ticking)'}
                 </span>
               </div>
               <div className="flex justify-between items-center py-1.5 border-b border-slate-100">

@@ -76,7 +76,7 @@ public class AttendanceServiceTest {
     public void testLoginInsideRadius() {
         when(userRepository.findByEmail("john@company.com")).thenReturn(Optional.of(activeEmployee));
         when(attendanceRepository.findByEmployeeIdAndAttendanceDate(1L, LocalDate.now(KOLKATA_ZONE))).thenReturn(Optional.empty());
-        when(locationRepository.findFirstByOrderByIdAsc()).thenReturn(Optional.of(defaultLocation));
+        when(locationRepository.findAll()).thenReturn(java.util.Collections.singletonList(defaultLocation));
 
         // Coordinates equal to office location coordinates
         AttendanceRequest request = new AttendanceRequest();
@@ -96,7 +96,7 @@ public class AttendanceServiceTest {
     public void testLoginOutsideRadius() {
         when(userRepository.findByEmail("john@company.com")).thenReturn(Optional.of(activeEmployee));
         when(attendanceRepository.findByEmployeeIdAndAttendanceDate(1L, LocalDate.now(KOLKATA_ZONE))).thenReturn(Optional.empty());
-        when(locationRepository.findFirstByOrderByIdAsc()).thenReturn(Optional.of(defaultLocation));
+        when(locationRepository.findAll()).thenReturn(java.util.Collections.singletonList(defaultLocation));
 
         // Submit coordinates far away
         AttendanceRequest request = new AttendanceRequest();

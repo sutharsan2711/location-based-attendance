@@ -16,6 +16,8 @@ import LeaveBalances from '../pages/employee/LeaveBalances';
 import LeaveCalendar from '../pages/employee/LeaveCalendar';
 import HolidayCalendar from '../pages/employee/HolidayCalendar';
 import EmployeeProfile from '../pages/employee/EmployeeProfile';
+import MyPayroll from '../pages/employee/MyPayroll';
+import MyPayslip from '../pages/employee/MyPayslip';
 
 const ADMIN_PANEL_URL = 'http://localhost:5200';
 
@@ -64,6 +66,8 @@ const AppRoutes: React.FC = () => {
           <Route path="/employee/leaves/balances" element={<LeaveBalances />} />
           <Route path="/employee/leaves/calendar" element={<LeaveCalendar />} />
           <Route path="/employee/leaves/holidays" element={<HolidayCalendar />} />
+          <Route path="/employee/payroll" element={<MyPayroll />} />
+          <Route path="/employee/payroll/:id" element={<MyPayslip />} />
           <Route path="/employee/profile" element={<EmployeeProfile />} />
         </Route>
       </Route>

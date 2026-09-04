@@ -64,6 +64,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/leaves/my").hasAnyRole("ADMIN", "EMPLOYEE", "TRAINEE", "INTERN")
                 .requestMatchers(HttpMethod.GET, "/holidays", "/holidays/**").hasAnyRole("ADMIN", "EMPLOYEE", "TRAINEE", "INTERN")
                 .requestMatchers("/holidays", "/holidays/**").hasRole("ADMIN")
+                .requestMatchers("/payroll/my", "/payroll/my/**", "/salary/my").hasAnyRole("ADMIN", "EMPLOYEE", "TRAINEE", "INTERN")
+                .requestMatchers("/payroll/**", "/salary/**").hasAnyRole("ADMIN", "EMPLOYEE", "TRAINEE", "INTERN")
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

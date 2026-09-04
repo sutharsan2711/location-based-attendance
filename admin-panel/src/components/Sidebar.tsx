@@ -14,6 +14,7 @@ import {
   Sliders,
   CalendarRange,
   Database,
+  DollarSign,
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
@@ -26,6 +27,7 @@ const Sidebar: React.FC = () => {
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Employees', path: '/employees', icon: Users },
     { name: 'Attendance & Grid', path: '/attendance', icon: CalendarDays },
+    { name: 'Payroll & Salary', path: '/payroll', icon: DollarSign },
     { name: 'Leave & Permissions', path: '/requests', icon: FileCheck },
     { name: 'Holiday Calendar', path: '/settings/holidays', icon: CalendarRange },
     { name: 'Office Timing', path: '/settings/timing', icon: Sliders },

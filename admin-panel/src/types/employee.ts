@@ -59,6 +59,16 @@ export interface EmployeeProfileInfo {
   laptopTag?: string;
   rfidCardId?: string;
   assetStatus?: string;
+  allocatedAssets?: AssetItem[];
+}
+
+export interface AssetItem {
+  id: string;
+  name: string; // e.g. "Mouse", "Laptop Stand", "Company Mobile", "Keyboard", "Headphones"
+  model?: string;
+  assetTag?: string;
+  status?: 'Active' | 'Assigned' | 'Returned' | 'Under Repair' | string;
+  issuedDate?: string;
 }
 
 export interface Employee {

@@ -13,9 +13,16 @@ import {
   Lock,
   X,
   Laptop,
-  Shield
+  Shield,
+  Smartphone,
+  MousePointer,
+  Headphones,
+  Keyboard,
+  Monitor,
+  Package,
+  Sliders,
 } from 'lucide-react';
-import { EmployeeProfileInfo } from '../../types/employee';
+import { EmployeeProfileInfo, AssetItem } from '../../types/employee';
 
 type SubTab = 'personal' | 'accounts' | 'family' | 'employment' | 'assets';
 
@@ -870,34 +877,97 @@ const EmployeeProfile: React.FC = () => {
                 </div>
 
                 {openCards.currentAssets && (
-                  <div className="p-6 space-y-4 animate-slide">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                      <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-                          <Laptop className="h-5 w-5" />
+                  <div className="p-6 space-y-6 animate-slide">
+                    {/* Primary Devices */}
+                    <div>
+                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Primary Equipment</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50 flex items-center gap-3.5 shadow-2xs">
+                          <div className="h-11 w-11 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                            <Laptop className="h-5 w-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-slate-800 truncate">{pInfo.laptopModel || 'Dell Latitude 5420'}</p>
+                            <p className="text-[11px] text-slate-400 mt-0.5">Asset Tag: <span className="font-medium text-slate-600">{pInfo.laptopTag || 'EC-LAP-2024-4018'}</span></p>
+                            <span className="inline-block mt-1.5 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                              {pInfo.assetStatus || 'Active'}
+                            </span>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-800">{pInfo.laptopModel || 'Dell Latitude 5420'}</p>
-                          <p className="text-[11px] text-slate-400">Tag: {pInfo.laptopTag || 'EC-LAP-2024-4018'}</p>
-                          <span className="inline-block mt-1 px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                            {pInfo.assetStatus || 'Active'}
-                          </span>
-                        </div>
-                      </div>
 
-                      <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
-                          <Shield className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-800">Smart Access Card (RFID)</p>
-                          <p className="text-[11px] text-slate-400">ID: {pInfo.rfidCardId || 'AC-CBE-0418'}</p>
-                          <span className="inline-block mt-1 px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                            {pInfo.assetStatus || 'Active'}
-                          </span>
+                        <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50 flex items-center gap-3.5 shadow-2xs">
+                          <div className="h-11 w-11 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                            <Shield className="h-5 w-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-slate-800 truncate">Smart Access Card (RFID)</p>
+                            <p className="text-[11px] text-slate-400 mt-0.5">Card ID: <span className="font-medium text-slate-600">{pInfo.rfidCardId || 'AC-CBE-0418'}</span></p>
+                            <span className="inline-block mt-1.5 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                              {pInfo.assetStatus || 'Active'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
+
+                    {/* Additional Allocated Peripherals & Devices */}
+                    {pInfo.allocatedAssets && pInfo.allocatedAssets.length > 0 && (
+                      <div>
+                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Additional Allocated Peripherals</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+                          {pInfo.allocatedAssets.map((asset: AssetItem, idx: number) => {
+                            const nameLower = (asset.name || '').toLowerCase();
+                            let iconBg = 'bg-blue-100 text-blue-600';
+                            let IconElem = <Package className="h-5 w-5" />;
+
+                            if (nameLower.includes('mouse')) {
+                              iconBg = 'bg-blue-100 text-blue-600';
+                              IconElem = <MousePointer className="h-5 w-5" />;
+                            } else if (nameLower.includes('stand') || nameLower.includes('lapstand')) {
+                              iconBg = 'bg-amber-100 text-amber-600';
+                              IconElem = <Laptop className="h-5 w-5" />;
+                            } else if (nameLower.includes('mobile') || nameLower.includes('phone')) {
+                              iconBg = 'bg-emerald-100 text-emerald-600';
+                              IconElem = <Smartphone className="h-5 w-5" />;
+                            } else if (nameLower.includes('head') || nameLower.includes('ear') || nameLower.includes('audio')) {
+                              iconBg = 'bg-purple-100 text-purple-600';
+                              IconElem = <Headphones className="h-5 w-5" />;
+                            } else if (nameLower.includes('key')) {
+                              iconBg = 'bg-cyan-100 text-cyan-600';
+                              IconElem = <Keyboard className="h-5 w-5" />;
+                            } else if (nameLower.includes('monitor') || nameLower.includes('screen')) {
+                              iconBg = 'bg-rose-100 text-rose-600';
+                              IconElem = <Monitor className="h-5 w-5" />;
+                            }
+
+                            return (
+                              <div
+                                key={asset.id || idx}
+                                className="p-4 rounded-2xl border border-slate-100 bg-white shadow-2xs hover:border-blue-200 transition-all flex items-start gap-3.5"
+                              >
+                                <div className={`h-10 w-10 rounded-xl ${iconBg} flex items-center justify-center shrink-0`}>
+                                  {IconElem}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-bold text-slate-800">{asset.name}</p>
+                                  {asset.model && (
+                                    <p className="text-[11px] text-slate-600 mt-0.5 truncate font-medium">{asset.model}</p>
+                                  )}
+                                  {asset.assetTag && (
+                                    <p className="text-[10px] text-slate-400 mt-0.5 truncate">Tag: {asset.assetTag}</p>
+                                  )}
+                                  <div className="flex items-center gap-2 mt-2">
+                                    <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                                      {asset.status || 'Active'}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

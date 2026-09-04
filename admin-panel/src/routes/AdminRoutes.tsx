@@ -17,6 +17,9 @@ import AdminLeaveRequests from '../pages/admin/AdminLeaveRequests';
 import AdminHolidayCalendar from '../pages/admin/AdminHolidayCalendar';
 import Reports from '../pages/admin/Reports';
 import DatabaseReset from '../pages/admin/DatabaseReset';
+import AdminPayroll from '../pages/admin/AdminPayroll';
+import AdminSalaryManagement from '../pages/admin/AdminSalaryManagement';
+import AdminPayslipView from '../pages/admin/AdminPayslipView';
 
 const HomeRedirect: React.FC = () => {
   const { user, loading } = useAuth();
@@ -45,6 +48,9 @@ const AdminRoutes: React.FC = () => {
           <Route path="/dashboard" element={<AdminDashboard />} />
           <Route path="/employees" element={<Employees />} />
           <Route path="/attendance" element={<Attendance />} />
+          <Route path="/payroll" element={<AdminPayroll />} />
+          <Route path="/payroll/salary" element={<AdminSalaryManagement />} />
+          <Route path="/payroll/payslip/:id" element={<AdminPayslipView />} />
           <Route path="/requests" element={<AdminLeaveRequests />} />
           <Route path="/requests/permissions" element={<AdminPermissionRequests />} />
           <Route path="/requests/leaves" element={<AdminLeaveRequests />} />

@@ -24,6 +24,11 @@ export interface CompanyLocation {
   businessLogoutTime?: string;
   businessGraceMinutes?: number;
 
+  // OG Team Shift (08:45 - 18:15)
+  ogLoginTime?: string;
+  ogLogoutTime?: string;
+  ogGraceMinutes?: number;
+
   createdAt?: string;
   updatedAt?: string;
 }

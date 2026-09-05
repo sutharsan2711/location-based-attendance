@@ -66,6 +66,9 @@ public class LocationService {
                     defaultLoc.setBusinessLoginTime(LocalTime.of(8, 45));
                     defaultLoc.setBusinessLogoutTime(LocalTime.of(17, 45));
                     defaultLoc.setBusinessGraceMinutes(15);
+                    defaultLoc.setOgLoginTime(LocalTime.of(8, 45));
+                    defaultLoc.setOgLogoutTime(LocalTime.of(18, 15));
+                    defaultLoc.setOgGraceMinutes(15);
                     return locationRepository.save(defaultLoc);
                 });
     }
@@ -125,6 +128,17 @@ public class LocationService {
         }
         if (request.getBusinessGraceMinutes() != null) {
             location.setBusinessGraceMinutes(request.getBusinessGraceMinutes());
+        }
+
+        // OG Team
+        if (request.getOgLoginTime() != null) {
+            location.setOgLoginTime(request.getOgLoginTime());
+        }
+        if (request.getOgLogoutTime() != null) {
+            location.setOgLogoutTime(request.getOgLogoutTime());
+        }
+        if (request.getOgGraceMinutes() != null) {
+            location.setOgGraceMinutes(request.getOgGraceMinutes());
         }
     }
 }

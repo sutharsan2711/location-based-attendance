@@ -1,5 +1,6 @@
 package com.company.attendance.dto;
 
+import com.company.attendance.enums.HalfDaySession;
 import com.company.attendance.enums.LeaveType;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
@@ -17,6 +18,10 @@ public class AdminRecordLeaveRequest {
 
     @NotNull(message = "To Date is required")
     private LocalDate toDate;
+
+    private Boolean isHalfDay = false;
+
+    private HalfDaySession halfDaySession;
 
     @NotNull(message = "Reason is required")
     private String reason;
@@ -57,6 +62,22 @@ public class AdminRecordLeaveRequest {
 
     public void setToDate(LocalDate toDate) {
         this.toDate = toDate;
+    }
+
+    public Boolean getIsHalfDay() {
+        return isHalfDay != null ? isHalfDay : false;
+    }
+
+    public void setIsHalfDay(Boolean isHalfDay) {
+        this.isHalfDay = isHalfDay != null ? isHalfDay : false;
+    }
+
+    public HalfDaySession getHalfDaySession() {
+        return halfDaySession;
+    }
+
+    public void setHalfDaySession(HalfDaySession halfDaySession) {
+        this.halfDaySession = halfDaySession;
     }
 
     public String getReason() {

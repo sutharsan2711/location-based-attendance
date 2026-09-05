@@ -4,5 +4,6 @@ public enum Role {
     ADMIN,
     EMPLOYEE,
     TRAINEE,
-    INTERN
+    INTERN,
+    OJT
 }

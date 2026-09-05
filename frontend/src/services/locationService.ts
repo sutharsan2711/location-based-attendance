@@ -18,6 +18,10 @@ export const locationService = {
         itLogoutTime: '18:30',
         edtechLoginTime: '08:45',
         edtechLogoutTime: '17:45',
+        businessLoginTime: '08:45',
+        businessLogoutTime: '17:45',
+        ogLoginTime: '08:45',
+        ogLogoutTime: '18:15',
       };
     }
   },

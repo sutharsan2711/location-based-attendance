@@ -18,6 +18,7 @@ import HolidayCalendar from '../pages/employee/HolidayCalendar';
 import EmployeeProfile from '../pages/employee/EmployeeProfile';
 import MyPayroll from '../pages/employee/MyPayroll';
 import MyPayslip from '../pages/employee/MyPayslip';
+import EmployeeTasks from '../pages/employee/EmployeeTasks';
 
 const ADMIN_PANEL_URL = 'http://localhost:5200';
 
@@ -57,9 +58,10 @@ const AppRoutes: React.FC = () => {
       <Route element={<DashboardLayout />}>
         <Route path="/" element={<HomeRedirect />} />
 
-        {/* Employee, Trainee and Intern Staff Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['EMPLOYEE', 'TRAINEE', 'INTERN']} />}>
+        {/* Employee, Trainee, Intern and OJT Staff Routes */}
+        <Route element={<ProtectedRoute allowedRoles={['EMPLOYEE', 'TRAINEE', 'INTERN', 'OJT']} />}>
           <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
+          <Route path="/employee/tasks" element={<EmployeeTasks />} />
           <Route path="/employee/attendance" element={<AttendanceHistory />} />
           <Route path="/employee/permissions" element={<EmployeePermissions />} />
           <Route path="/employee/leaves" element={<EmployeeLeaves />} />

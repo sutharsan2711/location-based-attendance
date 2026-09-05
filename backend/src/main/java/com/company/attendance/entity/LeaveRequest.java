@@ -1,5 +1,6 @@
 package com.company.attendance.entity;
 
+import com.company.attendance.enums.HalfDaySession;
 import com.company.attendance.enums.LeaveType;
 import com.company.attendance.enums.RequestStatus;
 import jakarta.persistence.*;
@@ -28,6 +29,13 @@ public class LeaveRequest {
     @Column(name = "to_date", nullable = false)
     private LocalDate toDate;
 
+    @Column(name = "is_half_day", nullable = false)
+    private Boolean isHalfDay = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "half_day_session", length = 30)
+    private HalfDaySession halfDaySession;
+
     @Column(nullable = false)
     private String reason;
 
@@ -54,6 +62,19 @@ public class LeaveRequest {
         this.leaveType = leaveType;
         this.fromDate = fromDate;
         this.toDate = toDate;
+        this.reason = reason;
+        this.remarks = remarks;
+        this.isHalfDay = false;
+        this.status = RequestStatus.PENDING;
+    }
+
+    public LeaveRequest(User employee, LeaveType leaveType, LocalDate fromDate, LocalDate toDate, Boolean isHalfDay, HalfDaySession halfDaySession, String reason, String remarks) {
+        this.employee = employee;
+        this.leaveType = leaveType;
+        this.fromDate = fromDate;
+        this.toDate = toDate;
+        this.isHalfDay = isHalfDay != null ? isHalfDay : false;
+        this.halfDaySession = halfDaySession;
         this.reason = reason;
         this.remarks = remarks;
         this.status = RequestStatus.PENDING;
@@ -86,6 +107,12 @@ public class LeaveRequest {
 
     public LocalDate getToDate() { return toDate; }
     public void setToDate(LocalDate toDate) { this.toDate = toDate; }
+
+    public Boolean getIsHalfDay() { return isHalfDay != null ? isHalfDay : false; }
+    public void setIsHalfDay(Boolean isHalfDay) { this.isHalfDay = isHalfDay != null ? isHalfDay : false; }
+
+    public HalfDaySession getHalfDaySession() { return halfDaySession; }
+    public void setHalfDaySession(HalfDaySession halfDaySession) { this.halfDaySession = halfDaySession; }
 
     public String getReason() { return reason; }
     public void setReason(String reason) { this.reason = reason; }

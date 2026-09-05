@@ -83,6 +83,31 @@ export const requestService = {
     return response.data;
   },
 
+  adminCancelLeave: async (id: number, withdrawalReason?: string): Promise<LeaveRequest> => {
+    const response = await api.patch<LeaveRequest>(`/admin/leaves/${id}/cancel`, { withdrawalReason });
+    return response.data;
+  },
+
+  previewCarryForward: async (
+    rules: import('../types/request').CarryForwardRulePayload
+  ): Promise<import('../types/request').CarryForwardPreviewResponse> => {
+    const response = await api.post<import('../types/request').CarryForwardPreviewResponse>(
+      '/admin/leaves/carry-forward/preview',
+      rules
+    );
+    return response.data;
+  },
+
+  executeCarryForward: async (
+    rules: import('../types/request').CarryForwardRulePayload
+  ): Promise<import('../types/request').CarryForwardPreviewResponse> => {
+    const response = await api.post<import('../types/request').CarryForwardPreviewResponse>(
+      '/admin/leaves/carry-forward/execute',
+      rules
+    );
+    return response.data;
+  },
+
   // Leave Balances APIs
   getAllLeaveBalances: async (year?: number): Promise<import('../types/request').LeaveBalanceSummary[]> => {
     const params = new URLSearchParams();

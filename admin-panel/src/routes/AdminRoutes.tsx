@@ -20,6 +20,8 @@ import DatabaseReset from '../pages/admin/DatabaseReset';
 import AdminPayroll from '../pages/admin/AdminPayroll';
 import AdminSalaryManagement from '../pages/admin/AdminSalaryManagement';
 import AdminPayslipView from '../pages/admin/AdminPayslipView';
+import AdminTasks from '../pages/admin/AdminTasks';
+import AdminStickyNotes from '../pages/admin/AdminStickyNotes';
 
 const HomeRedirect: React.FC = () => {
   const { user, loading } = useAuth();
@@ -46,6 +48,8 @@ const AdminRoutes: React.FC = () => {
         <Route element={<AdminLayout />}>
           <Route path="/" element={<HomeRedirect />} />
           <Route path="/dashboard" element={<AdminDashboard />} />
+          <Route path="/tasks" element={<AdminTasks />} />
+          <Route path="/notes" element={<AdminStickyNotes />} />
           <Route path="/employees" element={<Employees />} />
           <Route path="/attendance" element={<Attendance />} />
           <Route path="/payroll" element={<AdminPayroll />} />

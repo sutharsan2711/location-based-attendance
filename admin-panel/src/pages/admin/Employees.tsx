@@ -129,9 +129,79 @@ const Employees: React.FC = () => {
 
   // Filters State
   const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState<'ALL' | 'EMPLOYEE' | 'TRAINEE' | 'INTERN' | 'ADMIN'>('ALL');
+  const [roleFilter, setRoleFilter] = useState<'ALL' | 'EMPLOYEE' | 'TRAINEE' | 'INTERN' | 'OJT' | 'ADMIN' | string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [departmentFilter, setDepartmentFilter] = useState<string>('ALL');
+
+  // Custom Teams & Custom Roles created by Admin
+  const [customTeams, setCustomTeams] = useState<Array<{ id: string; name: string }>>(() => {
+    try {
+      const saved = localStorage.getItem('custom_attendance_teams');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [customRoles, setCustomRoles] = useState<Array<{ id: string; label: string }>>(() => {
+    try {
+      const saved = localStorage.getItem('custom_attendance_roles');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [showAddTeamModal, setShowAddTeamModal] = useState<boolean>(false);
+  const [newTeamName, setNewTeamName] = useState<string>('');
+  const [newTeamLoginTime, setNewTeamLoginTime] = useState<string>('09:00');
+  const [newTeamLogoutTime, setNewTeamLogoutTime] = useState<string>('18:00');
+  const [newTeamGraceMinutes, setNewTeamGraceMinutes] = useState<number>(15);
+
+  const [showAddRoleModal, setShowAddRoleModal] = useState<boolean>(false);
+  const [newRoleName, setNewRoleName] = useState<string>('');
+
+  const handleCreateCustomTeam = () => {
+    if (!newTeamName.trim()) return;
+    const formatTime12 = (t: string) => {
+      if (!t) return '';
+      const [h, m] = t.split(':').map(Number);
+      const d = new Date();
+      d.setHours(h, m, 0);
+      return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    };
+    const formatted = `${newTeamName.trim()} (${formatTime12(newTeamLoginTime)} - ${formatTime12(newTeamLogoutTime)})`;
+    const teamId = newTeamName.trim().toUpperCase().replace(/[^A-Z0-9]/g, '_');
+    const newShiftObj = {
+      id: teamId,
+      name: newTeamName.trim(),
+      displayName: formatted,
+      description: `${newTeamName.trim()} Shift Division`,
+      loginTime: newTeamLoginTime,
+      logoutTime: newTeamLogoutTime,
+      graceMinutes: newTeamGraceMinutes,
+    };
+    const updated = [...customTeams.filter((t) => t.id !== teamId), { ...newShiftObj, name: formatted }];
+    setCustomTeams(updated);
+    localStorage.setItem('custom_attendance_teams', JSON.stringify(updated));
+    setFormDepartment(teamId);
+    setNewTeamName('');
+    setNewTeamLoginTime('09:00');
+    setNewTeamLogoutTime('18:00');
+    setNewTeamGraceMinutes(15);
+    setShowAddTeamModal(false);
+  };
+
+  const handleCreateCustomRole = () => {
+    if (!newRoleName.trim()) return;
+    const roleId = newRoleName.trim().toUpperCase().replace(/[^A-Z0-9]/g, '_');
+    const updated = [...customRoles.filter((r) => r.id !== roleId), { id: roleId, label: newRoleName.trim() }];
+    setCustomRoles(updated);
+    localStorage.setItem('custom_attendance_roles', JSON.stringify(updated));
+    setFormRole(roleId);
+    setNewRoleName('');
+    setShowAddRoleModal(false);
+  };
 
   // Form State for basic add/edit
   const [formCode, setFormCode] = useState<string>('');
@@ -140,7 +210,7 @@ const Employees: React.FC = () => {
   const [formPhone, setFormPhone] = useState<string>('');
   const [formPassword, setFormPassword] = useState<string>('');
   const [formDepartment, setFormDepartment] = useState<string>('IT');
-  const [formRole, setFormRole] = useState<'ADMIN' | 'EMPLOYEE' | 'TRAINEE' | 'INTERN'>('EMPLOYEE');
+  const [formRole, setFormRole] = useState<string>('EMPLOYEE');
   const [formStatus, setFormStatus] = useState<'ACTIVE' | 'INACTIVE'>('ACTIVE');
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -401,6 +471,7 @@ const Employees: React.FC = () => {
         if (!dept && row.profileData) {
           if (row.profileData.toLowerCase().includes('edtech')) dept = 'EDTECH';
           else if (row.profileData.toLowerCase().includes('business')) dept = 'BUSINESS_SOLUTION';
+          else if (row.profileData.toLowerCase().includes('og')) dept = 'OG';
         }
         dept = dept || 'IT';
 
@@ -420,10 +491,28 @@ const Employees: React.FC = () => {
             </span>
           );
         }
+        if (dept.toUpperCase() === 'OG' || dept.toUpperCase() === 'OG_TEAM' || dept.toUpperCase() === 'BUSINESS_SOLUTION_2' || dept.toUpperCase().includes('BUSINESS SOLUTION 2') || dept.toUpperCase().includes('BUSINESS_SOLUTION_2')) {
+          return (
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold bg-violet-50 text-violet-700 border border-violet-200">
+              <Users className="h-3.5 w-3.5" />
+              <span>Business Solution 2 (8:45-6:15)</span>
+            </span>
+          );
+        }
+        // Custom team lookup
+        const customT = customTeams.find(t => t.id === dept || t.name === dept);
+        if (customT) {
+          return (
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold bg-cyan-50 text-cyan-700 border border-cyan-200">
+              <Users className="h-3.5 w-3.5" />
+              <span>{customT.name}</span>
+            </span>
+          );
+        }
         return (
           <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
             <Code2 className="h-3.5 w-3.5" />
-            <span>IT (9:00-6:30)</span>
+            <span>{dept || 'IT (9:00-6:30)'}</span>
           </span>
         );
       },
@@ -453,9 +542,16 @@ const Employees: React.FC = () => {
             </span>
           );
         }
+        if (r === 'OJT') {
+          return (
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+              OJT
+            </span>
+          );
+        }
         return (
           <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-            EMPLOYEE
+            {r}
           </span>
         );
       },
@@ -557,6 +653,7 @@ const Employees: React.FC = () => {
   const employeesCount = employees.filter(e => (e.role || 'EMPLOYEE').toUpperCase() === 'EMPLOYEE').length;
   const traineesCount = employees.filter(e => (e.role || '').toUpperCase() === 'TRAINEE').length;
   const internsCount = employees.filter(e => (e.role || '').toUpperCase() === 'INTERN').length;
+  const ojtCount = employees.filter(e => (e.role || '').toUpperCase() === 'OJT').length;
   const adminCount = employees.filter(e => (e.role || '').toUpperCase() === 'ADMIN').length;
 
   if (loading) return <Loading fullScreen message="Loading employees profiles..." />;
@@ -589,10 +686,10 @@ const Employees: React.FC = () => {
       </div>
 
       {/* ── Summary KPI Cards (Staff Breakdown) ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
+      <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
         <div 
           onClick={() => setRoleFilter('ALL')}
-          className={`bg-white rounded-2xl p-4 border transition-all cursor-pointer shadow-xs flex flex-col justify-between ${
+          className={`bg-white rounded-2xl p-3.5 border transition-all cursor-pointer shadow-xs flex flex-col justify-between ${
             roleFilter === 'ALL' ? 'border-indigo-500 ring-2 ring-indigo-100' : 'border-slate-200/80 hover:border-slate-300'
           }`}
         >
@@ -608,7 +705,7 @@ const Employees: React.FC = () => {
 
         <div 
           onClick={() => setRoleFilter('EMPLOYEE')}
-          className={`bg-white rounded-2xl p-4 border transition-all cursor-pointer shadow-xs flex flex-col justify-between ${
+          className={`bg-white rounded-2xl p-3.5 border transition-all cursor-pointer shadow-xs flex flex-col justify-between ${
             roleFilter === 'EMPLOYEE' ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-200/80 hover:border-slate-300'
           }`}
         >
@@ -624,7 +721,7 @@ const Employees: React.FC = () => {
 
         <div 
           onClick={() => setRoleFilter('TRAINEE')}
-          className={`bg-white rounded-2xl p-4 border transition-all cursor-pointer shadow-xs flex flex-col justify-between ${
+          className={`bg-white rounded-2xl p-3.5 border transition-all cursor-pointer shadow-xs flex flex-col justify-between ${
             roleFilter === 'TRAINEE' ? 'border-purple-500 ring-2 ring-purple-100' : 'border-slate-200/80 hover:border-slate-300'
           }`}
         >
@@ -634,13 +731,13 @@ const Employees: React.FC = () => {
           </div>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl font-black text-purple-700">{traineesCount}</span>
-            <span className="text-[10px] text-purple-600 font-medium">Trainee Team</span>
+            <span className="text-[10px] text-purple-600 font-medium">Trainees</span>
           </div>
         </div>
 
         <div 
           onClick={() => setRoleFilter('INTERN')}
-          className={`bg-white rounded-2xl p-4 border transition-all cursor-pointer shadow-xs flex flex-col justify-between ${
+          className={`bg-white rounded-2xl p-3.5 border transition-all cursor-pointer shadow-xs flex flex-col justify-between ${
             roleFilter === 'INTERN' ? 'border-teal-500 ring-2 ring-teal-100' : 'border-slate-200/80 hover:border-slate-300'
           }`}
         >
@@ -655,8 +752,24 @@ const Employees: React.FC = () => {
         </div>
 
         <div 
+          onClick={() => setRoleFilter('OJT')}
+          className={`bg-white rounded-2xl p-3.5 border transition-all cursor-pointer shadow-xs flex flex-col justify-between ${
+            roleFilter === 'OJT' ? 'border-amber-500 ring-2 ring-amber-100' : 'border-slate-200/80 hover:border-slate-300'
+          }`}
+        >
+          <div className="flex items-center justify-between text-slate-500">
+            <span className="text-[11px] font-bold uppercase tracking-wider">OJT</span>
+            <Sparkles className="h-4 w-4 text-amber-600" />
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-black text-amber-700">{ojtCount}</span>
+            <span className="text-[10px] text-amber-600 font-medium">On-the-Job</span>
+          </div>
+        </div>
+
+        <div 
           onClick={() => setRoleFilter('ADMIN')}
-          className={`bg-white rounded-2xl p-4 border transition-all cursor-pointer shadow-xs flex flex-col justify-between ${
+          className={`bg-white rounded-2xl p-3.5 border transition-all cursor-pointer shadow-xs flex flex-col justify-between ${
             roleFilter === 'ADMIN' ? 'border-indigo-500 ring-2 ring-indigo-100' : 'border-slate-200/80 hover:border-slate-300'
           }`}
         >
@@ -694,7 +807,11 @@ const Employees: React.FC = () => {
             <option value="EMPLOYEE">Employees Only ({employeesCount})</option>
             <option value="TRAINEE">Trainees Only ({traineesCount})</option>
             <option value="INTERN">Interns Only ({internsCount})</option>
+            <option value="OJT">OJT Only ({ojtCount})</option>
             <option value="ADMIN">Admins Only ({adminCount})</option>
+            {customRoles.map(cr => (
+              <option key={cr.id} value={cr.id}>{cr.label}</option>
+            ))}
           </select>
         </div>
       </div>
@@ -1674,29 +1791,59 @@ const Employees: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Assigned Team / Shift</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-semibold text-slate-700 block text-xs">Assigned Team / Shift</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddTeamModal(true)}
+                      className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <Plus className="h-3 w-3" /> Add Team
+                    </button>
+                  </div>
                   <select
                     value={formDepartment}
                     onChange={(e) => setFormDepartment(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white text-xs font-semibold"
                   >
                     <option value="IT">IT Team (09:00 AM - 06:30 PM)</option>
                     <option value="EDTECH">EdTech Team (08:45 AM - 05:45 PM)</option>
                     <option value="BUSINESS_SOLUTION">Business Solution (08:45 AM - 05:45 PM)</option>
+                    <option value="OG">Business Solution 2 (08:45 AM - 06:15 PM)</option>
+                    {customTeams.map((ct) => (
+                      <option key={ct.id} value={ct.id}>
+                        {ct.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Role / Staff Type</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-semibold text-slate-700 block text-xs">Role / Staff Type</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddRoleModal(true)}
+                      className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <Plus className="h-3 w-3" /> Add Role
+                    </button>
+                  </div>
                   <select
                     value={formRole}
-                    onChange={(e) => setFormRole(e.target.value as any)}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white"
+                    onChange={(e) => setFormRole(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white text-xs font-semibold"
                   >
                     <option value="EMPLOYEE">EMPLOYEE (Permanent Employee)</option>
                     <option value="TRAINEE">TRAINEE</option>
                     <option value="INTERN">INTERN</option>
+                    <option value="OJT">OJT (On-the-Job Trainee)</option>
                     <option value="ADMIN">ADMIN (Administrator)</option>
+                    {customRoles.map((cr) => (
+                      <option key={cr.id} value={cr.id}>
+                        {cr.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -1722,6 +1869,117 @@ const Employees: React.FC = () => {
                 </Button>
               </div>
             </form>
+          </Card>
+        </div>
+      )}
+
+      {/* ───────────────────────────────────────────────────────────── */}
+      {/* ADD CUSTOM TEAM / SHIFT MODAL                                  */}
+      {/* ───────────────────────────────────────────────────────────── */}
+      {showAddTeamModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <Card title="Add Custom Team & Office Shift Timing" className="w-full max-w-sm shadow-2xl bg-white animate-in fade-in">
+            <div className="space-y-4 text-xs">
+              <p className="text-slate-500 text-[11px]">
+                Create a new assigned department with its office work shift hours and late login grace.
+              </p>
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Team / Department Name</label>
+                <input
+                  type="text"
+                  required
+                  value={newTeamName}
+                  onChange={(e) => setNewTeamName(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-indigo-600 font-semibold"
+                  placeholder="e.g. Digital Marketing, Customer Support"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1 text-[11px]">Shift Start (Login)</label>
+                  <input
+                    type="time"
+                    required
+                    value={newTeamLoginTime}
+                    onChange={(e) => setNewTeamLoginTime(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-bold text-slate-800 bg-white focus:border-indigo-600 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1 text-[11px]">Shift End (Logout)</label>
+                  <input
+                    type="time"
+                    required
+                    value={newTeamLogoutTime}
+                    onChange={(e) => setNewTeamLogoutTime(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-bold text-slate-800 bg-white focus:border-indigo-600 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-bold text-slate-700 text-[11px]">Late Login Grace Window</label>
+                  <span className="font-mono text-indigo-700 font-bold bg-indigo-50 px-2 py-0.5 rounded text-[11px]">
+                    +{newTeamGraceMinutes} Minutes
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="60"
+                  step="5"
+                  value={newTeamGraceMinutes}
+                  onChange={(e) => setNewTeamGraceMinutes(parseInt(e.target.value, 10) || 0)}
+                  className="w-full accent-indigo-600 cursor-pointer"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <Button variant="outline" size="sm" type="button" onClick={() => setShowAddTeamModal(false)}>
+                  Cancel
+                </Button>
+                <Button variant="primary" size="sm" type="button" onClick={handleCreateCustomTeam} disabled={!newTeamName.trim()}>
+                  Add Team & Shift
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* ───────────────────────────────────────────────────────────── */}
+      {/* ADD CUSTOM ROLE MODAL                                          */}
+      {/* ───────────────────────────────────────────────────────────── */}
+      {showAddRoleModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <Card title="Add Custom Staff Role" className="w-full max-w-sm shadow-2xl bg-white animate-in fade-in">
+            <div className="space-y-4 text-xs">
+              <p className="text-slate-500 text-[11px]">
+                Create a new role/designation type for employee accounts.
+              </p>
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Role Name</label>
+                <input
+                  type="text"
+                  required
+                  value={newRoleName}
+                  onChange={(e) => setNewRoleName(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-indigo-600 font-semibold uppercase"
+                  placeholder="e.g. OJT, CONSULTANT, CONTRACTOR"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <Button variant="outline" size="sm" type="button" onClick={() => setShowAddRoleModal(false)}>
+                  Cancel
+                </Button>
+                <Button variant="primary" size="sm" type="button" onClick={handleCreateCustomRole} disabled={!newRoleName.trim()}>
+                  Add Role
+                </Button>
+              </div>
+            </div>
           </Card>
         </div>
       )}

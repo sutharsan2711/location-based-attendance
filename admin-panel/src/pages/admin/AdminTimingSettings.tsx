@@ -15,25 +15,36 @@ import {
   GraduationCap,
   Briefcase,
   Layers,
-  Sparkles,
   Sliders,
   Check,
   Save,
   HelpCircle,
   Building2,
   ArrowRight,
-  Zap,
   Timer,
-  CheckCircle,
-  XCircle,
-  AlertCircle
+  AlertCircle,
+  Users,
+  Plus,
+  Trash2,
+  Sparkles,
+  X,
 } from 'lucide-react';
+
+export interface CustomTeamShift {
+  id: string;
+  name: string;
+  displayName?: string;
+  description?: string;
+  loginTime: string;
+  logoutTime: string;
+  graceMinutes: number;
+}
 
 const AdminTimingSettings: React.FC = () => {
   const [location, setLocation] = useState<CompanyLocation | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [saveLoading, setSaveLoading] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'ALL' | 'IT' | 'EDTECH' | 'BUSINESS'>('ALL');
+  const [activeTab, setActiveTab] = useState<'ALL' | 'IT' | 'EDTECH' | 'BUSINESS' | 'OG'>('ALL');
 
   // General default fallback timings
   const [officeLoginTime, setOfficeLoginTime] = useState<string>('09:00');
@@ -55,12 +66,87 @@ const AdminTimingSettings: React.FC = () => {
   const [businessLogoutTime, setBusinessLogoutTime] = useState<string>('17:45');
   const [businessGraceMinutes, setBusinessGraceMinutes] = useState<number>(15);
 
-  // Live Simulator State
-  const [simTeam, setSimTeam] = useState<'IT' | 'EDTECH' | 'BUSINESS'>('IT');
-  const [simTime, setSimTime] = useState<string>('09:10');
+  // 4. OG Team Shift (8:45 AM - 6:15 PM)
+  const [ogLoginTime, setOgLoginTime] = useState<string>('08:45');
+  const [ogLogoutTime, setOgLogoutTime] = useState<string>('18:15');
+  const [ogGraceMinutes, setOgGraceMinutes] = useState<number>(15);
+
+  // Custom Team Shifts created by Admin
+  const [customShifts, setCustomShifts] = useState<CustomTeamShift[]>(() => {
+    try {
+      const raw = localStorage.getItem('custom_attendance_teams');
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return parsed.map((item: any) => ({
+        id: item.id || item.name,
+        name: item.name?.split('(')[0]?.trim() || item.name || 'Custom Team',
+        displayName: item.displayName || item.name,
+        description: item.description || 'Custom Assigned Work Shift',
+        loginTime: item.loginTime || '09:00',
+        logoutTime: item.logoutTime || '18:00',
+        graceMinutes: typeof item.graceMinutes === 'number' ? item.graceMinutes : 15,
+      }));
+    } catch {
+      return [];
+    }
+  });
+
+  const [showAddShiftModal, setShowAddShiftModal] = useState<boolean>(false);
+  const [newShiftName, setNewShiftName] = useState<string>('');
+  const [newShiftDesc, setNewShiftDesc] = useState<string>('');
+  const [newShiftLogin, setNewShiftLogin] = useState<string>('09:00');
+  const [newShiftLogout, setNewShiftLogout] = useState<string>('18:00');
+  const [newShiftGrace, setNewShiftGrace] = useState<number>(15);
 
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleAddCustomShift = () => {
+    if (!newShiftName.trim()) return;
+    const teamId = newShiftName.trim().toUpperCase().replace(/[^A-Z0-9]/g, '_');
+    const dispName = `${newShiftName.trim()} (${format12Hr(newShiftLogin)} - ${format12Hr(newShiftLogout)})`;
+    const newShift: CustomTeamShift = {
+      id: teamId,
+      name: newShiftName.trim(),
+      displayName: dispName,
+      description: newShiftDesc.trim() || 'Custom Assigned Work Shift',
+      loginTime: newShiftLogin,
+      logoutTime: newShiftLogout,
+      graceMinutes: newShiftGrace,
+    };
+    const updated = [...customShifts.filter((s) => s.id !== teamId), newShift];
+    setCustomShifts(updated);
+    localStorage.setItem('custom_attendance_teams', JSON.stringify(updated));
+    setNewShiftName('');
+    setNewShiftDesc('');
+    setNewShiftLogin('09:00');
+    setNewShiftLogout('18:00');
+    setNewShiftGrace(15);
+    setShowAddShiftModal(false);
+    setSuccessMsg(`Team Work Shift for "${newShift.name}" created successfully!`);
+    setTimeout(() => setSuccessMsg(null), 4000);
+  };
+
+  const handleUpdateCustomShift = (id: string, field: keyof CustomTeamShift, value: any) => {
+    setCustomShifts((prev) => {
+      const updated = prev.map((s) => {
+        if (s.id !== id) return s;
+        const modified = { ...s, [field]: value };
+        modified.displayName = `${modified.name} (${format12Hr(modified.loginTime)} - ${format12Hr(modified.logoutTime)})`;
+        return modified;
+      });
+      localStorage.setItem('custom_attendance_teams', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleDeleteCustomShift = (id: string) => {
+    const updated = customShifts.filter((s) => s.id !== id);
+    setCustomShifts(updated);
+    localStorage.setItem('custom_attendance_teams', JSON.stringify(updated));
+    setSuccessMsg('Custom team shift removed.');
+    setTimeout(() => setSuccessMsg(null), 3000);
+  };
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -87,6 +173,11 @@ const AdminTimingSettings: React.FC = () => {
         if (data.businessLoginTime) setBusinessLoginTime(data.businessLoginTime.substring(0, 5));
         if (data.businessLogoutTime) setBusinessLogoutTime(data.businessLogoutTime.substring(0, 5));
         if (data.businessGraceMinutes !== undefined) setBusinessGraceMinutes(data.businessGraceMinutes);
+
+        // OG Team
+        if (data.ogLoginTime) setOgLoginTime(data.ogLoginTime.substring(0, 5));
+        if (data.ogLogoutTime) setOgLogoutTime(data.ogLogoutTime.substring(0, 5));
+        if (data.ogGraceMinutes !== undefined) setOgGraceMinutes(data.ogGraceMinutes);
       } catch (err) {
         console.error(err);
         setErrorMsg('Failed to load timing configurations.');
@@ -127,61 +218,6 @@ const AdminTimingSettings: React.FC = () => {
     return `${hours}h ${mins > 0 ? `${mins}m` : '00m'}`;
   };
 
-  // Punctuality Simulator Calculation
-  const simulateCheckIn = () => {
-    let shiftStart = itLoginTime;
-    let grace = itGraceMinutes;
-    if (simTeam === 'EDTECH') {
-      shiftStart = edtechLoginTime;
-      grace = edtechGraceMinutes;
-    } else if (simTeam === 'BUSINESS') {
-      shiftStart = businessLoginTime;
-      grace = businessGraceMinutes;
-    }
-
-    if (!simTime || !shiftStart) return { status: 'UNKNOWN', label: 'Enter time', color: 'slate' };
-
-    const [hTest, mTest] = simTime.split(':').map(Number);
-    const [hStart, mStart] = shiftStart.split(':').map(Number);
-
-    const testMins = hTest * 60 + mTest;
-    const startMins = hStart * 60 + mStart;
-    const cutoffMins = startMins + (grace || 0);
-
-    if (testMins <= startMins) {
-      return {
-        status: 'ON_TIME_STANDARD',
-        label: 'PRESENT (Early / Right On Time)',
-        detail: `Punched in before ${format12Hr(shiftStart)}. Full attendance recorded.`,
-        badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-300',
-        bannerColor: 'bg-emerald-50 border-emerald-200 text-emerald-900',
-        icon: 'emerald'
-      };
-    } else if (testMins <= cutoffMins) {
-      const diff = testMins - startMins;
-      return {
-        status: 'ON_TIME_GRACE',
-        label: 'PRESENT (Covered by Grace Period)',
-        detail: `Punched in ${diff}m past shift start, but within ${grace}m grace allowance (Cutoff: ${calculateLateCutoff(shiftStart, grace)}).`,
-        badgeColor: 'bg-amber-50 text-amber-800 border-amber-300',
-        bannerColor: 'bg-amber-50 border-amber-200 text-amber-900',
-        icon: 'amber'
-      };
-    } else {
-      const diff = testMins - cutoffMins;
-      return {
-        status: 'LATE',
-        label: 'LATE LOGIN RECORDED',
-        detail: `Punched in ${diff}m after the ${grace}m grace cutoff (${calculateLateCutoff(shiftStart, grace)}). System automatically marks status as LATE.`,
-        badgeColor: 'bg-rose-50 text-rose-700 border-rose-300',
-        bannerColor: 'bg-rose-50 border-rose-200 text-rose-900',
-        icon: 'rose'
-      };
-    }
-  };
-
-  const simResult = simulateCheckIn();
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!location) return;
@@ -207,6 +243,10 @@ const AdminTimingSettings: React.FC = () => {
         businessLoginTime: businessLoginTime.length === 5 ? `${businessLoginTime}:00` : businessLoginTime,
         businessLogoutTime: businessLogoutTime.length === 5 ? `${businessLogoutTime}:00` : businessLogoutTime,
         businessGraceMinutes,
+
+        ogLoginTime: ogLoginTime.length === 5 ? `${ogLoginTime}:00` : ogLoginTime,
+        ogLogoutTime: ogLogoutTime.length === 5 ? `${ogLogoutTime}:00` : ogLogoutTime,
+        ogGraceMinutes,
       };
 
       const updated = await locationService.updateLocation(payload);
@@ -226,7 +266,7 @@ const AdminTimingSettings: React.FC = () => {
   if (loading) return <Loading fullScreen message="Loading office timing engine..." />;
 
   return (
-    <div className="space-y-6 max-w-6xl pb-16 animate-fade-in text-slate-800">
+    <div className="space-y-6 max-w-7xl pb-16 animate-fade-in text-slate-800">
       {/* ── Top Header Banner ── */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 md:p-8 text-white shadow-xl">
         <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl" />
@@ -248,6 +288,15 @@ const AdminTimingSettings: React.FC = () => {
 
           <div className="shrink-0 flex items-center gap-3">
             <button
+              type="button"
+              onClick={() => setShowAddShiftModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/20 transition-all cursor-pointer shadow-sm active:scale-95"
+            >
+              <Plus className="h-4 w-4 text-emerald-400" />
+              Add Team Shift
+            </button>
+
+            <button
               onClick={handleSubmit}
               disabled={saveLoading}
               className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs shadow-xl shadow-emerald-500/25 transition-all cursor-pointer active:scale-95"
@@ -263,7 +312,7 @@ const AdminTimingSettings: React.FC = () => {
         </div>
 
         {/* Quick Shift Summary Pills inside Header */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-6 mt-6 border-t border-white/10 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-6 mt-6 border-t border-white/10 text-xs">
           <div className="flex items-center gap-2.5 bg-white/5 backdrop-blur-sm rounded-xl px-3.5 py-2 border border-white/10">
             <div className="h-2 w-2 rounded-full bg-indigo-400" />
             <span className="text-indigo-200 font-bold">IT Team:</span>
@@ -284,6 +333,23 @@ const AdminTimingSettings: React.FC = () => {
             <span className="font-semibold text-white">{format12Hr(businessLoginTime)} – {format12Hr(businessLogoutTime)}</span>
             <span className="text-[10px] text-slate-400 font-mono ml-auto">+{businessGraceMinutes}m grace</span>
           </div>
+
+          <div className="flex items-center gap-2.5 bg-white/5 backdrop-blur-sm rounded-xl px-3.5 py-2 border border-white/10">
+            <div className="h-2 w-2 rounded-full bg-violet-400" />
+            <span className="text-violet-200 font-bold">Business Solution 2:</span>
+            <span className="font-semibold text-white">{format12Hr(ogLoginTime)} – {format12Hr(ogLogoutTime)}</span>
+            <span className="text-[10px] text-slate-400 font-mono ml-auto">+{ogGraceMinutes}m grace</span>
+          </div>
+
+          {/* Render custom team shift pills */}
+          {customShifts.map((cs) => (
+            <div key={cs.id} className="flex items-center gap-2.5 bg-white/5 backdrop-blur-sm rounded-xl px-3.5 py-2 border border-white/10">
+              <div className="h-2 w-2 rounded-full bg-cyan-400" />
+              <span className="text-cyan-200 font-bold truncate max-w-[100px]">{cs.name}:</span>
+              <span className="font-semibold text-white">{format12Hr(cs.loginTime)} – {format12Hr(cs.logoutTime)}</span>
+              <span className="text-[10px] text-slate-400 font-mono ml-auto">+{cs.graceMinutes}m grace</span>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -304,7 +370,7 @@ const AdminTimingSettings: React.FC = () => {
 
       {/* ── INTERACTIVE TEAM SHIFTS & GRACE TIMING SETTINGS ── */}
       <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
 
           {/* ══════════════════════════════════════════════════════ */}
           {/* 1. IT TEAM SHIFT CARD                                  */}
@@ -442,7 +508,7 @@ const AdminTimingSettings: React.FC = () => {
                     <p className="text-[11px] text-slate-400 font-semibold">Content & Academic Division</p>
                   </div>
                 </div>
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200">
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
                   {computeShiftDuration(edtechLoginTime, edtechLogoutTime)}
                 </span>
               </div>
@@ -460,7 +526,7 @@ const AdminTimingSettings: React.FC = () => {
                     onChange={(e) => setEdtechLoginTime(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-800 bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-100 outline-none"
                   />
-                  <span className="text-[10px] text-teal-700 font-bold block mt-1">
+                  <span className="text-[10px] text-teal-800 font-bold block mt-1">
                     {format12Hr(edtechLoginTime)}
                   </span>
                 </div>
@@ -476,7 +542,7 @@ const AdminTimingSettings: React.FC = () => {
                     onChange={(e) => setEdtechLogoutTime(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-800 bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-100 outline-none"
                   />
-                  <span className="text-[10px] text-teal-700 font-bold block mt-1">
+                  <span className="text-[10px] text-teal-800 font-bold block mt-1">
                     {format12Hr(edtechLogoutTime)}
                   </span>
                 </div>
@@ -489,7 +555,7 @@ const AdminTimingSettings: React.FC = () => {
                     <Timer className="h-3.5 w-3.5 text-teal-600" />
                     <span>Permission / Grace Window</span>
                   </label>
-                  <span className="text-xs font-black text-teal-700 font-mono bg-teal-50 px-2 py-0.5 rounded-md border border-teal-100">
+                  <span className="text-xs font-black text-teal-800 font-mono bg-teal-50 px-2 py-0.5 rounded-md border border-teal-100">
                     +{edtechGraceMinutes} Minutes
                   </span>
                 </div>
@@ -659,158 +725,387 @@ const AdminTimingSettings: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* ── INTERACTIVE TESTER & LOGIC RULES ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* ══════════════════════════════════════════════════════ */}
+          {/* 4. OG TEAM SHIFT CARD                                  */}
+          {/* ══════════════════════════════════════════════════════ */}
+          <div className="bg-white rounded-3xl border-2 border-violet-200/80 p-6 shadow-sm hover:shadow-lg transition-all flex flex-col justify-between relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-violet-50/70 rounded-bl-full -z-0" />
 
-          {/* ⚡ LIVE PUNCTUALITY SIMULATOR TOOL */}
-          <div className="lg:col-span-5 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 rounded-3xl p-6 text-white shadow-xl space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center font-bold">
-                <Zap className="h-4 w-4" />
-              </div>
-              <div>
-                <h3 className="text-sm font-extrabold text-white">Live Late Login Simulator</h3>
-                <p className="text-[11px] text-slate-400">Test how punch times evaluate with current grace rules</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 pt-1">
-              <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block mb-1">
-                  Select Team
-                </label>
-                <select
-                  value={simTeam}
-                  onChange={(e) => setSimTeam(e.target.value as any)}
-                  className="w-full rounded-xl bg-slate-800/90 border border-slate-700 px-3 py-2 text-xs font-bold text-white outline-none focus:border-indigo-400"
-                >
-                  <option value="IT">IT Team (09:00 AM)</option>
-                  <option value="EDTECH">EdTech Team (08:45 AM)</option>
-                  <option value="BUSINESS">Business Solution (08:45 AM)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block mb-1">
-                  Test Punch-In Time
-                </label>
-                <input
-                  type="time"
-                  value={simTime}
-                  onChange={(e) => setSimTime(e.target.value)}
-                  className="w-full rounded-xl bg-slate-800/90 border border-slate-700 px-3 py-2 text-xs font-bold text-white outline-none focus:border-indigo-400"
-                />
-              </div>
-            </div>
-
-            {/* Live Result Box */}
-            <div className={`p-4 rounded-2xl border ${simResult.bannerColor} space-y-1.5 transition-all`}>
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider opacity-75">Simulated Attendance Status:</span>
-                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${simResult.badgeColor}`}>
-                  {simResult.label}
+            <div className="relative z-10 space-y-5">
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-2xl bg-violet-100 text-violet-700 flex items-center justify-center font-bold shadow-xs">
+                    <Users className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-extrabold text-slate-900">Business Solution 2</h3>
+                    <p className="text-[11px] text-slate-400 font-semibold">Business Solution 2 Shift Division</p>
+                  </div>
+                </div>
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-violet-50 text-violet-800 border border-violet-200">
+                  {computeShiftDuration(ogLoginTime, ogLogoutTime)}
                 </span>
               </div>
-              <p className="text-[11px] leading-relaxed font-medium">
-                {simResult.detail}
-              </p>
+
+              {/* Timing Inputs */}
+              <div className="grid grid-cols-2 gap-3.5 bg-slate-50/80 p-3.5 rounded-2xl border border-slate-100">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-1">
+                    Shift Start (Login)
+                  </label>
+                  <input
+                    type="time"
+                    required
+                    value={ogLoginTime}
+                    onChange={(e) => setOgLoginTime(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-800 bg-white focus:border-violet-500 focus:ring-2 focus:ring-violet-100 outline-none"
+                  />
+                  <span className="text-[10px] text-violet-800 font-bold block mt-1">
+                    {format12Hr(ogLoginTime)}
+                  </span>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-1">
+                    Shift End (Logout)
+                  </label>
+                  <input
+                    type="time"
+                    required
+                    value={ogLogoutTime}
+                    onChange={(e) => setOgLogoutTime(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-800 bg-white focus:border-violet-500 focus:ring-2 focus:ring-violet-100 outline-none"
+                  />
+                  <span className="text-[10px] text-violet-800 font-bold block mt-1">
+                    {format12Hr(ogLogoutTime)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Permission / Grace Period Setting */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
+                    <Timer className="h-3.5 w-3.5 text-violet-600" />
+                    <span>Permission / Grace Window</span>
+                  </label>
+                  <span className="text-xs font-black text-violet-800 font-mono bg-violet-50 px-2 py-0.5 rounded-md border border-violet-100">
+                    +{ogGraceMinutes} Minutes
+                  </span>
+                </div>
+
+                {/* Grace Quick Presets */}
+                <div className="flex items-center gap-1.5">
+                  {presetGraceOptions.map((mins) => (
+                    <button
+                      key={mins}
+                      type="button"
+                      onClick={() => setOgGraceMinutes(mins)}
+                      className={`flex-1 py-1 text-[11px] font-bold rounded-lg transition-all ${
+                        ogGraceMinutes === mins
+                          ? 'bg-violet-600 text-white shadow-xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {mins}m
+                    </button>
+                  ))}
+                </div>
+
+                <input
+                  type="range"
+                  min="0"
+                  max="60"
+                  step="5"
+                  value={ogGraceMinutes}
+                  onChange={(e) => setOgGraceMinutes(parseInt(e.target.value, 10) || 0)}
+                  className="w-full accent-violet-600 cursor-pointer"
+                />
+              </div>
+
+              {/* Late Login Result Formula */}
+              <div className="p-3.5 bg-gradient-to-br from-violet-50 to-purple-50/60 rounded-2xl border border-violet-100 space-y-2 text-xs">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-slate-500 font-semibold">On-Time Cutoff:</span>
+                  <span className="font-bold text-emerald-700">Until {calculateLateCutoff(ogLoginTime, ogGraceMinutes)}</span>
+                </div>
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-slate-500 font-semibold">Late Login Mark:</span>
+                  <span className="font-bold text-rose-700">After {calculateLateCutoff(ogLoginTime, ogGraceMinutes)}</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden flex">
+                  <div className="bg-emerald-500 h-full" style={{ width: '60%' }} title="On-time" />
+                  <div className="bg-amber-400 h-full" style={{ width: '20%' }} title="Grace period" />
+                  <div className="bg-rose-500 h-full" style={{ width: '20%' }} title="Late threshold" />
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* 🏢 GENERAL FALLBACK & POLICY EXPLANATION */}
-          <div className="lg:col-span-7 bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm flex flex-col justify-between space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 font-extrabold text-sm text-slate-800">
-                <ShieldCheck className="h-5 w-5 text-indigo-600" />
-                <span>Attendance Evaluation & Permission Priority Rules</span>
-              </div>
+          {/* ══════════════════════════════════════════════════════ */}
+          {/* 5+. DYNAMIC CUSTOM TEAM WORK SHIFTS                     */}
+          {/* ══════════════════════════════════════════════════════ */}
+          {customShifts.map((shift, idx) => (
+            <div
+              key={shift.id}
+              className="bg-white rounded-3xl border-2 border-cyan-200/80 p-6 shadow-sm hover:shadow-lg transition-all flex flex-col justify-between relative overflow-hidden animate-fade-in"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-50/70 rounded-bl-full -z-0" />
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
-                  <span className="font-bold text-emerald-700 flex items-center gap-1">
-                    <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
-                    <span>1. On-Time</span>
-                  </span>
-                  <p className="text-[11px] text-slate-500 leading-relaxed">
-                    Check-in before or within the assigned team's grace period window.
-                  </p>
+              <div className="relative z-10 space-y-5">
+                {/* Header */}
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-12 w-12 rounded-2xl bg-cyan-100 text-cyan-700 flex items-center justify-center font-bold shadow-xs">
+                      <Users className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-extrabold text-slate-900">{shift.name}</h3>
+                      <p className="text-[11px] text-slate-400 font-semibold">{shift.description || 'Custom Shift Division'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-cyan-50 text-cyan-800 border border-cyan-200">
+                      {computeShiftDuration(shift.loginTime, shift.logoutTime)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCustomShift(shift.id)}
+                      className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                      title="Delete Custom Shift"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
 
-                <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
-                  <span className="font-bold text-rose-700 flex items-center gap-1">
-                    <XCircle className="h-3.5 w-3.5 text-rose-600" />
-                    <span>2. Late Login</span>
-                  </span>
-                  <p className="text-[11px] text-slate-500 leading-relaxed">
-                    Check-in after grace cutoff. Automatically flagged as <strong>LATE</strong> in the register.
-                  </p>
+                {/* Timing Inputs */}
+                <div className="grid grid-cols-2 gap-3.5 bg-slate-50/80 p-3.5 rounded-2xl border border-slate-100">
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-1">
+                      Shift Start (Login)
+                    </label>
+                    <input
+                      type="time"
+                      required
+                      value={shift.loginTime}
+                      onChange={(e) => handleUpdateCustomShift(shift.id, 'loginTime', e.target.value)}
+                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-800 bg-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 outline-none"
+                    />
+                    <span className="text-[10px] text-cyan-800 font-bold block mt-1">
+                      {format12Hr(shift.loginTime)}
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-1">
+                      Shift End (Logout)
+                    </label>
+                    <input
+                      type="time"
+                      required
+                      value={shift.logoutTime}
+                      onChange={(e) => handleUpdateCustomShift(shift.id, 'logoutTime', e.target.value)}
+                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-800 bg-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 outline-none"
+                    />
+                    <span className="text-[10px] text-cyan-800 font-bold block mt-1">
+                      {format12Hr(shift.logoutTime)}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
-                  <span className="font-bold text-indigo-700 flex items-center gap-1">
-                    <AlertCircle className="h-3.5 w-3.5 text-indigo-600" />
-                    <span>3. Permissions</span>
-                  </span>
-                  <p className="text-[11px] text-slate-500 leading-relaxed">
-                    Approved permission requests waive late login marks for authorized windows.
-                  </p>
+                {/* Permission / Grace Period Setting */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
+                      <Timer className="h-3.5 w-3.5 text-cyan-600" />
+                      <span>Permission / Grace Window</span>
+                    </label>
+                    <span className="text-xs font-black text-cyan-800 font-mono bg-cyan-50 px-2 py-0.5 rounded-md border border-cyan-100">
+                      +{shift.graceMinutes} Minutes
+                    </span>
+                  </div>
+
+                  {/* Grace Quick Presets */}
+                  <div className="flex items-center gap-1.5">
+                    {presetGraceOptions.map((mins) => (
+                      <button
+                        key={mins}
+                        type="button"
+                        onClick={() => handleUpdateCustomShift(shift.id, 'graceMinutes', mins)}
+                        className={`flex-1 py-1 text-[11px] font-bold rounded-lg transition-all ${
+                          shift.graceMinutes === mins
+                            ? 'bg-cyan-600 text-white shadow-xs'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        {mins}m
+                      </button>
+                    ))}
+                  </div>
+
+                  <input
+                    type="range"
+                    min="0"
+                    max="60"
+                    step="5"
+                    value={shift.graceMinutes}
+                    onChange={(e) => handleUpdateCustomShift(shift.id, 'graceMinutes', parseInt(e.target.value, 10) || 0)}
+                    className="w-full accent-cyan-600 cursor-pointer"
+                  />
+                </div>
+
+                {/* Late Login Result Formula */}
+                <div className="p-3.5 bg-gradient-to-br from-cyan-50 to-teal-50/60 rounded-2xl border border-cyan-100 space-y-2 text-xs">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-slate-500 font-semibold">On-Time Cutoff:</span>
+                    <span className="font-bold text-emerald-700">Until {calculateLateCutoff(shift.loginTime, shift.graceMinutes)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-slate-500 font-semibold">Late Login Mark:</span>
+                    <span className="font-bold text-rose-700">After {calculateLateCutoff(shift.loginTime, shift.graceMinutes)}</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden flex">
+                    <div className="bg-emerald-500 h-full" style={{ width: '60%' }} title="On-time" />
+                    <div className="bg-amber-400 h-full" style={{ width: '20%' }} title="Grace period" />
+                    <div className="bg-rose-500 h-full" style={{ width: '20%' }} title="Late threshold" />
+                  </div>
                 </div>
               </div>
             </div>
+          ))}
 
-            {/* General Fallback Inputs */}
-            <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
-              <div>
-                <span className="font-bold text-slate-700 block">General Default Fallback</span>
-                <span className="text-[11px] text-slate-400">Applied if employee is not assigned to a team</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="time"
-                  value={officeLoginTime}
-                  onChange={(e) => setOfficeLoginTime(e.target.value)}
-                  className="rounded-xl border border-slate-200 px-2.5 py-1 text-xs font-bold bg-slate-50 text-slate-800"
-                />
-                <span className="text-slate-400">to</span>
-                <input
-                  type="time"
-                  value={officeLogoutTime}
-                  onChange={(e) => setOfficeLogoutTime(e.target.value)}
-                  className="rounded-xl border border-slate-200 px-2.5 py-1 text-xs font-bold bg-slate-50 text-slate-800"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── BOTTOM STICKY SAVE BAR ── */}
-        <div className="flex items-center justify-between p-4 bg-slate-900 text-white rounded-3xl shadow-xl">
-          <div className="flex items-center gap-3 pl-2">
-            <div className="h-9 w-9 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold">
-              <Sparkles className="h-5 w-5" />
+          {/* Action Card: Add New Shift */}
+          <button
+            type="button"
+            onClick={() => setShowAddShiftModal(true)}
+            className="rounded-3xl border-2 border-dashed border-slate-300 hover:border-emerald-500 bg-slate-50/50 hover:bg-emerald-50/20 p-8 flex flex-col items-center justify-center gap-3 text-center transition-all cursor-pointer group min-h-[350px]"
+          >
+            <div className="h-14 w-14 rounded-2xl bg-white group-hover:bg-emerald-100 text-slate-400 group-hover:text-emerald-700 flex items-center justify-center shadow-xs border border-slate-200 group-hover:border-emerald-200 transition-all">
+              <Plus className="h-7 w-7" />
             </div>
             <div>
-              <p className="text-xs font-bold text-white">All changes are applied immediately</p>
-              <p className="text-[11px] text-slate-400">Employee punch evaluations & late status calculate in real-time</p>
+              <h4 className="font-black text-slate-800 group-hover:text-emerald-900 text-sm">Create New Team Work Shift</h4>
+              <p className="text-slate-400 text-xs mt-1 max-w-[220px]">
+                Define shift login/logout hours & late grace window for any department.
+              </p>
             </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={saveLoading}
-            className="inline-flex items-center gap-2 px-7 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/20 transition-all cursor-pointer active:scale-95"
-          >
-            {saveLoading ? (
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-950 border-r-transparent" />
-            ) : (
-              <Save className="h-4 w-4 stroke-[2.5]" />
-            )}
-            Save Office Timing Settings
           </button>
         </div>
       </form>
+
+      {/* ───────────────────────────────────────────────────────────── */}
+      {/* ADD CUSTOM WORK SHIFT MODAL                                    */}
+      {/* ───────────────────────────────────────────────────────────── */}
+      {showAddShiftModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <Card title="Add New Team Work Shift & Grace Timing" className="w-full max-w-md shadow-2xl bg-white animate-in fade-in">
+            <div className="space-y-4 text-xs">
+              <p className="text-slate-500 text-[11px]">
+                Set up standard work shift hours and late login grace limits for a department.
+              </p>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Team / Department Name</label>
+                <input
+                  type="text"
+                  required
+                  value={newShiftName}
+                  onChange={(e) => setNewShiftName(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-indigo-600 font-semibold"
+                  placeholder="e.g. Digital Marketing, Customer Support"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Division / Description (Optional)</label>
+                <input
+                  type="text"
+                  value={newShiftDesc}
+                  onChange={(e) => setNewShiftDesc(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-indigo-600"
+                  placeholder="e.g. Growth & Marketing Operations"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1 text-[11px]">Shift Start (Login)</label>
+                  <input
+                    type="time"
+                    required
+                    value={newShiftLogin}
+                    onChange={(e) => setNewShiftLogin(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-indigo-600 bg-white font-bold"
+                  />
+                  <span className="text-[10px] text-indigo-700 font-bold block mt-1">
+                    {format12Hr(newShiftLogin)}
+                  </span>
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1 text-[11px]">Shift End (Logout)</label>
+                  <input
+                    type="time"
+                    required
+                    value={newShiftLogout}
+                    onChange={(e) => setNewShiftLogout(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-indigo-600 bg-white font-bold"
+                  />
+                  <span className="text-[10px] text-indigo-700 font-bold block mt-1">
+                    {format12Hr(newShiftLogout)}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-bold text-slate-700 text-[11px]">Late Login Grace Window</label>
+                  <span className="font-mono text-indigo-700 font-bold bg-indigo-50 px-2 py-0.5 rounded text-[11px]">
+                    +{newShiftGrace} Minutes
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  {presetGraceOptions.map((mins) => (
+                    <button
+                      key={mins}
+                      type="button"
+                      onClick={() => setNewShiftGrace(mins)}
+                      className={`flex-1 py-1 text-[11px] font-bold rounded-lg transition-all ${
+                        newShiftGrace === mins
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {mins}m
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="60"
+                  step="5"
+                  value={newShiftGrace}
+                  onChange={(e) => setNewShiftGrace(parseInt(e.target.value, 10) || 0)}
+                  className="w-full accent-indigo-600 cursor-pointer"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <Button variant="outline" size="sm" type="button" onClick={() => setShowAddShiftModal(false)}>
+                  Cancel
+                </Button>
+                <Button variant="primary" size="sm" type="button" onClick={handleAddCustomShift} disabled={!newShiftName.trim()}>
+                  Create Team Shift
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

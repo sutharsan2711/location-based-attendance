@@ -11,6 +11,7 @@ import {
   Settings,
   User as UserIcon,
   DollarSign,
+  CheckSquare,
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
@@ -84,6 +85,21 @@ const Sidebar: React.FC = () => {
         >
           <Home className="h-4 w-4 shrink-0" />
           <span>Home</span>
+        </NavLink>
+
+        {/* My Tasks */}
+        <NavLink
+          to="/employee/tasks"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all ${
+              isActive
+                ? 'bg-blue-50/80 text-blue-600 font-semibold'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+            }`
+          }
+        >
+          <CheckSquare className="h-4 w-4 shrink-0 text-blue-600" />
+          <span>My Tasks</span>
         </NavLink>
 
         {/* Attendance (Collapsible - Open by Default) */}

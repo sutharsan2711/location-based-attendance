@@ -46,6 +46,10 @@ public class LocationRequest {
     private LocalTime businessLogoutTime;
     private Integer businessGraceMinutes;
 
+    private LocalTime ogLoginTime;
+    private LocalTime ogLogoutTime;
+    private Integer ogGraceMinutes;
+
     // Getters and Setters
     public String getCompanyName() { return companyName; }
     public void setCompanyName(String companyName) { this.companyName = companyName; }
@@ -97,4 +101,13 @@ public class LocationRequest {
 
     public Integer getBusinessGraceMinutes() { return businessGraceMinutes; }
     public void setBusinessGraceMinutes(Integer businessGraceMinutes) { this.businessGraceMinutes = businessGraceMinutes; }
+
+    public LocalTime getOgLoginTime() { return ogLoginTime; }
+    public void setOgLoginTime(LocalTime ogLoginTime) { this.ogLoginTime = ogLoginTime; }
+
+    public LocalTime getOgLogoutTime() { return ogLogoutTime; }
+    public void setOgLogoutTime(LocalTime ogLogoutTime) { this.ogLogoutTime = ogLogoutTime; }
+
+    public Integer getOgGraceMinutes() { return ogGraceMinutes; }
+    public void setOgGraceMinutes(Integer ogGraceMinutes) { this.ogGraceMinutes = ogGraceMinutes; }
 }

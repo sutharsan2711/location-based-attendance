@@ -325,6 +325,7 @@ const Reports: React.FC = () => {
       if (selectedTeam === 'IT' && dept !== 'IT') return false;
       if (selectedTeam === 'EDTECH' && dept !== 'EDTECH') return false;
       if (selectedTeam === 'BUSINESS' && dept !== 'BUSINESS_SOLUTION' && dept !== 'BUSINESS') return false;
+      if (selectedTeam === 'OG' && dept !== 'OG' && dept !== 'OG_TEAM') return false;
     }
 
     return true;
@@ -645,10 +646,11 @@ const Reports: React.FC = () => {
                 onChange={(e) => setSelectedTeam(e.target.value)}
                 className="w-full rounded-2xl border border-slate-200 px-3.5 py-2.5 text-xs font-bold text-slate-800 bg-slate-50 focus:bg-white focus:border-indigo-500 outline-none cursor-pointer"
               >
-                <option value="ALL">All Teams (IT, EdTech, Business)</option>
+                <option value="ALL">All Teams (IT, EdTech, Business Solution, Business Solution 2)</option>
                 <option value="IT">IT Team (9:00 AM - 6:30 PM)</option>
                 <option value="EDTECH">EdTech Team (8:45 AM - 5:45 PM)</option>
                 <option value="BUSINESS">Business Solution (8:45 AM - 5:45 PM)</option>
+                <option value="OG">Business Solution 2 (8:45 AM - 6:15 PM)</option>
               </select>
             </div>
 

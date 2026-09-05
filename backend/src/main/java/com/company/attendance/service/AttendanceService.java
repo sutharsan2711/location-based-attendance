@@ -129,6 +129,7 @@ public class AttendanceService {
         if (dept == null && employee.getProfileData() != null) {
             if (employee.getProfileData().toLowerCase().contains("edtech")) dept = "EDTECH";
             else if (employee.getProfileData().toLowerCase().contains("business")) dept = "BUSINESS_SOLUTION";
+            else if (employee.getProfileData().toLowerCase().contains("og")) dept = "OG";
             else if (employee.getProfileData().toLowerCase().contains("it")) dept = "IT";
         }
         if (dept == null) dept = "IT";
@@ -142,6 +143,9 @@ public class AttendanceService {
         } else if (dept.equalsIgnoreCase("BUSINESS_SOLUTION") || dept.equalsIgnoreCase("BUSINESS") || dept.toLowerCase().contains("business")) {
             shiftLoginTime = location.getBusinessLoginTime() != null ? location.getBusinessLoginTime() : LocalTime.of(8, 45);
             graceMinutes = location.getBusinessGraceMinutes() != null ? location.getBusinessGraceMinutes() : 15;
+        } else if (dept.equalsIgnoreCase("OG") || dept.equalsIgnoreCase("OG_TEAM") || dept.toLowerCase().contains("og")) {
+            shiftLoginTime = location.getOgLoginTime() != null ? location.getOgLoginTime() : LocalTime.of(8, 45);
+            graceMinutes = location.getOgGraceMinutes() != null ? location.getOgGraceMinutes() : 15;
         } else {
             // IT Team default
             shiftLoginTime = location.getItLoginTime() != null ? location.getItLoginTime() : LocalTime.of(9, 0);

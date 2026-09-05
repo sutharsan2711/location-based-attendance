@@ -57,8 +57,8 @@ public class DashboardService {
         return false;
     }
 
-    public Map<String, Object> getDashboardStats() {
-        LocalDate today = LocalDate.now(KOLKATA_ZONE);
+    public Map<String, Object> getDashboardStats(LocalDate targetDate) {
+        LocalDate selectedDate = targetDate != null ? targetDate : LocalDate.now(KOLKATA_ZONE);
 
         // Fetch all employees (excluding admin and legacy temporary accounts)
         List<User> employees = userRepository.findByRoleNot(Role.ADMIN).stream()
@@ -67,23 +67,23 @@ public class DashboardService {
         long totalEmployees = employees.size();
         long activeEmployees = employees.stream().filter(u -> u.getStatus() == UserStatus.ACTIVE).count();
 
-        // Attendance stats for today
-        long todayLogin = attendanceRepository.countByAttendanceDateAndStatusIn(
-                today, Arrays.asList(AttendanceStatus.LOGGED_IN, AttendanceStatus.COMPLETED));
+        // Attendance stats for selected date
+        long loginCount = attendanceRepository.countByAttendanceDateAndStatusIn(
+                selectedDate, Arrays.asList(AttendanceStatus.LOGGED_IN, AttendanceStatus.COMPLETED));
         
-        long todayLogout = attendanceRepository.countByAttendanceDateAndStatus(today, AttendanceStatus.COMPLETED);
+        long logoutCount = attendanceRepository.countByAttendanceDateAndStatus(selectedDate, AttendanceStatus.COMPLETED);
         
-        long currentlyWorking = attendanceRepository.countByAttendanceDateAndStatus(today, AttendanceStatus.LOGGED_IN);
+        long currentlyWorking = attendanceRepository.countByAttendanceDateAndStatus(selectedDate, AttendanceStatus.LOGGED_IN);
         
-        // Late today count
-        List<Attendance> todayAttendances = attendanceRepository.findByAttendanceDate(today);
-        long lateToday = todayAttendances.stream()
+        // Late count for selected date
+        List<Attendance> dateAttendances = attendanceRepository.findByAttendanceDate(selectedDate);
+        long lateCount = dateAttendances.stream()
                 .filter(a -> !isDummyEmployee(a.getEmployee()) && a.getTimingStatus() == AttendanceTimingStatus.LATE)
                 .count();
 
-        // On leave today count
-        List<LeaveRequest> approvedLeavesToday = leaveRepository.findApprovedLeavesForDate(today, RequestStatus.APPROVED);
-        long onLeaveToday = approvedLeavesToday.stream()
+        // On leave for selected date
+        List<LeaveRequest> approvedLeaves = leaveRepository.findApprovedLeavesForDate(selectedDate, RequestStatus.APPROVED);
+        long onLeaveCount = approvedLeaves.stream()
                 .filter(l -> !isDummyEmployee(l.getEmployee()))
                 .count();
 
@@ -91,17 +91,18 @@ public class DashboardService {
         long pendingPermissionRequests = permissionRepository.countByStatus(RequestStatus.PENDING);
         long pendingLeaveRequests = leaveRepository.countByStatus(RequestStatus.PENDING);
 
-        long absent = Math.max(0, activeEmployees - todayLogin - onLeaveToday);
+        long absent = Math.max(0, activeEmployees - loginCount - onLeaveCount);
 
         Map<String, Object> stats = new HashMap<>();
+        stats.put("selectedDate", selectedDate.toString());
         stats.put("totalEmployees", totalEmployees);
         stats.put("activeEmployees", activeEmployees);
-        stats.put("presentToday", todayLogin);
-        stats.put("todayLogin", todayLogin);
-        stats.put("todayLogout", todayLogout);
+        stats.put("presentToday", loginCount);
+        stats.put("todayLogin", loginCount);
+        stats.put("todayLogout", logoutCount);
         stats.put("currentlyWorking", currentlyWorking);
-        stats.put("lateToday", lateToday);
-        stats.put("onLeaveToday", onLeaveToday);
+        stats.put("lateToday", lateCount);
+        stats.put("onLeaveToday", onLeaveCount);
         stats.put("pendingPermissionRequests", pendingPermissionRequests);
         stats.put("pendingLeaveRequests", pendingLeaveRequests);
         stats.put("absent", absent);
@@ -109,9 +110,9 @@ public class DashboardService {
         return stats;
     }
 
-    public List<Map<String, Object>> getAttendanceSummaryCharts() {
+    public List<Map<String, Object>> getAttendanceSummaryCharts(LocalDate targetDate) {
         List<Map<String, Object>> chartData = new ArrayList<>();
-        LocalDate today = LocalDate.now(KOLKATA_ZONE);
+        LocalDate endDate = targetDate != null ? targetDate : LocalDate.now(KOLKATA_ZONE);
         long activeEmployees = userRepository.findByRoleNot(Role.ADMIN).stream()
                 .filter(u -> !isDummyEmployee(u) && u.getStatus() == UserStatus.ACTIVE)
                 .count();
@@ -119,7 +120,7 @@ public class DashboardService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
         for (int i = 6; i >= 0; i--) {
-            LocalDate date = today.minusDays(i);
+            LocalDate date = endDate.minusDays(i);
             long loginCount = attendanceRepository.countByAttendanceDateAndStatusIn(
                     date, Arrays.asList(AttendanceStatus.LOGGED_IN, AttendanceStatus.COMPLETED));
             long logoutCount = attendanceRepository.countByAttendanceDateAndStatus(date, AttendanceStatus.COMPLETED);

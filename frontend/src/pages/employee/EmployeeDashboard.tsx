@@ -3,8 +3,10 @@ import { useAuth } from '../../hooks/useAuth';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import { attendanceService } from '../../services/attendanceService';
 import { locationService } from '../../services/locationService';
+import { taskService } from '../../services/taskService';
 import { Attendance } from '../../types/attendance';
 import { CompanyLocation } from '../../types/location';
+import { Task } from '../../types/task';
 import { calculateDistance } from '../../utils/locationUtils';
 import { formatTime, formatDate } from '../../utils/dateUtils';
 import Loading from '../../components/Loading';
@@ -20,6 +22,9 @@ import {
   Clock,
   RefreshCw,
   Calendar,
+  CheckSquare,
+  PlayCircle,
+  Flame,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -41,6 +46,7 @@ const EmployeeDashboard: React.FC = () => {
   const [calculatedDistance, setCalculatedDistance] = useState<number | null>(null);
   const [checkingLocation, setCheckingLocation] = useState<boolean>(false);
   const [actionLoading, setActionLoading] = useState<boolean>(false);
+  const [myTasks, setMyTasks] = useState<Task[]>([]);
 
   const [apiSuccess, setApiSuccess] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -58,12 +64,14 @@ const EmployeeDashboard: React.FC = () => {
   // ── 2. Data Fetching ──
   const fetchDashboardData = useCallback(async () => {
     try {
-      const [todayAtt, locationConfig] = await Promise.all([
+      const [todayAtt, locationConfig, tasksData] = await Promise.all([
         attendanceService.getTodayAttendance(),
         locationService.getLocation(),
+        taskService.getMyTasks().catch(() => []),
       ]);
       setAttendance(todayAtt);
       setOfficeLocation(locationConfig);
+      setMyTasks(tasksData || []);
     } catch (err) {
       console.error('Failed to load dashboard data', err);
       if (!attendance) {
@@ -472,9 +480,65 @@ const EmployeeDashboard: React.FC = () => {
 
         </div>
 
-        {/* ════════ COLUMN 2: Requests & Leaves (4 cols) ════════ */}
+        {/* ════════ COLUMN 2: Tasks, Requests & Leaves (4 cols) ════════ */}
         <div className="md:col-span-4 space-y-4">
           
+          {/* Assigned Tasks Widget */}
+          <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <CheckSquare className="h-4 w-4 text-blue-600" /> My Tasks
+              </h2>
+              <button
+                onClick={() => navigate('/employee/tasks')}
+                className="text-[11px] font-semibold text-blue-600 hover:underline"
+              >
+                View All ({myTasks.length})
+              </button>
+            </div>
+
+            {myTasks.filter(t => t.status !== 'COMPLETED').length > 0 ? (
+              <div className="space-y-2.5 mb-3">
+                {myTasks
+                  .filter(t => t.status !== 'COMPLETED')
+                  .slice(0, 2)
+                  .map(task => (
+                    <div
+                      key={task.id}
+                      onClick={() => navigate('/employee/tasks')}
+                      className="p-2.5 rounded-lg bg-slate-50 hover:bg-blue-50/50 border border-slate-100 cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-800 line-clamp-1">{task.title}</span>
+                        {task.priority === 'URGENT' && (
+                          <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.2 rounded shrink-0">
+                            Urgent
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between mt-1 text-[10px] text-slate-400">
+                        <span>Status: <strong className="text-blue-600">{task.status}</strong></span>
+                        {task.dueDate && <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <p className="text-[11px] text-slate-500 mb-3 leading-relaxed">
+                {myTasks.length > 0
+                  ? 'All assigned tasks completed! Great work.'
+                  : 'No active tasks assigned yet.'}
+              </p>
+            )}
+
+            <button
+              onClick={() => navigate('/employee/tasks')}
+              className="w-full py-2 px-3 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
+            >
+              Open Task Dashboard <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
           {/* Permission Requests Section */}
           <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md">
             <div className="flex items-center justify-between mb-3">

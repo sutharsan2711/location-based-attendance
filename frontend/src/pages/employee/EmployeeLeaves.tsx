@@ -25,7 +25,9 @@ import {
   Info,
   CalendarRange,
   Building,
-  Filter
+  Filter,
+  Undo2,
+  Ban,
 } from 'lucide-react';
 
 interface UnifiedEmployeeRequest {
@@ -37,7 +39,7 @@ interface UnifiedEmployeeRequest {
   rawDate: string;
   reason: string;
   remarks?: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'WITHDRAWN';
   adminRemarks?: string;
   createdAt?: string;
 }
@@ -57,6 +59,8 @@ const EmployeeLeaves: React.FC = () => {
 
   // Leave Form Fields
   const [leaveType, setLeaveType] = useState<LeaveType>('CASUAL_LEAVE');
+  const [isHalfDay, setIsHalfDay] = useState<boolean>(false);
+  const [halfDaySession, setHalfDaySession] = useState<'FIRST_HALF' | 'SECOND_HALF'>('FIRST_HALF');
   const [fromDate, setFromDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [toDate, setToDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
@@ -68,6 +72,12 @@ const EmployeeLeaves: React.FC = () => {
   // Common Fields
   const [reason, setReason] = useState<string>('');
   const [remarks, setRemarks] = useState<string>('');
+
+  // Withdraw Modal State
+  const [withdrawModalOpen, setWithdrawModalOpen] = useState<boolean>(false);
+  const [withdrawTarget, setWithdrawTarget] = useState<UnifiedEmployeeRequest | null>(null);
+  const [withdrawReason, setWithdrawReason] = useState<string>('');
+  const [withdrawing, setWithdrawing] = useState<boolean>(false);
 
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -140,6 +150,13 @@ const EmployeeLeaves: React.FC = () => {
       const fromD = new Date(l.fromDate);
       const toD = new Date(l.toDate);
       const diffDays = Math.ceil(Math.abs(toD.getTime() - fromD.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      const isHalf = Boolean(l.isHalfDay);
+      const sessionLabel =
+        l.halfDaySession === 'FIRST_HALF'
+          ? '1st Half'
+          : l.halfDaySession === 'SECOND_HALF'
+          ? '2nd Half'
+          : 'Half Day';
 
       list.push({
         id: l.id,
@@ -147,9 +164,11 @@ const EmployeeLeaves: React.FC = () => {
         title: formatLeaveType(l.leaveType),
         schedule:
           l.fromDate === l.toDate
-            ? formatDate(l.fromDate)
+            ? isHalf
+              ? `${formatDate(l.fromDate)} (${sessionLabel})`
+              : formatDate(l.fromDate)
             : `${formatDate(l.fromDate)} - ${formatDate(l.toDate)}`,
-        duration: `${diffDays} Day${diffDays > 1 ? 's' : ''}`,
+        duration: isHalf ? `0.5 Day (${sessionLabel})` : `${diffDays} Day${diffDays > 1 ? 's' : ''}`,
         rawDate: l.fromDate,
         reason: l.reason,
         remarks: l.remarks,
@@ -214,12 +233,18 @@ const EmployeeLeaves: React.FC = () => {
         const payload: LeaveCreatePayload = {
           leaveType,
           fromDate,
-          toDate,
+          toDate: isHalfDay ? fromDate : toDate,
+          isHalfDay,
+          halfDaySession: isHalfDay ? halfDaySession : undefined,
           reason: reason.trim(),
           remarks: remarks.trim() || undefined,
         };
         await requestService.applyLeave(payload);
-        setSuccessMsg('Leave application submitted successfully! Awaiting supervisor approval.');
+        setSuccessMsg(
+          isHalfDay
+            ? 'Half-day leave application submitted successfully! Awaiting supervisor approval.'
+            : 'Leave application submitted successfully! Awaiting supervisor approval.'
+        );
       } else {
         const payload: PermissionCreatePayload = {
           permissionDate: permDate,
@@ -241,6 +266,27 @@ const EmployeeLeaves: React.FC = () => {
       setErrorMsg(err.response?.data?.message || err.message || 'Failed to submit request.');
     } finally {
       setSubmitLoading(false);
+    }
+  };
+
+  const handleConfirmWithdraw = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!withdrawTarget) return;
+
+    try {
+      setWithdrawing(true);
+      setErrorMsg(null);
+      await requestService.withdrawLeave(withdrawTarget.id, withdrawReason.trim() || undefined);
+      setSuccessMsg(`Leave request (${withdrawTarget.title}) successfully withdrawn and balance restored.`);
+      setWithdrawModalOpen(false);
+      setWithdrawTarget(null);
+      setWithdrawReason('');
+      fetchData();
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.response?.data?.message || err.message || 'Failed to withdraw leave request.');
+    } finally {
+      setWithdrawing(false);
     }
   };
 
@@ -412,12 +458,13 @@ const EmployeeLeaves: React.FC = () => {
                   <th className="py-4 px-6">Duration</th>
                   <th className="py-4 px-6">Reason & Notes</th>
                   <th className="py-4 px-6">Status</th>
+                  <th className="py-4 px-6 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
                 {filteredRequests.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-slate-400">
+                    <td colSpan={6} className="py-12 text-center text-slate-400">
                       No applications found in this category. Click "+ New Request" to apply.
                     </td>
                   </tr>
@@ -464,7 +511,7 @@ const EmployeeLeaves: React.FC = () => {
                         {r.remarks && <p className="text-[10px] text-slate-400 italic">Note: {r.remarks}</p>}
                         {r.adminRemarks && (
                           <div className="mt-1 text-[10px] bg-slate-50 border border-slate-200 px-2 py-0.5 rounded text-slate-600">
-                            <span className="font-bold">Supervisor:</span> {r.adminRemarks}
+                            <span className="font-bold">Remarks:</span> {r.adminRemarks}
                           </div>
                         )}
                       </td>
@@ -476,6 +523,8 @@ const EmployeeLeaves: React.FC = () => {
                               ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                               : r.status === 'REJECTED'
                               ? 'bg-rose-50 text-rose-700 border-rose-200'
+                              : r.status === 'CANCELLED' || r.status === 'WITHDRAWN'
+                              ? 'bg-slate-100 text-slate-600 border-slate-200'
                               : 'bg-amber-50 text-amber-700 border-amber-200'
                           }`}
                         >
@@ -485,17 +534,105 @@ const EmployeeLeaves: React.FC = () => {
                                 ? 'bg-emerald-500'
                                 : r.status === 'REJECTED'
                                 ? 'bg-rose-500'
+                                : r.status === 'CANCELLED' || r.status === 'WITHDRAWN'
+                                ? 'bg-slate-400'
                                 : 'bg-amber-500'
                             }`}
                           />
-                          {r.status}
+                          {r.status === 'CANCELLED' ? 'WITHDRAWN / CANCELLED' : r.status}
                         </span>
+                      </td>
+
+                      <td className="py-4 px-6 text-right">
+                        {r.type === 'LEAVE' && (r.status === 'PENDING' || r.status === 'APPROVED') ? (
+                          <button
+                            onClick={() => {
+                              setWithdrawTarget(r);
+                              setWithdrawReason('');
+                              setWithdrawModalOpen(true);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl border border-rose-200 transition"
+                            title="Withdraw Leave Application"
+                          >
+                            <Undo2 className="w-3.5 h-3.5" />
+                            Withdraw
+                          </button>
+                        ) : (
+                          <span className="text-slate-300 text-xs">--</span>
+                        )}
                       </td>
                     </tr>
                   ))
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── WITHDRAW CONFIRMATION MODAL ── */}
+      {withdrawModalOpen && withdrawTarget && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-slate-100 animate-scale-up">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
+                  <Undo2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Withdraw Leave Application</h3>
+                  <p className="text-xs text-slate-400">{withdrawTarget.title}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setWithdrawModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmWithdraw} className="py-4 space-y-3.5">
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-600 space-y-1">
+                <p><strong>Schedule:</strong> {withdrawTarget.schedule}</p>
+                <p><strong>Duration:</strong> {withdrawTarget.duration}</p>
+                <p className="text-amber-700 font-medium">
+                  {withdrawTarget.status === 'APPROVED'
+                    ? '⚠️ This leave was approved. Withdrawing it will restore the leave days back into your available balance.'
+                    : 'ℹ️ Withdrawing will cancel this pending application.'}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Reason for Withdrawal (Optional)
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="e.g. Plan postponed, attended office instead, or client meeting scheduled..."
+                  value={withdrawReason}
+                  onChange={(e) => setWithdrawReason(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 font-medium"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setWithdrawModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50"
+                >
+                  Keep Request
+                </button>
+                <button
+                  type="submit"
+                  disabled={withdrawing}
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-xs font-bold text-white shadow-sm flex items-center gap-1.5 disabled:opacity-60"
+                >
+                  {withdrawing ? 'Withdrawing...' : 'Confirm Withdrawal'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -572,32 +709,83 @@ const EmployeeLeaves: React.FC = () => {
                     </select>
                   </div>
 
+                  {/* Day Duration Toggle (Full Day vs Half Day) */}
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-700">Duration Type:</span>
+                      <div className="flex items-center gap-3">
+                        <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700">
+                          <input
+                            type="radio"
+                            name="isHalfDayRadio"
+                            checked={!isHalfDay}
+                            onChange={() => setIsHalfDay(false)}
+                            className="text-blue-600 focus:ring-blue-500"
+                          />
+                          Full / Multi Day (1.0+)
+                        </label>
+                        <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-blue-700">
+                          <input
+                            type="radio"
+                            name="isHalfDayRadio"
+                            checked={isHalfDay}
+                            onChange={() => {
+                              setIsHalfDay(true);
+                              setToDate(fromDate);
+                            }}
+                            className="text-blue-600 focus:ring-blue-500"
+                          />
+                          Half Day (0.5)
+                        </label>
+                      </div>
+                    </div>
+
+                    {isHalfDay && (
+                      <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between gap-3 animate-fade-in">
+                        <label className="text-xs font-bold text-slate-700">Select Shift Half *</label>
+                        <select
+                          value={halfDaySession}
+                          onChange={(e) => setHalfDaySession(e.target.value as 'FIRST_HALF' | 'SECOND_HALF')}
+                          className="px-3 py-1.5 text-xs font-bold bg-white border border-blue-200 text-blue-800 rounded-xl focus:outline-none"
+                        >
+                          <option value="FIRST_HALF">First Half (Morning Shift)</option>
+                          <option value="SECOND_HALF">Second Half (Afternoon Shift)</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Dates */}
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className={`grid ${isHalfDay ? 'grid-cols-1' : 'grid-cols-2'} gap-3`}>
                     <div>
                       <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                        From Date *
+                        {isHalfDay ? 'Leave Date *' : 'From Date *'}
                       </label>
                       <input
                         type="date"
                         required
                         value={fromDate}
-                        onChange={(e) => setFromDate(e.target.value)}
+                        onChange={(e) => {
+                          setFromDate(e.target.value);
+                          if (isHalfDay) setToDate(e.target.value);
+                        }}
                         className="w-full px-4 py-2.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                        To Date *
-                      </label>
-                      <input
-                        type="date"
-                        required
-                        value={toDate}
-                        onChange={(e) => setToDate(e.target.value)}
-                        className="w-full px-4 py-2.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                      />
-                    </div>
+                    {!isHalfDay && (
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                          To Date *
+                        </label>
+                        <input
+                          type="date"
+                          required
+                          value={toDate}
+                          onChange={(e) => setToDate(e.target.value)}
+                          className="w-full px-4 py-2.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        />
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (

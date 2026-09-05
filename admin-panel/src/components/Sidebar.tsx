@@ -15,6 +15,8 @@ import {
   CalendarRange,
   Database,
   DollarSign,
+  CheckSquare,
+  StickyNote,
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
@@ -25,6 +27,8 @@ const Sidebar: React.FC = () => {
 
   const adminMenu = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+    { name: 'Task Management', path: '/tasks', icon: CheckSquare },
+    { name: 'Sticky Notes', path: '/notes', icon: StickyNote },
     { name: 'Employees', path: '/employees', icon: Users },
     { name: 'Attendance & Grid', path: '/attendance', icon: CalendarDays },
     { name: 'Payroll & Salary', path: '/payroll', icon: DollarSign },

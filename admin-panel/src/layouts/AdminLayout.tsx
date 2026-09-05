@@ -9,7 +9,7 @@ const AdminLayout: React.FC = () => {
       <Sidebar />
       <div className="flex flex-col md:pl-64">
         <Navbar />
-        <main className="flex-1 p-6 md:p-8 animate-slide">
+        <main className="flex-1 p-6 md:p-8">
           <Outlet />
         </main>
       </div>

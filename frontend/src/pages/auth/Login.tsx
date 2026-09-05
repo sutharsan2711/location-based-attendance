@@ -143,7 +143,7 @@ const Login: React.FC = () => {
           </div>
           <h2 className="text-3xl font-extrabold tracking-tight text-white">Employee Login</h2>
           <p className="mt-2 text-sm text-slate-400">
-            Sign in using your <span className="font-bold text-slate-200">Employee Code</span> and password
+            Sign in using your <span className="font-bold text-slate-200">Email or Employee ID</span> and password
           </p>
         </div>
 
@@ -199,10 +199,10 @@ const Login: React.FC = () => {
               </div>
             )}
 
-            {/* Employee Code / Email Field */}
+            {/* Email or Employee ID Field */}
             <div className="space-y-1.5">
               <label htmlFor="identifier" className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
-                Employee Code / Email
+                Email or Employee ID
               </label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
@@ -211,12 +211,12 @@ const Login: React.FC = () => {
                 <input
                   id="identifier"
                   type="text"
-                  placeholder="e.g. ECLCE2008 or email"
+                  placeholder="Enter email or employee ID"
                   className={`w-full rounded-2xl border bg-white/5 pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition-all focus:border-primary-500 focus:ring-1 focus:ring-primary-500 font-medium ${
                     errors.identifier ? 'border-rose-500/50' : 'border-white/10'
                   }`}
                   {...register('identifier', {
-                    required: 'Employee Code or Email is required',
+                    required: 'Email or Employee ID is required',
                   })}
                 />
               </div>
@@ -231,9 +231,6 @@ const Login: React.FC = () => {
                 <label htmlFor="password" className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
                   Password
                 </label>
-                <span className="text-[11px] text-slate-400 font-medium">
-                  Default: <code className="bg-white/10 px-1.5 py-0.5 rounded text-primary-300">123456789</code>
-                </span>
               </div>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
@@ -242,7 +239,7 @@ const Login: React.FC = () => {
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="123456789"
+                  placeholder="Enter password"
                   className={`w-full rounded-2xl border bg-white/5 pl-10 pr-10 py-3 text-sm text-white placeholder-slate-500 outline-none transition-all focus:border-primary-500 focus:ring-1 focus:ring-primary-500 ${
                     errors.password ? 'border-rose-500/50' : 'border-white/10'
                   }`}

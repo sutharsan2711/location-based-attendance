@@ -43,7 +43,14 @@ public class LeaveService {
             throw new IllegalStateException("Your employee account is inactive.");
         }
 
-        if (request.getToDate().isBefore(request.getFromDate())) {
+        if (Boolean.TRUE.equals(request.getIsHalfDay())) {
+            if (!request.getFromDate().equals(request.getToDate())) {
+                throw new IllegalArgumentException("Half-day leave must have the same From Date and To Date.");
+            }
+            if (request.getHalfDaySession() == null) {
+                throw new IllegalArgumentException("Please select a session (First Half or Second Half) for half-day leave.");
+            }
+        } else if (request.getToDate().isBefore(request.getFromDate())) {
             throw new IllegalArgumentException("To Date must be after or same as From Date.");
         }
 
@@ -52,6 +59,8 @@ public class LeaveService {
                 request.getLeaveType(),
                 request.getFromDate(),
                 request.getToDate(),
+                Boolean.TRUE.equals(request.getIsHalfDay()),
+                request.getHalfDaySession(),
                 request.getReason().trim(),
                 request.getRemarks() != null ? request.getRemarks().trim() : null
         );
@@ -64,7 +73,14 @@ public class LeaveService {
         User employee = userRepository.findById(request.getEmployeeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with ID: " + request.getEmployeeId()));
 
-        if (request.getToDate().isBefore(request.getFromDate())) {
+        if (Boolean.TRUE.equals(request.getIsHalfDay())) {
+            if (!request.getFromDate().equals(request.getToDate())) {
+                throw new IllegalArgumentException("Half-day leave must have the same From Date and To Date.");
+            }
+            if (request.getHalfDaySession() == null) {
+                throw new IllegalArgumentException("Please select a session (First Half or Second Half) for half-day leave.");
+            }
+        } else if (request.getToDate().isBefore(request.getFromDate())) {
             throw new IllegalArgumentException("To Date must be after or same as From Date.");
         }
 
@@ -75,6 +91,8 @@ public class LeaveService {
                 request.getLeaveType(),
                 request.getFromDate(),
                 request.getToDate(),
+                Boolean.TRUE.equals(request.getIsHalfDay()),
+                request.getHalfDaySession(),
                 request.getReason() != null ? request.getReason().trim() : "Unapplied Leave / Admin Recorded",
                 note
         );
@@ -104,6 +122,53 @@ public class LeaveService {
         if (request.getAdminRemarks() != null) {
             leave.setAdminRemarks(request.getAdminRemarks().trim());
         }
+
+        return leaveRepository.save(leave);
+    }
+
+    @Transactional
+    public LeaveRequest withdrawMyLeave(String email, Long id, LeaveWithdrawRequest request) {
+        User employee = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with email: " + email));
+
+        LeaveRequest leave = leaveRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Leave request not found with ID: " + id));
+
+        if (!leave.getEmployee().getId().equals(employee.getId())) {
+            throw new IllegalStateException("You are not authorized to withdraw this leave request.");
+        }
+
+        if (leave.getStatus() == RequestStatus.CANCELLED || leave.getStatus() == RequestStatus.WITHDRAWN) {
+            throw new IllegalStateException("This leave request is already cancelled/withdrawn.");
+        }
+
+        leave.setStatus(RequestStatus.CANCELLED);
+        String reason = (request != null && request.getWithdrawalReason() != null && !request.getWithdrawalReason().trim().isEmpty())
+                ? request.getWithdrawalReason().trim()
+                : "Withdrawn by Employee";
+        
+        String existingRemarks = leave.getAdminRemarks() != null ? leave.getAdminRemarks() + " | " : "";
+        leave.setAdminRemarks(existingRemarks + "[Withdrawn by Employee] " + reason);
+
+        return leaveRepository.save(leave);
+    }
+
+    @Transactional
+    public LeaveRequest adminCancelLeave(Long id, LeaveWithdrawRequest request) {
+        LeaveRequest leave = leaveRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Leave request not found with ID: " + id));
+
+        if (leave.getStatus() == RequestStatus.CANCELLED || leave.getStatus() == RequestStatus.WITHDRAWN) {
+            throw new IllegalStateException("This leave request is already cancelled/withdrawn.");
+        }
+
+        leave.setStatus(RequestStatus.CANCELLED);
+        String reason = (request != null && request.getWithdrawalReason() != null && !request.getWithdrawalReason().trim().isEmpty())
+                ? request.getWithdrawalReason().trim()
+                : "Cancelled by Admin";
+
+        String existingRemarks = leave.getAdminRemarks() != null ? leave.getAdminRemarks() + " | " : "";
+        leave.setAdminRemarks(existingRemarks + "[Cancelled by Admin] " + reason);
 
         return leaveRepository.save(leave);
     }
@@ -146,6 +211,87 @@ public class LeaveService {
         return buildEmployeeLeaveSummary(employee, year);
     }
 
+    @Transactional
+    public CarryForwardPreviewResponse previewCarryForward(CarryForwardRuleDTO rules) {
+        int fromYear = rules.getFromYear() > 0 ? rules.getFromYear() : LocalDate.now().getYear() - 1;
+        int toYear = rules.getToYear() > 0 ? rules.getToYear() : fromYear + 1;
+
+        List<User> employees = userRepository.findAll();
+        CarryForwardPreviewResponse response = new CarryForwardPreviewResponse();
+        response.setFromYear(fromYear);
+        response.setToYear(toYear);
+
+        double totalDays = 0;
+        List<CarryForwardPreviewResponse.CarryForwardEmployeeItem> items = new ArrayList<>();
+
+        for (User emp : employees) {
+            if (emp.getRole().name().equals("ADMIN")) continue;
+
+            LeaveBalanceSummaryResponse fromSummary = buildEmployeeLeaveSummary(emp, fromYear);
+
+            double casualClosing = 0;
+            double sickClosing = 0;
+            double compOffClosing = 0;
+
+            for (LeaveBalanceItemDTO item : fromSummary.getBalances()) {
+                if ("CASUAL_LEAVE".equals(item.getType())) {
+                    casualClosing = item.getBalance();
+                } else if ("SICK_LEAVE".equals(item.getType())) {
+                    sickClosing = item.getBalance();
+                } else if ("COMP_OFF".equals(item.getType())) {
+                    compOffClosing = item.getBalance();
+                }
+            }
+
+            double casualCarried = rules.isEnableCasualLeave() ? Math.min(casualClosing, rules.getMaxCasualLeaveCap()) : 0;
+            double sickCarried = rules.isEnableSickLeave() ? Math.min(sickClosing, rules.getMaxSickLeaveCap()) : 0;
+            double compOffCarried = rules.isEnableCompOff() ? Math.min(compOffClosing, rules.getMaxCompOffCap()) : 0;
+            double empTotal = casualCarried + sickCarried + compOffCarried;
+
+            CarryForwardPreviewResponse.CarryForwardEmployeeItem empItem = new CarryForwardPreviewResponse.CarryForwardEmployeeItem();
+            empItem.setEmployeeId(emp.getId());
+            empItem.setEmployeeName(emp.getName());
+            empItem.setEmployeeCode(emp.getEmployeeCode());
+            empItem.setCasualClosing(casualClosing);
+            empItem.setCasualCarried(casualCarried);
+            empItem.setSickClosing(sickClosing);
+            empItem.setSickCarried(sickCarried);
+            empItem.setCompOffClosing(compOffClosing);
+            empItem.setCompOffCarried(compOffCarried);
+            empItem.setTotalCarried(empTotal);
+
+            items.add(empItem);
+            totalDays += empTotal;
+        }
+
+        response.setEmployees(items);
+        response.setTotalEmployees(items.size());
+        response.setTotalDaysCarriedForward(totalDays);
+        return response;
+    }
+
+    @Transactional
+    public CarryForwardPreviewResponse executeCarryForward(CarryForwardRuleDTO rules) {
+        CarryForwardPreviewResponse preview = previewCarryForward(rules);
+        int toYear = preview.getToYear();
+
+        for (CarryForwardPreviewResponse.CarryForwardEmployeeItem item : preview.getEmployees()) {
+            User employee = userRepository.findById(item.getEmployeeId()).orElse(null);
+            if (employee == null) continue;
+
+            LeaveBalance targetBalance = leaveBalanceRepository.findByEmployeeIdAndYear(employee.getId(), toYear)
+                    .orElseGet(() -> new LeaveBalance(employee, toYear));
+
+            targetBalance.setCasualLeaveCarriedForward(item.getCasualCarried());
+            targetBalance.setSickLeaveCarriedForward(item.getSickCarried());
+            targetBalance.setCompOffCarriedForward(item.getCompOffCarried());
+
+            leaveBalanceRepository.save(targetBalance);
+        }
+
+        return preview;
+    }
+
     private LeaveBalanceSummaryResponse buildEmployeeLeaveSummary(User employee, int year) {
         if (year <= 0) year = LocalDate.now().getYear();
 
@@ -154,7 +300,6 @@ public class LeaveService {
                 .orElseGet(() -> leaveBalanceRepository.save(new LeaveBalance(employee, targetYear)));
 
         List<LeaveRequest> userLeaves = leaveRepository.findByEmployeeIdOrderByFromDateDesc(employee.getId());
-
 
         // Process leave buckets
         double lopConsumed = 0;
@@ -171,9 +316,9 @@ public class LeaveService {
 
         for (LeaveRequest req : userLeaves) {
             if (req.getFromDate().getYear() == targetYear || req.getToDate().getYear() == targetYear) {
-                double days = (double) (ChronoUnit.DAYS.between(req.getFromDate(), req.getToDate()) + 1);
+                double days = Boolean.TRUE.equals(req.getIsHalfDay()) ? 0.5 : (double) (ChronoUnit.DAYS.between(req.getFromDate(), req.getToDate()) + 1);
                 LeaveDetailItemDTO detail = new LeaveDetailItemDTO(
-                        req.getId(), req.getFromDate(), req.getToDate(), days, req.getReason(), req.getStatus().name()
+                        req.getId(), req.getFromDate(), req.getToDate(), days, req.getIsHalfDay(), req.getHalfDaySession(), req.getReason(), req.getStatus().name()
                 );
 
                 boolean isApproved = req.getStatus() == RequestStatus.APPROVED;
@@ -209,31 +354,34 @@ public class LeaveService {
         // 1. Loss Of Pay
         LeaveBalanceItemDTO lopItem = new LeaveBalanceItemDTO(
                 "LOSS_OF_PAY", "Loss Of Pay",
-                balance.getLossOfPayGranted(), lopConsumed, Math.max(0, balance.getLossOfPayGranted() - lopConsumed)
+                balance.getLossOfPayGranted(), 0.0, lopConsumed, Math.max(0, balance.getLossOfPayGranted() - lopConsumed)
         );
         lopItem.setBreakdown(lopList);
         items.add(lopItem);
 
         // 2. Comp - Off
+        double compOffTotal = balance.getCompOffGranted() + balance.getCompOffCarriedForward();
         LeaveBalanceItemDTO compOffItem = new LeaveBalanceItemDTO(
                 "COMP_OFF", "Comp - Off",
-                balance.getCompOffGranted(), compOffConsumed, Math.max(0, balance.getCompOffGranted() - compOffConsumed)
+                balance.getCompOffGranted(), balance.getCompOffCarriedForward(), compOffConsumed, Math.max(0, compOffTotal - compOffConsumed)
         );
         compOffItem.setBreakdown(compOffList);
         items.add(compOffItem);
 
         // 3. Casual Leave
+        double casualTotal = balance.getCasualLeaveGranted() + balance.getCasualLeaveCarriedForward();
         LeaveBalanceItemDTO casualItem = new LeaveBalanceItemDTO(
                 "CASUAL_LEAVE", "Casual Leave",
-                balance.getCasualLeaveGranted(), casualConsumed, Math.max(0, balance.getCasualLeaveGranted() - casualConsumed)
+                balance.getCasualLeaveGranted(), balance.getCasualLeaveCarriedForward(), casualConsumed, Math.max(0, casualTotal - casualConsumed)
         );
         casualItem.setBreakdown(casualList);
         items.add(casualItem);
 
         // 4. Sick Leave- Trainee And Interns
+        double sickTotal = balance.getSickLeaveGranted() + balance.getSickLeaveCarriedForward();
         LeaveBalanceItemDTO sickItem = new LeaveBalanceItemDTO(
                 "SICK_LEAVE", "Sick Leave- Trainee And Interns",
-                balance.getSickLeaveGranted(), sickConsumed, Math.max(0, balance.getSickLeaveGranted() - sickConsumed)
+                balance.getSickLeaveGranted(), balance.getSickLeaveCarriedForward(), sickConsumed, Math.max(0, sickTotal - sickConsumed)
         );
         sickItem.setBreakdown(sickList);
         items.add(sickItem);
@@ -241,7 +389,7 @@ public class LeaveService {
         // 5. Work From Home
         LeaveBalanceItemDTO wfhItem = new LeaveBalanceItemDTO(
                 "WORK_FROM_HOME", "Work From Home",
-                balance.getWorkFromHomeGranted(), wfhConsumed, Math.max(0, balance.getWorkFromHomeGranted() - wfhConsumed)
+                balance.getWorkFromHomeGranted(), 0.0, wfhConsumed, Math.max(0, balance.getWorkFromHomeGranted() - wfhConsumed)
         );
         wfhItem.setBreakdown(wfhList);
         items.add(wfhItem);

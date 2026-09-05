@@ -9,7 +9,7 @@ const DashboardLayout: React.FC = () => {
       <Sidebar />
       <div className="flex flex-col md:pl-60 min-h-screen">
         <Navbar />
-        <main className="flex-1 p-5 md:p-6 animate-slide">
+        <main className="flex-1 p-5 md:p-6">
           <Outlet />
         </main>
       </div>

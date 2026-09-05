@@ -129,16 +129,23 @@ const LeaveBalances: React.FC = () => {
             return (
               <div
                 key={item.type}
-                className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md flex flex-col justify-between min-h-[175px]"
+                className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md flex flex-col justify-between min-h-[185px]"
               >
                 {/* Card Top: Title & Granted Count */}
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="text-xs font-semibold text-slate-800 truncate" title={item.title}>
                     {item.title}
                   </h3>
-                  <span className="text-[11px] text-slate-500 font-medium whitespace-nowrap">
-                    Granted: {item.granted}
-                  </span>
+                  <div className="text-right">
+                    <span className="text-[11px] text-slate-500 font-medium whitespace-nowrap block">
+                      Granted: {item.granted}
+                    </span>
+                    {item.carriedForward !== undefined && item.carriedForward > 0 && (
+                      <span className="text-[10px] text-indigo-600 font-bold whitespace-nowrap block">
+                        +{item.carriedForward} Carried
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Card Center: Big Balance Number */}
@@ -146,7 +153,7 @@ const LeaveBalances: React.FC = () => {
                   <div className="text-3xl font-extrabold text-slate-800 tracking-tight font-mono">
                     {formatNumber(item.balance)}
                   </div>
-                  <div className="text-[11px] text-slate-400 font-medium mt-0.5">Balance</div>
+                  <div className="text-[11px] text-slate-400 font-medium mt-0.5">Available Balance</div>
 
                   {hasDetails && (
                     <button
@@ -160,11 +167,11 @@ const LeaveBalances: React.FC = () => {
 
                 {/* Card Bottom: Consumed Progress Bar */}
                 <div className="pt-2 border-t border-slate-100">
-                  {item.granted > 0 ? (
+                  {item.granted > 0 || (item.carriedForward && item.carriedForward > 0) ? (
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-[10px] text-slate-500 font-medium">
                         <span>
-                          {item.consumed} of {item.granted} Consumed
+                          {item.consumed} of {item.granted + (item.carriedForward || 0)} Consumed
                         </span>
                       </div>
                       <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
@@ -186,14 +193,14 @@ const LeaveBalances: React.FC = () => {
 
       {/* ── View Details Modal / Drawer ── */}
       {activeDetailModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm animate-slide">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm animate-slide">
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl border border-slate-200">
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div>
                 <h3 className="text-base font-bold text-slate-800">{activeDetailModal.title}</h3>
                 <p className="text-xs text-slate-400 font-medium mt-0.5">
-                  Year {selectedYear} Leave Breakdown
+                  Year {selectedYear} Leave Breakdown & Rollover
                 </p>
               </div>
               <button
@@ -205,17 +212,25 @@ const LeaveBalances: React.FC = () => {
             </div>
 
             {/* Summary Metrics Bar */}
-            <div className="mt-4 grid grid-cols-3 gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
+            <div className="mt-4 grid grid-cols-4 gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">
-                  Granted
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide block">
+                  New Grant
                 </span>
                 <span className="text-sm font-extrabold text-slate-800 font-mono">
                   {activeDetailModal.granted}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">
+                <span className="text-[9px] font-bold text-indigo-500 uppercase tracking-wide block">
+                  Carried Over
+                </span>
+                <span className="text-sm font-extrabold text-indigo-600 font-mono">
+                  {activeDetailModal.carriedForward || 0}
+                </span>
+              </div>
+              <div>
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide block">
                   Consumed
                 </span>
                 <span className="text-sm font-extrabold text-blue-600 font-mono">
@@ -223,8 +238,8 @@ const LeaveBalances: React.FC = () => {
                 </span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">
-                  Balance Available
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide block">
+                  Available
                 </span>
                 <span className="text-sm font-extrabold text-emerald-600 font-mono">
                   {activeDetailModal.balance}
@@ -253,7 +268,16 @@ const LeaveBalances: React.FC = () => {
                           <td className="py-2.5 px-3 font-semibold whitespace-nowrap">
                             {item.fromDate} {item.fromDate !== item.toDate && `to ${item.toDate}`}
                           </td>
-                          <td className="py-2.5 px-3 font-bold font-mono">{item.days}</td>
+                          <td className="py-2.5 px-3 font-bold font-mono">
+                            <span className={item.isHalfDay ? 'text-indigo-600 font-extrabold' : ''}>
+                              {item.days}
+                            </span>
+                            {item.isHalfDay && (
+                              <span className="block text-[9px] font-semibold text-slate-400">
+                                {item.halfDaySession === 'FIRST_HALF' ? '1st Half' : '2nd Half'}
+                              </span>
+                            )}
+                          </td>
                           <td className="py-2.5 px-3 max-w-[150px] truncate" title={item.reason}>
                             {item.reason}
                           </td>

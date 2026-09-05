@@ -67,6 +67,16 @@ public class CompanyLocation {
     @Column(name = "business_grace_minutes", nullable = false)
     private Integer businessGraceMinutes = 15;
 
+    // 4. OG Team Shift (8:45 AM - 6:15 PM)
+    @Column(name = "og_login_time", nullable = false)
+    private LocalTime ogLoginTime = LocalTime.of(8, 45);
+
+    @Column(name = "og_logout_time", nullable = false)
+    private LocalTime ogLogoutTime = LocalTime.of(18, 15);
+
+    @Column(name = "og_grace_minutes", nullable = false)
+    private Integer ogGraceMinutes = 15;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
@@ -103,6 +113,10 @@ public class CompanyLocation {
         if (businessLoginTime == null) businessLoginTime = LocalTime.of(8, 45);
         if (businessLogoutTime == null) businessLogoutTime = LocalTime.of(17, 45);
         if (businessGraceMinutes == null) businessGraceMinutes = 15;
+
+        if (ogLoginTime == null) ogLoginTime = LocalTime.of(8, 45);
+        if (ogLogoutTime == null) ogLogoutTime = LocalTime.of(18, 15);
+        if (ogGraceMinutes == null) ogGraceMinutes = 15;
     }
 
     @PreUpdate
@@ -164,6 +178,15 @@ public class CompanyLocation {
 
     public Integer getBusinessGraceMinutes() { return businessGraceMinutes; }
     public void setBusinessGraceMinutes(Integer businessGraceMinutes) { this.businessGraceMinutes = businessGraceMinutes; }
+
+    public LocalTime getOgLoginTime() { return ogLoginTime; }
+    public void setOgLoginTime(LocalTime ogLoginTime) { this.ogLoginTime = ogLoginTime; }
+
+    public LocalTime getOgLogoutTime() { return ogLogoutTime; }
+    public void setOgLogoutTime(LocalTime ogLogoutTime) { this.ogLogoutTime = ogLogoutTime; }
+
+    public Integer getOgGraceMinutes() { return ogGraceMinutes; }
+    public void setOgGraceMinutes(Integer ogGraceMinutes) { this.ogGraceMinutes = ogGraceMinutes; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

@@ -23,11 +23,20 @@ public class LeaveBalance {
     @Column(name = "casual_leave_granted", nullable = false)
     private double casualLeaveGranted = 5.0;
 
+    @Column(name = "casual_leave_carried_forward", nullable = false)
+    private double casualLeaveCarriedForward = 0.0;
+
     @Column(name = "sick_leave_granted", nullable = false)
     private double sickLeaveGranted = 1.0;
 
+    @Column(name = "sick_leave_carried_forward", nullable = false)
+    private double sickLeaveCarriedForward = 0.0;
+
     @Column(name = "comp_off_granted", nullable = false)
     private double compOffGranted = 0.0;
+
+    @Column(name = "comp_off_carried_forward", nullable = false)
+    private double compOffCarriedForward = 0.0;
 
     @Column(name = "loss_of_pay_granted", nullable = false)
     private double lossOfPayGranted = 0.0;
@@ -47,8 +56,11 @@ public class LeaveBalance {
         this.employee = employee;
         this.year = year;
         this.casualLeaveGranted = 5.0;
+        this.casualLeaveCarriedForward = 0.0;
         this.sickLeaveGranted = 1.0;
+        this.sickLeaveCarriedForward = 0.0;
         this.compOffGranted = 0.0;
+        this.compOffCarriedForward = 0.0;
         this.lossOfPayGranted = 0.0;
         this.workFromHomeGranted = 0.0;
     }
@@ -77,11 +89,20 @@ public class LeaveBalance {
     public double getCasualLeaveGranted() { return casualLeaveGranted; }
     public void setCasualLeaveGranted(double casualLeaveGranted) { this.casualLeaveGranted = casualLeaveGranted; }
 
+    public double getCasualLeaveCarriedForward() { return casualLeaveCarriedForward; }
+    public void setCasualLeaveCarriedForward(double casualLeaveCarriedForward) { this.casualLeaveCarriedForward = casualLeaveCarriedForward; }
+
     public double getSickLeaveGranted() { return sickLeaveGranted; }
     public void setSickLeaveGranted(double sickLeaveGranted) { this.sickLeaveGranted = sickLeaveGranted; }
 
+    public double getSickLeaveCarriedForward() { return sickLeaveCarriedForward; }
+    public void setSickLeaveCarriedForward(double sickLeaveCarriedForward) { this.sickLeaveCarriedForward = sickLeaveCarriedForward; }
+
     public double getCompOffGranted() { return compOffGranted; }
     public void setCompOffGranted(double compOffGranted) { this.compOffGranted = compOffGranted; }
+
+    public double getCompOffCarriedForward() { return compOffCarriedForward; }
+    public void setCompOffCarriedForward(double compOffCarriedForward) { this.compOffCarriedForward = compOffCarriedForward; }
 
     public double getLossOfPayGranted() { return lossOfPayGranted; }
     public void setLossOfPayGranted(double lossOfPayGranted) { this.lossOfPayGranted = lossOfPayGranted; }

@@ -78,6 +78,11 @@ export const requestService = {
     return response.data;
   },
 
+  withdrawLeave: async (id: number, withdrawalReason?: string): Promise<LeaveRequest> => {
+    const response = await api.patch<LeaveRequest>(`/leaves/${id}/withdraw`, { withdrawalReason });
+    return response.data;
+  },
+
   // Leave Balances APIs
   getMyLeaveBalances: async (year?: number): Promise<import('../types/request').LeaveBalanceSummary> => {
     const params = new URLSearchParams();

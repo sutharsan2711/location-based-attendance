@@ -24,13 +24,15 @@ public class AdminController {
     }
 
     @GetMapping("/dashboard")
-    public ResponseEntity<Map<String, Object>> getDashboardStats() {
-        return ResponseEntity.ok(dashboardService.getDashboardStats());
+    public ResponseEntity<Map<String, Object>> getDashboardStats(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return ResponseEntity.ok(dashboardService.getDashboardStats(date));
     }
 
     @GetMapping("/attendance-summary")
-    public ResponseEntity<List<Map<String, Object>>> getAttendanceSummaryCharts() {
-        return ResponseEntity.ok(dashboardService.getAttendanceSummaryCharts());
+    public ResponseEntity<List<Map<String, Object>>> getAttendanceSummaryCharts(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return ResponseEntity.ok(dashboardService.getAttendanceSummaryCharts(date));
     }
 
     @GetMapping("/attendance-report")

@@ -8,7 +8,7 @@ export interface PermissionRequest {
   toTime: string;
   reason: string;
   remarks?: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'WITHDRAWN';
   adminRemarks?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -31,15 +31,19 @@ export type LeaveType =
   | 'PERSONAL_LEAVE'
   | 'OTHER';
 
+export type HalfDaySession = 'FIRST_HALF' | 'SECOND_HALF';
+
 export interface LeaveRequest {
   id: number;
   employee: Employee;
   leaveType: LeaveType;
   fromDate: string;
   toDate: string;
+  isHalfDay?: boolean;
+  halfDaySession?: HalfDaySession;
   reason: string;
   remarks?: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'WITHDRAWN';
   adminRemarks?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -49,12 +53,14 @@ export interface LeaveCreatePayload {
   leaveType: LeaveType;
   fromDate: string;
   toDate: string;
+  isHalfDay?: boolean;
+  halfDaySession?: HalfDaySession;
   reason: string;
   remarks?: string;
 }
 
 export interface RequestStatusUpdatePayload {
-  status: 'APPROVED' | 'REJECTED';
+  status: 'APPROVED' | 'REJECTED' | 'CANCELLED';
   adminRemarks?: string;
 }
 
@@ -63,6 +69,8 @@ export interface LeaveDetailItem {
   fromDate: string;
   toDate: string;
   days: number;
+  isHalfDay?: boolean;
+  halfDaySession?: HalfDaySession;
   reason: string;
   status: string;
 }
@@ -71,6 +79,7 @@ export interface LeaveBalanceItem {
   type: string;
   title: string;
   granted: number;
+  carriedForward?: number;
   consumed: number;
   balance: number;
   breakdown: LeaveDetailItem[];
@@ -92,4 +101,36 @@ export interface LeaveGrantUpdatePayload {
   compOffGranted: number;
   lossOfPayGranted: number;
   workFromHomeGranted: number;
+}
+
+export interface CarryForwardRulePayload {
+  fromYear: number;
+  toYear: number;
+  maxCasualLeaveCap: number;
+  maxSickLeaveCap: number;
+  maxCompOffCap: number;
+  enableCasualLeave: boolean;
+  enableSickLeave: boolean;
+  enableCompOff: boolean;
+}
+
+export interface CarryForwardEmployeeItem {
+  employeeId: number;
+  employeeName: string;
+  employeeCode: string;
+  casualClosing: number;
+  casualCarried: number;
+  sickClosing: number;
+  sickCarried: number;
+  compOffClosing: number;
+  compOffCarried: number;
+  totalCarried: number;
+}
+
+export interface CarryForwardPreviewResponse {
+  fromYear: number;
+  toYear: number;
+  totalEmployees: number;
+  totalDaysCarriedForward: number;
+  employees: CarryForwardEmployeeItem[];
 }

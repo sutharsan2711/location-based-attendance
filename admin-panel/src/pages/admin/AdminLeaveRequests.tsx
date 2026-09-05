@@ -42,8 +42,10 @@ import {
   PlusCircle,
   HelpCircle,
   Info,
-  ShieldAlert
+  ShieldAlert,
+  Undo2,
 } from 'lucide-react';
+import AdminCarryForwardModal from '../../components/AdminCarryForwardModal';
 
 const currentYear = new Date().getFullYear();
 
@@ -66,7 +68,7 @@ export interface UnifiedRequest {
   reason: string;
   remarks?: string;
   isAdminNoted?: boolean;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'WITHDRAWN';
   adminRemarks?: string;
   createdAt?: string;
   originalLeave?: LeaveRequest;
@@ -85,6 +87,9 @@ const AdminLeaveRequests: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
+  // Carry Forward Engine Modal State
+  const [showCarryForwardModal, setShowCarryForwardModal] = useState<boolean>(false);
+
   // Filters
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [selectedOrigin, setSelectedOrigin] = useState<'ALL' | 'SELF' | 'ADMIN_NOTED'>('ALL');
@@ -96,10 +101,10 @@ const AdminLeaveRequests: React.FC = () => {
   const [balancesLoading, setBalancesLoading] = useState<boolean>(false);
   const [balanceSearchQuery, setBalanceSearchQuery] = useState<string>('');
 
-  // Action State (Approval / Rejection Modal)
+  // Action State (Approval / Rejection / Cancellation Modal)
   const [actionModal, setActionModal] = useState<{
     request: UnifiedRequest;
-    action: 'APPROVED' | 'REJECTED';
+    action: 'APPROVED' | 'REJECTED' | 'CANCELLED';
   } | null>(null);
   const [adminRemarks, setAdminRemarks] = useState<string>('');
   const [actionLoading, setActionLoading] = useState<boolean>(false);
@@ -108,6 +113,8 @@ const AdminLeaveRequests: React.FC = () => {
   const [showUnappliedModal, setShowUnappliedModal] = useState<boolean>(false);
   const [unappliedEmployeeId, setUnappliedEmployeeId] = useState<number | ''>('');
   const [unappliedLeaveType, setUnappliedLeaveType] = useState<LeaveType>('CASUAL_LEAVE');
+  const [unappliedIsHalfDay, setUnappliedIsHalfDay] = useState<boolean>(false);
+  const [unappliedHalfDaySession, setUnappliedHalfDaySession] = useState<'FIRST_HALF' | 'SECOND_HALF'>('FIRST_HALF');
   const [unappliedFromDate, setUnappliedFromDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [unappliedToDate, setUnappliedToDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [unappliedReason, setUnappliedReason] = useState<string>('Unannounced Absence (Employee did not apply)');
@@ -229,6 +236,14 @@ const AdminLeaveRequests: React.FC = () => {
       const toD = new Date(l.toDate);
       const diffTime = Math.abs(toD.getTime() - fromD.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+      const isHalf = Boolean(l.isHalfDay);
+      const sessionLabel =
+        l.halfDaySession === 'FIRST_HALF'
+          ? '1st Half'
+          : l.halfDaySession === 'SECOND_HALF'
+          ? '2nd Half'
+          : 'Half Day';
+
       const isAdminNoted =
         (l.remarks && l.remarks.toLowerCase().includes('admin noted')) ||
         (l.remarks && l.remarks.toLowerCase().includes('direct entry')) ||
@@ -241,9 +256,11 @@ const AdminLeaveRequests: React.FC = () => {
         title: formatLeaveType(l.leaveType),
         dateRange:
           l.fromDate === l.toDate
-            ? formatDate(l.fromDate)
+            ? isHalf
+              ? `${formatDate(l.fromDate)} • ${sessionLabel}`
+              : formatDate(l.fromDate)
             : `${formatDate(l.fromDate)} - ${formatDate(l.toDate)}`,
-        duration: `${diffDays} Day${diffDays > 1 ? 's' : ''}`,
+        duration: isHalf ? `0.5 Day (${sessionLabel})` : `${diffDays} Day${diffDays > 1 ? 's' : ''}`,
         rawStartDate: l.fromDate,
         reason: l.reason,
         remarks: l.remarks,
@@ -355,7 +372,9 @@ const AdminLeaveRequests: React.FC = () => {
     setActionLoading(true);
 
     try {
-      if (actionModal.request.requestType === 'LEAVE') {
+      if (actionModal.action === 'CANCELLED') {
+        await requestService.adminCancelLeave(actionModal.request.id, adminRemarks.trim() || undefined);
+      } else if (actionModal.request.requestType === 'LEAVE') {
         await requestService.updateLeaveStatus(actionModal.request.id, {
           status: actionModal.action,
           adminRemarks: adminRemarks.trim() || undefined,
@@ -402,7 +421,9 @@ const AdminLeaveRequests: React.FC = () => {
         employeeId: Number(unappliedEmployeeId),
         leaveType: unappliedLeaveType,
         fromDate: unappliedFromDate,
-        toDate: unappliedToDate,
+        toDate: unappliedIsHalfDay ? unappliedFromDate : unappliedToDate,
+        isHalfDay: unappliedIsHalfDay,
+        halfDaySession: unappliedIsHalfDay ? unappliedHalfDaySession : undefined,
         reason: unappliedReason.trim() || 'Unapplied Leave (Admin Noted)',
         adminRemarks: unappliedAdminRemarks.trim() || 'Directly logged by Admin',
         isUnapplied: true,
@@ -552,6 +573,15 @@ const AdminLeaveRequests: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-3 shrink-0">
+            {/* ANNUAL CARRY FORWARD ENGINE */}
+            <button
+              onClick={() => setShowCarryForwardModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/30 transition-all cursor-pointer active:scale-95"
+            >
+              <Layers className="h-4 w-4 text-white stroke-[2.5]" />
+              Annual Carry-Forward
+            </button>
+
             {/* SEPARATE DIRECT LEAVE / UNAPPLIED LEAVE OPTION */}
             <button
               onClick={() => {
@@ -883,6 +913,8 @@ const AdminLeaveRequests: React.FC = () => {
                                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                   : req.status === 'REJECTED'
                                   ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                  : req.status === 'CANCELLED' || req.status === 'WITHDRAWN'
+                                  ? 'bg-slate-100 text-slate-600 border-slate-200'
                                   : 'bg-amber-50 text-amber-700 border-amber-200 animate-pulse'
                               }`}
                             >
@@ -892,10 +924,12 @@ const AdminLeaveRequests: React.FC = () => {
                                     ? 'bg-emerald-500'
                                     : req.status === 'REJECTED'
                                     ? 'bg-rose-500'
+                                    : req.status === 'CANCELLED' || req.status === 'WITHDRAWN'
+                                    ? 'bg-slate-400'
                                     : 'bg-amber-500'
                                 }`}
                               />
-                              {req.status}
+                              {req.status === 'CANCELLED' ? 'WITHDRAWN / CANCELLED' : req.status}
                             </span>
                           </td>
 
@@ -918,6 +952,17 @@ const AdminLeaveRequests: React.FC = () => {
                                 >
                                   <X className="h-3.5 w-3.5 stroke-[3]" />
                                   Reject
+                                </button>
+                              </div>
+                            ) : req.status === 'APPROVED' ? (
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  onClick={() => setActionModal({ request: req, action: 'CANCELLED' })}
+                                  className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 border border-slate-200"
+                                  title="Revoke and cancel this approved leave (restore quota)"
+                                >
+                                  <Undo2 className="h-3 w-3" />
+                                  Revoke
                                 </button>
                               </div>
                             ) : (
@@ -949,20 +994,30 @@ const AdminLeaveRequests: React.FC = () => {
               />
             </div>
 
-            {/* Year Selector */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-500">Quota Year:</span>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none"
+            {/* Year Selector & Carry Forward */}
+            <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-500">Quota Year:</span>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  className="text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none"
+                >
+                  {[currentYear - 1, currentYear, currentYear + 1].map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCarryForwardModal(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold text-xs shadow-md shadow-indigo-600/20 transition-all cursor-pointer"
               >
-                {[currentYear - 1, currentYear, currentYear + 1].map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
+                <Sparkles className="h-3.5 w-3.5" />
+                Annual Carry-Forward
+              </button>
             </div>
           </div>
 
@@ -1008,9 +1063,16 @@ const AdminLeaveRequests: React.FC = () => {
 
                             <td className="py-4 px-6">
                               <div className="space-y-0.5">
-                                <span className="font-bold text-slate-900">
-                                  {cl ? `${cl.balance} / ${cl.granted}` : '--'}
-                                </span>
+                                <div className="flex items-center gap-1">
+                                  <span className="font-bold text-slate-900">
+                                    {cl ? `${cl.balance} / ${cl.granted}` : '--'}
+                                  </span>
+                                  {cl && (cl.carriedForward ?? 0) > 0 && (
+                                    <span className="text-[9px] font-black px-1 py-0.2 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                      +{cl.carriedForward} C/F
+                                    </span>
+                                  )}
+                                </div>
                                 <span className="text-[10px] text-slate-400 block font-medium">
                                   Consumed: {cl?.consumed || 0}
                                 </span>
@@ -1019,9 +1081,16 @@ const AdminLeaveRequests: React.FC = () => {
 
                             <td className="py-4 px-6">
                               <div className="space-y-0.5">
-                                <span className="font-bold text-slate-900">
-                                  {sl ? `${sl.balance} / ${sl.granted}` : '--'}
-                                </span>
+                                <div className="flex items-center gap-1">
+                                  <span className="font-bold text-slate-900">
+                                    {sl ? `${sl.balance} / ${sl.granted}` : '--'}
+                                  </span>
+                                  {sl && (sl.carriedForward ?? 0) > 0 && (
+                                    <span className="text-[9px] font-black px-1 py-0.2 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                      +{sl.carriedForward} C/F
+                                    </span>
+                                  )}
+                                </div>
                                 <span className="text-[10px] text-slate-400 block font-medium">
                                   Consumed: {sl?.consumed || 0}
                                 </span>
@@ -1030,9 +1099,16 @@ const AdminLeaveRequests: React.FC = () => {
 
                             <td className="py-4 px-6">
                               <div className="space-y-0.5">
-                                <span className="font-bold text-slate-900">
-                                  {co ? `${co.balance} / ${co.granted}` : '--'}
-                                </span>
+                                <div className="flex items-center gap-1">
+                                  <span className="font-bold text-slate-900">
+                                    {co ? `${co.balance} / ${co.granted}` : '--'}
+                                  </span>
+                                  {co && (co.carriedForward ?? 0) > 0 && (
+                                    <span className="text-[9px] font-black px-1 py-0.2 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                      +{co.carriedForward} C/F
+                                    </span>
+                                  )}
+                                </div>
                                 <span className="text-[10px] text-slate-400 block font-medium">
                                   Consumed: {co?.consumed || 0}
                                 </span>
@@ -1141,32 +1217,83 @@ const AdminLeaveRequests: React.FC = () => {
                 </select>
               </div>
 
+              {/* Day Duration Toggle (Full Day vs Half Day) */}
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-700">Duration Type:</span>
+                  <div className="flex items-center gap-3">
+                    <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700">
+                      <input
+                        type="radio"
+                        name="unappliedIsHalfDayRadio"
+                        checked={!unappliedIsHalfDay}
+                        onChange={() => setUnappliedIsHalfDay(false)}
+                        className="text-orange-600 focus:ring-orange-500"
+                      />
+                      Full / Multi Day (1.0+)
+                    </label>
+                    <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-orange-700">
+                      <input
+                        type="radio"
+                        name="unappliedIsHalfDayRadio"
+                        checked={unappliedIsHalfDay}
+                        onChange={() => {
+                          setUnappliedIsHalfDay(true);
+                          setUnappliedToDate(unappliedFromDate);
+                        }}
+                        className="text-orange-600 focus:ring-orange-500"
+                      />
+                      Half Day (0.5)
+                    </label>
+                  </div>
+                </div>
+
+                {unappliedIsHalfDay && (
+                  <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between gap-3 animate-fade-in">
+                    <label className="text-xs font-bold text-slate-700">Select Shift Half *</label>
+                    <select
+                      value={unappliedHalfDaySession}
+                      onChange={(e) => setUnappliedHalfDaySession(e.target.value as 'FIRST_HALF' | 'SECOND_HALF')}
+                      className="px-3 py-1.5 text-xs font-bold bg-white border border-orange-200 text-orange-800 rounded-xl focus:outline-none"
+                    >
+                      <option value="FIRST_HALF">First Half (Morning Shift)</option>
+                      <option value="SECOND_HALF">Second Half (Afternoon Shift)</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
               {/* Date Range */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className={`grid ${unappliedIsHalfDay ? 'grid-cols-1' : 'grid-cols-2'} gap-3`}>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    From Date *
+                    {unappliedIsHalfDay ? 'Leave Date *' : 'From Date *'}
                   </label>
                   <input
                     type="date"
                     required
                     value={unappliedFromDate}
-                    onChange={(e) => setUnappliedFromDate(e.target.value)}
+                    onChange={(e) => {
+                      setUnappliedFromDate(e.target.value);
+                      if (unappliedIsHalfDay) setUnappliedToDate(e.target.value);
+                    }}
                     className="w-full px-4 py-2.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    To Date *
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={unappliedToDate}
-                    onChange={(e) => setUnappliedToDate(e.target.value)}
-                    className="w-full px-4 py-2.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-                  />
-                </div>
+                {!unappliedIsHalfDay && (
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      To Date *
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={unappliedToDate}
+                      onChange={(e) => setUnappliedToDate(e.target.value)}
+                      className="w-full px-4 py-2.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Quick Preset Reasons */}
@@ -1447,6 +1574,20 @@ const AdminLeaveRequests: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ── ANNUAL CARRY-FORWARD ENGINE MODAL ── */}
+      <AdminCarryForwardModal
+        isOpen={showCarryForwardModal}
+        onClose={() => setShowCarryForwardModal(false)}
+        onSuccess={() => {
+          fetchBalances(selectedYear);
+          fetchAllRequests();
+          setNotification({
+            type: 'success',
+            message: 'Annual leave carry-forward executed successfully!',
+          });
+        }}
+      />
     </div>
   );
 };

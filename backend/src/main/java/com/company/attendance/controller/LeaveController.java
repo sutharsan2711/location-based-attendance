@@ -62,6 +62,33 @@ public class LeaveController {
         return ResponseEntity.ok(leaveService.updateLeaveStatus(id, request));
     }
 
+    @PatchMapping("/leaves/{id}/withdraw")
+    public ResponseEntity<LeaveRequest> withdrawLeave(
+            @PathVariable Long id,
+            @RequestBody(required = false) com.company.attendance.dto.LeaveWithdrawRequest request) {
+        String email = getCurrentUserEmail();
+        return ResponseEntity.ok(leaveService.withdrawMyLeave(email, id, request));
+    }
+
+    @PatchMapping("/admin/leaves/{id}/cancel")
+    public ResponseEntity<LeaveRequest> adminCancelLeave(
+            @PathVariable Long id,
+            @RequestBody(required = false) com.company.attendance.dto.LeaveWithdrawRequest request) {
+        return ResponseEntity.ok(leaveService.adminCancelLeave(id, request));
+    }
+
+    @PostMapping("/admin/leaves/carry-forward/preview")
+    public ResponseEntity<com.company.attendance.dto.CarryForwardPreviewResponse> previewCarryForward(
+            @RequestBody com.company.attendance.dto.CarryForwardRuleDTO rules) {
+        return ResponseEntity.ok(leaveService.previewCarryForward(rules));
+    }
+
+    @PostMapping("/admin/leaves/carry-forward/execute")
+    public ResponseEntity<com.company.attendance.dto.CarryForwardPreviewResponse> executeCarryForward(
+            @RequestBody com.company.attendance.dto.CarryForwardRuleDTO rules) {
+        return ResponseEntity.ok(leaveService.executeCarryForward(rules));
+    }
+
     @GetMapping("/leaves/balances/my")
     public ResponseEntity<com.company.attendance.dto.LeaveBalanceSummaryResponse> getMyLeaveBalances(
             @RequestParam(required = false, defaultValue = "0") int year) {

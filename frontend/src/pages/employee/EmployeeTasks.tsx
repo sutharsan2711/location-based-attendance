@@ -280,8 +280,8 @@ const EmployeeTasks: React.FC = () => {
                       <Calendar className="w-3.5 h-3.5 text-slate-400" />
                       <span>Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No Deadline'}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-slate-400">
-                      <span>Assigned by Admin on {new Date(task.createdAt).toLocaleDateString()}</span>
+                    <div className="flex items-center gap-1.5 text-slate-500 font-medium bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100">
+                      <span>Assigned by: <strong className="text-slate-700">{task.assignedByName || task.createdByName || 'Admin'}</strong> on {new Date(task.createdAt).toLocaleDateString()}</span>
                     </div>
                   </div>
 

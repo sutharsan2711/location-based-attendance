@@ -8,6 +8,7 @@ import com.company.attendance.entity.User;
 import com.company.attendance.enums.Role;
 import com.company.attendance.enums.TaskPriority;
 import com.company.attendance.enums.TaskStatus;
+import com.company.attendance.exception.ResourceNotFoundException;
 import com.company.attendance.repository.TaskRepository;
 import com.company.attendance.repository.UserRepository;
 import org.springframework.security.core.Authentication;
@@ -44,12 +45,15 @@ public class TaskService {
 
     @Transactional
     public TaskResponse createTask(TaskRequest req) {
+        if (req.getEmployeeId() == null) {
+            throw new IllegalArgumentException("Please select an employee to assign this task.");
+        }
         User admin = getCurrentUser();
         User employee = userRepository.findById(req.getEmployeeId())
-                .orElseThrow(() -> new RuntimeException("Assigned employee not found with ID: " + req.getEmployeeId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Assigned employee not found with ID: " + req.getEmployeeId()));
 
         Task task = new Task();
-        task.setTitle(req.getTitle());
+        task.setTitle(req.getTitle() != null ? req.getTitle().trim() : "Untitled Task");
         task.setDescription(req.getDescription());
         task.setAssignedEmployee(employee);
         task.setAssignedBy(admin);

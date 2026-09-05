@@ -8,6 +8,7 @@ public class TaskRequest {
     private String title;
     private String description;
     private Long employeeId;
+    private Long assignedEmployeeId;
     private String department;
     private TaskPriority priority = TaskPriority.MEDIUM;
     private TaskStatus status = TaskStatus.PENDING;
@@ -23,8 +24,25 @@ public class TaskRequest {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public Long getEmployeeId() { return employeeId; }
-    public void setEmployeeId(Long employeeId) { this.employeeId = employeeId; }
+    public Long getEmployeeId() {
+        return employeeId != null ? employeeId : assignedEmployeeId;
+    }
+    public void setEmployeeId(Long employeeId) {
+        this.employeeId = employeeId;
+        if (this.assignedEmployeeId == null) {
+            this.assignedEmployeeId = employeeId;
+        }
+    }
+
+    public Long getAssignedEmployeeId() {
+        return assignedEmployeeId != null ? assignedEmployeeId : employeeId;
+    }
+    public void setAssignedEmployeeId(Long assignedEmployeeId) {
+        this.assignedEmployeeId = assignedEmployeeId;
+        if (this.employeeId == null) {
+            this.employeeId = assignedEmployeeId;
+        }
+    }
 
     public String getDepartment() { return department; }
     public void setDepartment(String department) { this.department = department; }

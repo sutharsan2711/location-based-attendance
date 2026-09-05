@@ -14,9 +14,19 @@ public class TaskResponse {
     private String employeeCode;
     private String employeeName;
     private String employeeEmail;
+
+    // Aliases for Frontend consistency
+    private Long assignedEmployeeId;
+    private String assignedEmployeeCode;
+    private String assignedEmployeeName;
+    private String assignedEmployeeEmail;
+
     private String department;
     private Long assignedById;
     private String assignedByName;
+    private Long createdById;
+    private String createdByName;
+
     private TaskPriority priority;
     private TaskStatus status;
     private LocalDate startDate;
@@ -34,14 +44,29 @@ public class TaskResponse {
         dto.setTitle(task.getTitle());
         dto.setDescription(task.getDescription());
         if (task.getAssignedEmployee() != null) {
-            dto.setEmployeeId(task.getAssignedEmployee().getId());
-            dto.setEmployeeCode(task.getAssignedEmployee().getEmployeeCode());
-            dto.setEmployeeName(task.getAssignedEmployee().getName());
-            dto.setEmployeeEmail(task.getAssignedEmployee().getEmail());
+            Long empId = task.getAssignedEmployee().getId();
+            String empCode = task.getAssignedEmployee().getEmployeeCode();
+            String empName = task.getAssignedEmployee().getName();
+            String empEmail = task.getAssignedEmployee().getEmail();
+
+            dto.setEmployeeId(empId);
+            dto.setEmployeeCode(empCode);
+            dto.setEmployeeName(empName);
+            dto.setEmployeeEmail(empEmail);
+
+            dto.setAssignedEmployeeId(empId);
+            dto.setAssignedEmployeeCode(empCode);
+            dto.setAssignedEmployeeName(empName);
+            dto.setAssignedEmployeeEmail(empEmail);
         }
         if (task.getAssignedBy() != null) {
-            dto.setAssignedById(task.getAssignedBy().getId());
-            dto.setAssignedByName(task.getAssignedBy().getName());
+            Long creatorId = task.getAssignedBy().getId();
+            String creatorName = task.getAssignedBy().getName();
+
+            dto.setAssignedById(creatorId);
+            dto.setAssignedByName(creatorName);
+            dto.setCreatedById(creatorId);
+            dto.setCreatedByName(creatorName);
         }
         dto.setDepartment(task.getDepartment());
         dto.setPriority(task.getPriority());
@@ -76,6 +101,18 @@ public class TaskResponse {
     public String getEmployeeEmail() { return employeeEmail; }
     public void setEmployeeEmail(String employeeEmail) { this.employeeEmail = employeeEmail; }
 
+    public Long getAssignedEmployeeId() { return assignedEmployeeId != null ? assignedEmployeeId : employeeId; }
+    public void setAssignedEmployeeId(Long assignedEmployeeId) { this.assignedEmployeeId = assignedEmployeeId; }
+
+    public String getAssignedEmployeeCode() { return assignedEmployeeCode != null ? assignedEmployeeCode : employeeCode; }
+    public void setAssignedEmployeeCode(String assignedEmployeeCode) { this.assignedEmployeeCode = assignedEmployeeCode; }
+
+    public String getAssignedEmployeeName() { return assignedEmployeeName != null ? assignedEmployeeName : employeeName; }
+    public void setAssignedEmployeeName(String assignedEmployeeName) { this.assignedEmployeeName = assignedEmployeeName; }
+
+    public String getAssignedEmployeeEmail() { return assignedEmployeeEmail != null ? assignedEmployeeEmail : employeeEmail; }
+    public void setAssignedEmployeeEmail(String assignedEmployeeEmail) { this.assignedEmployeeEmail = assignedEmployeeEmail; }
+
     public String getDepartment() { return department; }
     public void setDepartment(String department) { this.department = department; }
 
@@ -84,6 +121,12 @@ public class TaskResponse {
 
     public String getAssignedByName() { return assignedByName; }
     public void setAssignedByName(String assignedByName) { this.assignedByName = assignedByName; }
+
+    public Long getCreatedById() { return createdById != null ? createdById : assignedById; }
+    public void setCreatedById(Long createdById) { this.createdById = createdById; }
+
+    public String getCreatedByName() { return createdByName != null ? createdByName : assignedByName; }
+    public void setCreatedByName(String createdByName) { this.createdByName = createdByName; }
 
     public TaskPriority getPriority() { return priority; }
     public void setPriority(TaskPriority priority) { this.priority = priority; }

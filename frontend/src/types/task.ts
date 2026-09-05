@@ -7,14 +7,28 @@ export interface Task {
   description: string;
   priority: TaskPriority;
   status: TaskStatus;
+  startDate?: string;
   dueDate?: string;
+  department?: string;
+
+  // Assignee Information
   assignedEmployeeId: number;
   assignedEmployeeName: string;
   assignedEmployeeCode: string;
+  assignedEmployeeEmail?: string;
+  employeeId?: number;
+  employeeName?: string;
+  employeeCode?: string;
+
+  // Creator / Assigner Information
+  assignedById?: number;
+  assignedByName?: string;
   createdById?: number;
   createdByName?: string;
+
   completionNotes?: string;
   completedAt?: string;
+  checklistJson?: string;
   createdAt: string;
   updatedAt: string;
 }

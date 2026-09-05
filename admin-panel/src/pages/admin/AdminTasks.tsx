@@ -104,15 +104,18 @@ const AdminTasks: React.FC = () => {
 
   const filteredTasks = useMemo(() => {
     return tasks.filter((t) => {
+      const empName = t.assignedEmployeeName || t.employeeName || '';
+      const empCode = t.assignedEmployeeCode || t.employeeCode || '';
       const matchSearch =
         t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (t.description && t.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        t.assignedEmployeeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.assignedEmployeeCode.toLowerCase().includes(searchQuery.toLowerCase());
+        empName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        empCode.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchStatus = statusFilter === 'ALL' || t.status === statusFilter;
       const matchPriority = priorityFilter === 'ALL' || t.priority === priorityFilter;
-      const matchEmployee = employeeFilter === 'ALL' || String(t.assignedEmployeeId) === employeeFilter;
+      const targetEmpId = t.assignedEmployeeId || t.employeeId;
+      const matchEmployee = employeeFilter === 'ALL' || String(targetEmpId) === employeeFilter;
 
       return matchSearch && matchStatus && matchPriority && matchEmployee;
     });
@@ -121,22 +124,26 @@ const AdminTasks: React.FC = () => {
   const handleOpenCreateModal = (taskToEdit?: Task) => {
     if (taskToEdit) {
       setSelectedTask(taskToEdit);
+      const empId = taskToEdit.assignedEmployeeId || taskToEdit.employeeId || 0;
       setFormData({
         title: taskToEdit.title,
         description: taskToEdit.description || '',
         priority: taskToEdit.priority,
         status: taskToEdit.status,
         dueDate: taskToEdit.dueDate ? taskToEdit.dueDate.substring(0, 10) : '',
-        assignedEmployeeId: taskToEdit.assignedEmployeeId,
+        assignedEmployeeId: empId,
+        employeeId: empId,
       });
     } else {
       setSelectedTask(null);
+      const defaultEmpId = employees.length > 0 ? employees[0].id : 0;
       setFormData({
         title: '',
         description: '',
         priority: 'MEDIUM',
         dueDate: new Date().toISOString().substring(0, 10),
-        assignedEmployeeId: employees.length > 0 ? employees[0].id : 0,
+        assignedEmployeeId: defaultEmpId,
+        employeeId: defaultEmpId,
       });
     }
     setIsCreateModalOpen(true);
@@ -144,23 +151,35 @@ const AdminTasks: React.FC = () => {
 
   const handleSaveTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title.trim() || !formData.assignedEmployeeId) {
+    const targetEmpId = Number(formData.assignedEmployeeId || formData.employeeId);
+    if (!formData.title.trim() || !targetEmpId) {
       alert('Please fill the task title and select an employee.');
       return;
     }
 
     try {
       setIsSubmitting(true);
+      const payload: TaskRequest = {
+        title: formData.title.trim(),
+        description: formData.description?.trim() || undefined,
+        priority: formData.priority,
+        status: formData.status || 'PENDING',
+        dueDate: formData.dueDate || undefined,
+        assignedEmployeeId: targetEmpId,
+        employeeId: targetEmpId,
+      };
+
       if (selectedTask) {
-        await taskService.updateTask(selectedTask.id, formData);
+        await taskService.updateTask(selectedTask.id, payload);
       } else {
-        await taskService.createTask(formData);
+        await taskService.createTask(payload);
       }
       setIsCreateModalOpen(false);
       await fetchData();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to save task', err);
-      alert('Failed to save task. Please try again.');
+      const msg = err.response?.data?.message || err.message || 'Failed to save task. Please try again.';
+      alert(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -503,6 +522,7 @@ const AdminTasks: React.FC = () => {
                 <tr>
                   <th className="px-6 py-4">Task Details</th>
                   <th className="px-6 py-4">Assigned To</th>
+                  <th className="px-6 py-4">Assigned By</th>
                   <th className="px-6 py-4">Priority</th>
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4">Due Date</th>
@@ -512,6 +532,10 @@ const AdminTasks: React.FC = () => {
               <tbody className="divide-y divide-slate-100 font-medium">
                 {filteredTasks.map((task) => {
                   const StatusIcon = statusConfig[task.status].icon;
+                  const empName = task.assignedEmployeeName || task.employeeName || 'Unassigned';
+                  const empCode = task.assignedEmployeeCode || task.employeeCode || '';
+                  const assignerName = task.assignedByName || task.createdByName || 'Admin';
+
                   return (
                     <tr key={task.id} className="hover:bg-slate-50/70 transition-colors">
                       <td className="px-6 py-4 max-w-xs">
@@ -527,14 +551,17 @@ const AdminTasks: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <div className="h-7 w-7 rounded-full bg-primary-50 text-primary-700 flex items-center justify-center font-bold text-xs">
-                            {task.assignedEmployeeName.charAt(0)}
+                          <div className="h-7 w-7 rounded-full bg-primary-50 text-primary-700 flex items-center justify-center font-bold text-xs shrink-0">
+                            {empName.charAt(0)}
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-slate-800">{task.assignedEmployeeName}</p>
-                            <p className="text-[10px] text-slate-400">{task.assignedEmployeeCode}</p>
+                            <p className="text-xs font-bold text-slate-800">{empName}</p>
+                            {empCode && <p className="text-[10px] text-slate-400 font-mono">{empCode}</p>}
                           </div>
                         </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-xs font-semibold text-slate-700">{assignerName}</span>
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${priorityColors[task.priority].badge}`}>
@@ -586,7 +613,7 @@ const AdminTasks: React.FC = () => {
                 })}
                 {filteredTasks.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400 text-sm">
+                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400 text-sm">
                       No tasks found matching the selected filters.
                     </td>
                   </tr>
@@ -757,19 +784,26 @@ const AdminTasks: React.FC = () => {
                   <div className="flex items-center gap-2 mt-1">
                     <UserCheck className="w-4 h-4 text-primary-500" />
                     <div>
-                      <p className="text-xs font-bold text-slate-800">{selectedTask.assignedEmployeeName}</p>
-                      <p className="text-[10px] text-slate-400">{selectedTask.assignedEmployeeCode}</p>
+                      <p className="text-xs font-bold text-slate-800">
+                        {selectedTask.assignedEmployeeName || selectedTask.employeeName || 'Unassigned'}
+                      </p>
+                      <p className="text-[10px] text-slate-400">
+                        {selectedTask.assignedEmployeeCode || selectedTask.employeeCode || ''}
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <span className="text-[11px] font-bold text-slate-400 uppercase block">Due Date</span>
+                  <span className="text-[11px] font-bold text-slate-400 uppercase block">Assigned By</span>
                   <div className="flex items-center gap-2 mt-1">
-                    <Calendar className="w-4 h-4 text-amber-500" />
-                    <p className="text-xs font-bold text-slate-800">
-                      {selectedTask.dueDate ? new Date(selectedTask.dueDate).toLocaleDateString() : 'No Deadline'}
-                    </p>
+                    <User className="w-4 h-4 text-indigo-500" />
+                    <div>
+                      <p className="text-xs font-bold text-slate-800">
+                        {selectedTask.assignedByName || selectedTask.createdByName || 'Admin'}
+                      </p>
+                      <p className="text-[10px] text-slate-400">Task Creator</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -851,6 +885,10 @@ interface TaskCardProps {
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ task, onClick, onStatusChange, onEdit, onDelete }) => {
+  const empName = task.assignedEmployeeName || task.employeeName || 'Unassigned';
+  const empCode = task.assignedEmployeeCode || task.employeeCode || '';
+  const assignerName = task.assignedByName || task.createdByName || 'Admin';
+
   return (
     <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all group flex flex-col justify-between">
       <div>
@@ -865,6 +903,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onClick, onStatusChange, onEd
                 onEdit();
               }}
               className="p-1 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition"
+              title="Edit Task"
             >
               <Edit2 className="w-3.5 h-3.5" />
             </button>
@@ -874,6 +913,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onClick, onStatusChange, onEd
                 onDelete();
               }}
               className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+              title="Delete Task"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
@@ -894,21 +934,34 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onClick, onStatusChange, onEd
         )}
       </div>
 
-      <div className="mt-4 pt-3 border-t border-slate-100">
+      <div className="mt-4 pt-3 border-t border-slate-100 space-y-2">
         <div className="flex items-center justify-between text-xs">
-          <div className="flex items-center gap-1.5">
-            <div className="h-5 w-5 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-[10px]">
-              {task.assignedEmployeeName.charAt(0)}
+          <div className="flex items-center gap-1.5 min-w-0">
+            <div className="h-6 w-6 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-xs shrink-0">
+              {empName.charAt(0)}
             </div>
-            <span className="font-semibold text-slate-700 truncate max-w-[90px]">{task.assignedEmployeeName}</span>
+            <div className="min-w-0">
+              <span className="font-bold text-slate-800 truncate block text-xs" title={empName}>
+                {empName}
+              </span>
+              {empCode && (
+                <span className="text-[10px] text-slate-400 font-mono block">
+                  {empCode}
+                </span>
+              )}
+            </div>
           </div>
 
           {task.dueDate && (
-            <div className="flex items-center gap-1 text-[11px] text-slate-400 font-medium">
-              <Calendar className="w-3 h-3" />
+            <div className="flex items-center gap-1 text-[11px] text-slate-500 font-medium shrink-0 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+              <Calendar className="w-3 h-3 text-amber-500" />
               <span>{new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
             </div>
           )}
+        </div>
+
+        <div className="text-[10px] text-slate-400 font-medium">
+          Assigned by: <span className="font-semibold text-slate-600">{assignerName}</span>
         </div>
 
         {task.completionNotes && (

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import { workPlanService } from '../../services/workPlanService';
@@ -35,6 +36,9 @@ import {
   Award,
   XCircle,
   Calendar,
+  ExternalLink,
+  ArrowRight,
+  X,
 } from 'lucide-react';
 
 const PRIORITY_BADGES: Record<WorkPlanPriority, { label: string; bg: string; text: string; dot: string }> = {
@@ -53,6 +57,7 @@ const STATUS_BADGES: Record<WorkPlanStatus, { label: string; bg: string; text: s
 
 const EmployeeDashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { latitude, longitude, accuracy, getCoordinates } = useGeolocation();
 
   // Dashboard Data State
@@ -82,6 +87,11 @@ const EmployeeDashboard: React.FC = () => {
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<DailyWorkPlanItem | null>(null);
   const [isBulkUpdateOpen, setIsBulkUpdateOpen] = useState(false);
+
+  // Swipes & Attendance History Modal State
+  const [showSwipesModal, setShowSwipesModal] = useState(false);
+  const [recentSwipes, setRecentSwipes] = useState<Attendance[]>([]);
+  const [swipesLoading, setSwipesLoading] = useState(false);
 
   // Attendance State
   const [attendance, setAttendance] = useState<Attendance | null>(null);
@@ -203,7 +213,21 @@ const EmployeeDashboard: React.FC = () => {
     fetchDashboard();
   }, [fetchDashboard]);
 
-  // ── 2. Add / Edit Task Handler ──
+  // ── 2. Open Swipes & History Modal ──
+  const handleOpenSwipesModal = async () => {
+    setShowSwipesModal(true);
+    try {
+      setSwipesLoading(true);
+      const data = await attendanceService.getHistory();
+      setRecentSwipes(data || []);
+    } catch (err) {
+      console.error('Failed to load swipe history', err);
+    } finally {
+      setSwipesLoading(false);
+    }
+  };
+
+  // ── 3. Add / Edit Task Handler ──
   const handleSaveTask = async (data: {
     taskName: string;
     category: string;
@@ -225,7 +249,7 @@ const EmployeeDashboard: React.FC = () => {
     }
   };
 
-  // ── 3. Delete Task Handler ──
+  // ── 4. Delete Task Handler ──
   const handleDeleteTask = async (id: number) => {
     if (!window.confirm('Are you sure you want to delete this planned task?')) return;
     try {
@@ -238,7 +262,7 @@ const EmployeeDashboard: React.FC = () => {
     }
   };
 
-  // ── 4. Update Single Status ──
+  // ── 5. Update Single Status ──
   const handleStatusChange = async (id: number, newStatus: WorkPlanStatus) => {
     try {
       const target = plans.find((p) => p.id === id);
@@ -255,7 +279,7 @@ const EmployeeDashboard: React.FC = () => {
     }
   };
 
-  // ── 5. Bulk Update Handler ──
+  // ── 6. Bulk Update Handler ──
   const handleBulkUpdate = async (
     updates: {
       id: number;
@@ -271,7 +295,7 @@ const EmployeeDashboard: React.FC = () => {
     }
   };
 
-  // ── 6. Save Notes Handler ──
+  // ── 7. Save Notes Handler ──
   const handleSaveNotes = async () => {
     try {
       setNotesSaving(true);
@@ -289,7 +313,7 @@ const EmployeeDashboard: React.FC = () => {
     }
   };
 
-  // ── 7. Attendance Swipe Handler (Check In / Check Out) ──
+  // ── 8. Attendance Swipe Handler (Check In / Check Out) ──
   const handleSwipe = async () => {
     setSwipeError(null);
     setSwipeSuccess(null);
@@ -496,10 +520,17 @@ const EmployeeDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* 6. Attendance Card */}
-        <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-4 rounded-2xl shadow-md flex flex-col justify-between">
+        {/* 6. Attendance Card with View Swipes & History click trigger */}
+        <div className="bg-gradient-to-br from-slate-900 via-slate-850 to-slate-800 text-white p-4 rounded-2xl shadow-md flex flex-col justify-between relative group">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Attendance</span>
+            <button
+              onClick={handleOpenSwipesModal}
+              className="text-[10px] font-bold text-slate-300 uppercase tracking-wider hover:text-cyan-400 transition-colors flex items-center gap-1 cursor-pointer"
+              title="Click to view full Swipes & History"
+            >
+              <span>Attendance</span>
+              <ExternalLink className="h-2.5 w-2.5 opacity-70" />
+            </button>
             <button
               onClick={handleSwipe}
               disabled={actionLoading || (hasCheckedIn && hasCheckedOut)}
@@ -528,7 +559,11 @@ const EmployeeDashboard: React.FC = () => {
             </button>
           </div>
 
-          <div className="mt-2 space-y-1 text-[11px]">
+          <div
+            onClick={handleOpenSwipesModal}
+            className="mt-2 space-y-1 text-[11px] cursor-pointer hover:bg-white/5 p-1.5 rounded-xl transition-colors"
+            title="Click to view Swipes & History"
+          >
             <div className="flex items-center justify-between text-slate-300">
               <span>In:</span>
               <span className="font-bold text-white">{summary.checkInTime}</span>
@@ -542,6 +577,14 @@ const EmployeeDashboard: React.FC = () => {
               <span className="font-bold text-emerald-400">{summary.workHoursFormatted}</span>
             </div>
           </div>
+
+          <button
+            onClick={handleOpenSwipesModal}
+            className="mt-1 text-[10px] text-cyan-400 hover:text-cyan-300 font-semibold flex items-center justify-center gap-1 hover:underline cursor-pointer"
+          >
+            <span>View Swipes & History</span>
+            <ArrowRight className="h-2.5 w-2.5" />
+          </button>
         </div>
       </div>
 
@@ -597,7 +640,7 @@ const EmployeeDashboard: React.FC = () => {
                         <span className="font-medium">No planned tasks for today yet.</span>
                         <button
                           onClick={() => setIsAddTaskOpen(true)}
-                          className="text-blue-600 font-semibold text-xs hover:underline mt-1"
+                          className="text-blue-600 font-semibold text-xs hover:underline mt-1 cursor-pointer"
                         >
                           + Click here to add your first morning task
                         </button>
@@ -945,6 +988,156 @@ const EmployeeDashboard: React.FC = () => {
         plans={plans}
         onSave={handleBulkUpdate}
       />
+
+      {/* ── View Swipes & History Modal ── */}
+      {showSwipesModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/80 w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm shadow-blue-500/30">
+                  <Clock className="h-4.5 w-4.5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-800">
+                    My Attendance Swipes & History
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Today's punch activity and recent attendance records
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowSwipesModal(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
+              {/* Today's Punch Summary Box */}
+              <div className="p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 text-slate-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs text-blue-900">Today's Punch Activity</span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white text-blue-700 border border-blue-200 shadow-2xs">
+                    {attendance?.timingStatus || 'PRESENT'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+                  <div className="bg-white p-2.5 rounded-lg border border-blue-100 shadow-2xs">
+                    <span className="text-[10px] text-slate-400 font-semibold block">Check-In</span>
+                    <span className="font-bold text-slate-800 text-xs mt-0.5 block">{summary.checkInTime}</span>
+                  </div>
+                  <div className="bg-white p-2.5 rounded-lg border border-blue-100 shadow-2xs">
+                    <span className="text-[10px] text-slate-400 font-semibold block">Check-Out</span>
+                    <span className="font-bold text-slate-800 text-xs mt-0.5 block">{summary.checkOutTime}</span>
+                  </div>
+                  <div className="bg-white p-2.5 rounded-lg border border-blue-100 shadow-2xs">
+                    <span className="text-[10px] text-slate-400 font-semibold block">Work Hours</span>
+                    <span className="font-bold text-emerald-600 text-xs mt-0.5 block">{summary.workHoursFormatted}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Swipes Table */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-bold text-slate-800 text-xs">Recent Swipe Logs</h4>
+                  <button
+                    onClick={() => {
+                      setShowSwipesModal(false);
+                      navigate('/employee/attendance');
+                    }}
+                    className="text-[11px] font-bold text-blue-600 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>Full Attendance History</span>
+                    <ArrowRight className="h-3 w-3" />
+                  </button>
+                </div>
+
+                {swipesLoading ? (
+                  <div className="py-8 text-center text-slate-400 text-xs">Loading swipes...</div>
+                ) : recentSwipes.length === 0 ? (
+                  <div className="py-6 text-center text-slate-400 text-xs">No swipe records found.</div>
+                ) : (
+                  <div className="border border-slate-100 rounded-xl overflow-hidden shadow-2xs">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
+                        <tr>
+                          <th className="py-2.5 px-3">Date</th>
+                          <th className="py-2.5 px-3">Check-In</th>
+                          <th className="py-2.5 px-3">Check-Out</th>
+                          <th className="py-2.5 px-3">Status</th>
+                          <th className="py-2.5 px-3">Timing</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {recentSwipes.slice(0, 7).map((sw, idx) => {
+                          const inTime = sw.loginTime
+                            ? new Date(sw.loginTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+                            : '--';
+                          const outTime = sw.logoutTime
+                            ? new Date(sw.logoutTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+                            : '--';
+
+                          return (
+                            <tr key={sw.id || idx} className="hover:bg-slate-50/70">
+                              <td className="py-2.5 px-3 font-semibold text-slate-800">{sw.attendanceDate}</td>
+                              <td className="py-2.5 px-3 font-mono text-slate-700">{inTime}</td>
+                              <td className="py-2.5 px-3 font-mono text-slate-700">{outTime}</td>
+                              <td className="py-2.5 px-3">
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                  sw.status === 'COMPLETED'
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                    : sw.status === 'LOGGED_IN'
+                                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                    : 'bg-slate-100 text-slate-600'
+                                }`}>
+                                  {sw.status}
+                                </span>
+                              </td>
+                              <td className="py-2.5 px-3">
+                                <span className="font-semibold text-slate-600 text-[11px]">{sw.timingStatus || 'PRESENT'}</span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between px-6 py-3.5 border-t border-slate-100 bg-slate-50/50">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSwipesModal(false);
+                  navigate('/employee/attendance');
+                }}
+                className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer hover:underline"
+              >
+                <span>Open Full Swipes & History Page</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowSwipesModal(false)}
+                className="px-4 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

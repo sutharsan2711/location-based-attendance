@@ -1,747 +1,950 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useGeolocation } from '../../hooks/useGeolocation';
+import { workPlanService } from '../../services/workPlanService';
 import { attendanceService } from '../../services/attendanceService';
-import { locationService } from '../../services/locationService';
-import { taskService } from '../../services/taskService';
+import {
+  DailyWorkPlanItem,
+  DailyWorkSummary,
+  TodayDashboardResponse,
+  WorkPlanPriority,
+  WorkPlanStatus,
+} from '../../types/workPlan';
 import { Attendance } from '../../types/attendance';
-import { CompanyLocation } from '../../types/location';
-import { Task } from '../../types/task';
-import { calculateDistance } from '../../utils/locationUtils';
-import { formatTime, formatDate } from '../../utils/dateUtils';
 import Loading from '../../components/Loading';
+import KpiGauge, { getKpiTier } from '../../components/KpiGauge';
+import PriorityDonutChart from '../../components/PriorityDonutChart';
+import CompletionDonutChart from '../../components/CompletionDonutChart';
+import AddTaskModal from '../../components/AddTaskModal';
+import BulkUpdateModal from '../../components/BulkUpdateModal';
 import {
-  TrackIllustration,
-} from '../../components/GreythrIllustrations';
-import {
-  ArrowRight,
-  MapPin,
+  Sparkles,
+  Plus,
+  Edit2,
+  Trash2,
   CheckCircle2,
-  AlertTriangle,
-  X,
   Clock,
-  RefreshCw,
-  Calendar,
+  AlertTriangle,
   CheckSquare,
-  PlayCircle,
-  Flame,
+  ListTodo,
+  TrendingUp,
+  Save,
+  LogIn,
+  LogOut,
+  RefreshCw,
+  Award,
+  XCircle,
+  Calendar,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+
+const PRIORITY_BADGES: Record<WorkPlanPriority, { label: string; bg: string; text: string; dot: string }> = {
+  HIGH: { label: 'High', bg: 'bg-rose-50 border-rose-200/80', text: 'text-rose-700 font-bold', dot: 'bg-rose-500' },
+  MEDIUM: { label: 'Medium', bg: 'bg-amber-50 border-amber-200/80', text: 'text-amber-700 font-bold', dot: 'bg-amber-500' },
+  LOW: { label: 'Low', bg: 'bg-emerald-50 border-emerald-200/80', text: 'text-emerald-700 font-bold', dot: 'bg-emerald-500' },
+  NOT_SET: { label: 'Not Set', bg: 'bg-slate-50 border-slate-200', text: 'text-slate-600', dot: 'bg-slate-400' },
+};
+
+const STATUS_BADGES: Record<WorkPlanStatus, { label: string; bg: string; text: string; icon: string }> = {
+  COMPLETED: { label: 'Completed', bg: 'bg-emerald-50 border-emerald-200/80', text: 'text-emerald-700 font-bold', icon: '✅' },
+  IN_PROGRESS: { label: 'In Progress', bg: 'bg-amber-50 border-amber-200/80', text: 'text-amber-700 font-bold', icon: '🟡' },
+  NOT_COMPLETED: { label: 'Not Completed', bg: 'bg-rose-50 border-rose-200/80', text: 'text-rose-700 font-bold', icon: '🔴' },
+  NOT_STARTED: { label: 'Not Started', bg: 'bg-blue-50 border-blue-200/80', text: 'text-blue-700 font-bold', icon: '⚪' },
+};
 
 const EmployeeDashboard: React.FC = () => {
-  const { user, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { latitude, longitude, accuracy, getCoordinates } = useGeolocation();
 
-  const {
-    latitude,
-    longitude,
-    accuracy,
-    loading: geoLoading,
-    error: geoError,
-    getCoordinates,
-  } = useGeolocation();
+  // Dashboard Data State
+  const [dashboardData, setDashboardData] = useState<TodayDashboardResponse | null>(null);
+  const [plans, setPlans] = useState<DailyWorkPlanItem[]>([]);
+  const [summary, setSummary] = useState<DailyWorkSummary>({
+    totalTasks: 0,
+    completedCount: 0,
+    inProgressCount: 0,
+    notCompletedCount: 0,
+    notStartedCount: 0,
+    kpiScore: 75,
+    kpiLabel: 'Good',
+    highPriorityCount: 0,
+    mediumPriorityCount: 0,
+    lowPriorityCount: 0,
+    notSetPriorityCount: 0,
+    checkInTime: '--:--',
+    checkOutTime: '--:--',
+    workHoursFormatted: '--',
+  });
+  const [notesText, setNotesText] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
 
+  // Modals state
+  const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<DailyWorkPlanItem | null>(null);
+  const [isBulkUpdateOpen, setIsBulkUpdateOpen] = useState(false);
+
+  // Attendance State
   const [attendance, setAttendance] = useState<Attendance | null>(null);
-  const [dashboardLoading, setDashboardLoading] = useState<boolean>(true);
-  const [allLocations, setAllLocations] = useState<CompanyLocation[]>([]);
-  const [officeLocation, setOfficeLocation] = useState<CompanyLocation | null>(null);
-  const [calculatedDistance, setCalculatedDistance] = useState<number | null>(null);
-  const [checkingLocation, setCheckingLocation] = useState<boolean>(false);
-  const [actionLoading, setActionLoading] = useState<boolean>(false);
-  const [myTasks, setMyTasks] = useState<Task[]>([]);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [swipeError, setSwipeError] = useState<string | null>(null);
+  const [swipeSuccess, setSwipeSuccess] = useState<string | null>(null);
+  const [notesSaving, setNotesSaving] = useState(false);
+  const [notesMessage, setNotesMessage] = useState<string | null>(null);
 
-  const [apiSuccess, setApiSuccess] = useState<string | null>(null);
-  const [apiError, setApiError] = useState<string | null>(null);
-  const [showSwipesModal, setShowSwipesModal] = useState(false);
-
-  // ── 1. Live Digital Clock ──
+  // Live Time
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // ── 2. Data Fetching ──
-  const fetchDashboardData = useCallback(async () => {
+  const currentHour = currentTime.getHours();
+  const greetingText =
+    currentHour < 12 ? 'Good Morning' : currentHour < 17 ? 'Good Afternoon' : 'Good Evening';
+
+  // Recalculate summary metrics & KPI score locally in real time
+  const updateLocalSummary = (newPlans: DailyWorkPlanItem[], currentAttendance?: Attendance | null) => {
+    const total = newPlans.length;
+    const completed = newPlans.filter((p) => p.status === 'COMPLETED').length;
+    const inProgress = newPlans.filter((p) => p.status === 'IN_PROGRESS').length;
+    const notCompleted = newPlans.filter((p) => p.status === 'NOT_COMPLETED').length;
+    const notStarted = newPlans.filter((p) => p.status === 'NOT_STARTED').length;
+
+    const high = newPlans.filter((p) => p.priority === 'HIGH').length;
+    const medium = newPlans.filter((p) => p.priority === 'MEDIUM').length;
+    const low = newPlans.filter((p) => p.priority === 'LOW').length;
+    const notSet = newPlans.filter((p) => p.priority === 'NOT_SET').length;
+
+    // KPI calculation formula: Completed: 100%, In-Progress: 50%, Not Done: 0%
+    let kpi = 75;
+    if (total > 0) {
+      kpi = Math.round(((completed * 100 + inProgress * 50) / total));
+    }
+
+    const tier = getKpiTier(kpi);
+
+    const att = currentAttendance !== undefined ? currentAttendance : attendance;
+    let checkIn = '--:--';
+    let checkOut = '--:--';
+    let hours = '--';
+
+    if (att?.loginTime) {
+      const d = new Date(att.loginTime);
+      checkIn = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+    if (att?.logoutTime) {
+      const d = new Date(att.logoutTime);
+      checkOut = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+    if (att?.loginTime && att?.logoutTime) {
+      const diffMs = new Date(att.logoutTime).getTime() - new Date(att.loginTime).getTime();
+      const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      hours = `${diffHrs}h ${diffMins}m`;
+    } else if (att?.loginTime) {
+      const diffMs = new Date().getTime() - new Date(att.loginTime).getTime();
+      const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      hours = `${diffHrs}h ${diffMins}m`;
+    }
+
+    setSummary({
+      totalTasks: total,
+      completedCount: completed,
+      inProgressCount: inProgress,
+      notCompletedCount: notCompleted,
+      notStartedCount: notStarted,
+      highPriorityCount: high,
+      mediumPriorityCount: medium,
+      lowPriorityCount: low,
+      notSetPriorityCount: notSet,
+      kpiScore: kpi,
+      kpiLabel: tier.label,
+      checkInTime: checkIn,
+      checkOutTime: checkOut,
+      workHoursFormatted: hours,
+    });
+  };
+
+  // ── 1. Fetch Dashboard Data ──
+  const fetchDashboard = useCallback(async (isSilent = false) => {
     try {
-      const [todayAtt, locationsData, tasksData] = await Promise.all([
+      if (!isSilent) setLoading(true);
+      else setRefreshing(true);
+
+      const [res, attRes] = await Promise.all([
+        workPlanService.getTodayDashboard().catch(() => null),
         attendanceService.getTodayAttendance().catch(() => null),
-        locationService
-          .getAllLocations()
-          .catch(async () => [await locationService.getLocation().catch(() => null)])
-          .then((arr) => (arr || []).filter((item): item is CompanyLocation => Boolean(item))),
-        taskService.getMyTasks().catch(() => []),
       ]);
 
-      if (todayAtt) {
-        setAttendance(todayAtt);
-      } else {
-        setAttendance({
-          id: 0,
-          employee: {
-            id: user?.id || 0,
-            name: user?.name || '',
-            email: user?.email || '',
-            role: 'EMPLOYEE',
-            employeeCode: user?.employeeCode || '',
-            phone: '',
-            status: 'ACTIVE',
-          },
-          attendanceDate: new Date().toISOString().split('T')[0],
-          status: 'NOT_LOGGED_IN',
-        } as any);
-      }
-
-      const validLocations: CompanyLocation[] = [];
-      if (Array.isArray(locationsData)) {
-        for (const loc of locationsData) {
-          if (loc && typeof loc === 'object' && 'latitude' in loc) {
-            validLocations.push(loc as CompanyLocation);
-          }
+      if (res) {
+        setDashboardData(res);
+        setPlans(res.plans || []);
+        if (res.note) {
+          setNotesText(res.note.notes || '');
         }
       }
 
-      setAllLocations(validLocations);
-      if (validLocations.length > 0) {
-        setOfficeLocation(validLocations[0]);
+      if (attRes) {
+        setAttendance(attRes);
       }
-      setMyTasks(tasksData || []);
+
+      const activePlans = res?.plans || [];
+      updateLocalSummary(activePlans, attRes);
     } catch (err) {
-      console.error('Failed to load dashboard data', err);
-      setAttendance({
-        id: 0,
-        employee: {
-          id: user?.id || 0,
-          name: user?.name || '',
-          email: user?.email || '',
-          role: 'EMPLOYEE',
-          employeeCode: user?.employeeCode || '',
-          phone: '',
-          status: 'ACTIVE',
-        },
-        attendanceDate: new Date().toISOString().split('T')[0],
-        status: 'NOT_LOGGED_IN',
-      } as any);
+      console.error('Failed to load dashboard:', err);
     } finally {
-      setDashboardLoading(false);
+      setLoading(false);
+      setRefreshing(false);
     }
-  }, [user]);
+  }, []);
 
   useEffect(() => {
-    if (!authLoading) {
-      fetchDashboardData();
-    }
-  }, [authLoading, fetchDashboardData]);
+    fetchDashboard();
+  }, [fetchDashboard]);
 
-  // Handle client-side distance calculation across all office locations
-  useEffect(() => {
-    if (latitude && longitude && allLocations.length > 0) {
-      let minDistance = Infinity;
-      let nearestLoc = allLocations[0];
-
-      allLocations.forEach((loc) => {
-        const dist = calculateDistance(latitude, longitude, loc.latitude, loc.longitude);
-        if (dist < minDistance) {
-          minDistance = dist;
-          nearestLoc = loc;
-        }
-      });
-
-      setCalculatedDistance(minDistance);
-      setOfficeLocation(nearestLoc);
-    } else if (latitude && longitude && officeLocation) {
-      const dist = calculateDistance(
-        latitude,
-        longitude,
-        officeLocation.latitude,
-        officeLocation.longitude
-      );
-      setCalculatedDistance(dist);
+  // ── 2. Add / Edit Task Handler ──
+  const handleSaveTask = async (data: {
+    taskName: string;
+    category: string;
+    priority: WorkPlanPriority;
+    targetDescription: string;
+    remarks: string;
+  }) => {
+    if (editingItem) {
+      const updated = await workPlanService.updatePlan(editingItem.id, data);
+      const updatedList = plans.map((p) => (p.id === editingItem.id ? updated : p));
+      setPlans(updatedList);
+      updateLocalSummary(updatedList);
+      setEditingItem(null);
     } else {
-      setCalculatedDistance(null);
+      const created = await workPlanService.createPlan(data);
+      const updatedList = [...plans, created];
+      setPlans(updatedList);
+      updateLocalSummary(updatedList);
     }
-  }, [latitude, longitude, allLocations, officeLocation]);
+  };
 
-  // Browser geolocation check
-  const checkCurrentLocation = useCallback(async () => {
-    setCheckingLocation(true);
-    setApiError(null);
+  // ── 3. Delete Task Handler ──
+  const handleDeleteTask = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this planned task?')) return;
     try {
-      await getCoordinates(true);
-    } catch (err: any) {
-      console.warn('Location check notice:', err);
+      await workPlanService.deletePlan(id);
+      const updatedList = plans.filter((p) => p.id !== id);
+      setPlans(updatedList);
+      updateLocalSummary(updatedList);
+    } catch (err) {
+      alert('Failed to delete task');
+    }
+  };
+
+  // ── 4. Update Single Status ──
+  const handleStatusChange = async (id: number, newStatus: WorkPlanStatus) => {
+    try {
+      const target = plans.find((p) => p.id === id);
+      const updated = await workPlanService.updateStatus(id, {
+        status: newStatus,
+        reasonRemarks: target?.reasonRemarks,
+        timeSpent: target?.timeSpent,
+      });
+      const updatedList = plans.map((p) => (p.id === id ? updated : p));
+      setPlans(updatedList);
+      updateLocalSummary(updatedList);
+    } catch (err) {
+      console.error('Failed to update status:', err);
+    }
+  };
+
+  // ── 5. Bulk Update Handler ──
+  const handleBulkUpdate = async (
+    updates: {
+      id: number;
+      status: WorkPlanStatus;
+      reasonRemarks?: string;
+      timeSpent?: string;
+    }[]
+  ) => {
+    const res = await workPlanService.bulkUpdateStatus(updates);
+    if (res.plans) {
+      setPlans(res.plans);
+      updateLocalSummary(res.plans);
+    }
+  };
+
+  // ── 6. Save Notes Handler ──
+  const handleSaveNotes = async () => {
+    try {
+      setNotesSaving(true);
+      setNotesMessage(null);
+      await workPlanService.saveNote({
+        notes: notesText,
+        kpiScore: summary.kpiScore,
+      });
+      setNotesMessage('Notes saved successfully!');
+      setTimeout(() => setNotesMessage(null), 3000);
+    } catch (err) {
+      setNotesMessage('Failed to save notes.');
     } finally {
-      setCheckingLocation(false);
+      setNotesSaving(false);
     }
-  }, [getCoordinates]);
+  };
 
-  useEffect(() => {
-    if (officeLocation) {
-      checkCurrentLocation();
-    }
-  }, [officeLocation, checkCurrentLocation]);
-
-  // ── 3. Swipe Actions ──
-  const handleSignIn = async () => {
+  // ── 7. Attendance Swipe Handler (Check In / Check Out) ──
+  const handleSwipe = async () => {
+    setSwipeError(null);
+    setSwipeSuccess(null);
     setActionLoading(true);
-    setApiError(null);
-    setApiSuccess(null);
 
-    let currentLat = latitude;
-    let currentLng = longitude;
-    let currentAcc = accuracy;
+    try {
+      let lat = latitude;
+      let lng = longitude;
+      let acc = accuracy || 15;
 
-    // Auto-retrieve coordinates if not ready
-    if (!currentLat || !currentLng) {
-      try {
-        const coords = await getCoordinates(true);
-        currentLat = coords.latitude;
-        currentLng = coords.longitude;
-        currentAcc = coords.accuracy;
-      } catch (locErr: any) {
-        setApiError(locErr.message || 'Location access is required to sign in. Please enable location in your browser.');
+      if (!lat || !lng) {
+        try {
+          const coords = await getCoordinates();
+          lat = coords.latitude;
+          lng = coords.longitude;
+          acc = coords.accuracy || 15;
+        } catch (e) {
+          console.warn('Geolocation fallback:', e);
+        }
+      }
+
+      const hasCheckedIn =
+        attendance?.status === 'LOGGED_IN' ||
+        attendance?.status === 'COMPLETED' ||
+        Boolean(attendance?.loginTime);
+      const hasCheckedOut = attendance?.status === 'COMPLETED' || Boolean(attendance?.logoutTime);
+
+      if (!hasCheckedIn) {
+        await attendanceService.loginAttendance({
+          latitude: lat || 13.0827,
+          longitude: lng || 80.2707,
+          accuracy: acc,
+        });
+        setSwipeSuccess('Checked in successfully! Have a great productive day.');
+      } else if (!hasCheckedOut) {
+        await attendanceService.logoutAttendance({
+          latitude: lat || 13.0827,
+          longitude: lng || 80.2707,
+          accuracy: acc,
+        });
+        setSwipeSuccess('Checked out successfully! Have a wonderful evening.');
+      } else {
+        setSwipeError('You have already completed attendance for today.');
         setActionLoading(false);
         return;
       }
-    }
 
-    try {
-      const response = await attendanceService.loginAttendance({
-        latitude: currentLat!,
-        longitude: currentLng!,
-        accuracy: currentAcc || 15,
-      });
-      if (response.success) {
-        setApiSuccess(response.message || 'Sign In recorded successfully!');
-        await fetchDashboardData();
-      }
+      await fetchDashboard(true);
     } catch (err: any) {
-      console.error('Sign In error:', err);
-      const errMsg = err.response?.data?.message || err.message || 'Failed to record Sign In. Please ensure you are within office boundary.';
-      setApiError(errMsg);
+      setSwipeError(err?.response?.data?.error || err.message || 'Failed to record attendance swipe.');
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleSignOut = async () => {
-    setActionLoading(true);
-    setApiError(null);
-    setApiSuccess(null);
+  const displayName = user?.name || dashboardData?.employee?.name || 'Employee';
+  const hasCheckedIn =
+    attendance?.status === 'LOGGED_IN' ||
+    attendance?.status === 'COMPLETED' ||
+    Boolean(attendance?.loginTime);
+  const hasCheckedOut = attendance?.status === 'COMPLETED' || Boolean(attendance?.logoutTime);
 
-    let currentLat = latitude;
-    let currentLng = longitude;
-    let currentAcc = accuracy;
-
-    if (!currentLat || !currentLng) {
-      try {
-        const coords = await getCoordinates(true);
-        currentLat = coords.latitude;
-        currentLng = coords.longitude;
-        currentAcc = coords.accuracy;
-      } catch (locErr: any) {
-        setApiError(locErr.message || 'Location access is required to sign out. Please enable location in your browser.');
-        setActionLoading(false);
-        return;
-      }
-    }
-
-    try {
-      const response = await attendanceService.logoutAttendance({
-        latitude: currentLat!,
-        longitude: currentLng!,
-        accuracy: currentAcc || 15,
-      });
-      if (response.success) {
-        setApiSuccess(response.message || 'Sign Out recorded successfully!');
-        await fetchDashboardData();
-      }
-    } catch (err: any) {
-      console.error('Sign Out error:', err);
-      const errMsg = err.response?.data?.message || err.message || 'Failed to record Sign Out. Please ensure you are within office boundary.';
-      setApiError(errMsg);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  if (authLoading || dashboardLoading || !attendance) {
-    return <Loading fullScreen message="Loading ESS Portal..." />;
+  if (loading) {
+    return <Loading fullScreen message="Loading Eclearnix EDTECH Portal..." />;
   }
 
-  const resolvedLocation = officeLocation ?? {
-    companyName: 'ABC Technologies',
-    latitude: 11.078319,
-    longitude: 76.999745,
-    allowedRadius: 50,
-    maxGpsAccuracy: 100,
-  };
-
-  const isLocationVerified =
-    calculatedDistance !== null &&
-    calculatedDistance <= resolvedLocation.allowedRadius &&
-    accuracy !== null &&
-    accuracy <= resolvedLocation.maxGpsAccuracy;
-
-  // Format dynamic dates
-  const formattedDay = currentTime.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
-  const formattedWeekday = currentTime.toLocaleDateString('en-IN', { weekday: 'long' });
-  const formattedTime = currentTime.toTimeString().split(' ')[0]; // e.g. 13:14:49
-
-  // ── 4. Live Elapsed / Stopped Work Timer ──
-  const getWorkingDuration = () => {
-    if (!attendance?.loginTime) return '--';
-
-    try {
-      const loginTimestamp = new Date(attendance.loginTime).getTime();
-      if (isNaN(loginTimestamp)) return '--';
-
-      let diffMs = 0;
-      if (attendance.logoutTime) {
-        // User has logged out: timer is stopped and frozen at exact logout time
-        const logoutTimestamp = new Date(attendance.logoutTime).getTime();
-        diffMs = Math.max(0, logoutTimestamp - loginTimestamp);
-      } else if (attendance.status === 'LOGGED_IN' || !attendance.logoutTime) {
-        // User is currently logged in: timer is running live every second
-        diffMs = Math.max(0, currentTime.getTime() - loginTimestamp);
-      }
-
-      const totalSeconds = Math.floor(diffMs / 1000);
-      const hrs = Math.floor(totalSeconds / 3600);
-      const mins = Math.floor((totalSeconds % 3600) / 60);
-      const secs = totalSeconds % 60;
-
-      return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-    } catch {
-      return '--';
-    }
-  };
-
   return (
-    <div className="space-y-4 max-w-7xl mx-auto pb-8">
-      {/* ── Status Alerts (if any) ── */}
-      {apiSuccess && (
-        <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-800 animate-slide">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12 animate-fade-in font-sans">
+      {/* ── 1. Top Greeting & Motivational Banner ── */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 p-6 md:p-8 text-white shadow-xl shadow-blue-900/15">
+        <div className="absolute right-0 top-0 -mt-8 -mr-8 h-48 w-48 rounded-full bg-white/10 blur-2xl pointer-events-none" />
+        <div className="absolute left-1/3 bottom-0 -mb-8 h-32 w-32 rounded-full bg-blue-400/20 blur-xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-[11px] font-semibold text-blue-100 border border-white/20">
+              <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+              <span>Eclearnix EDTECH • Plan • Perform • Progress</span>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white">
+              {greetingText}, {displayName} 👋
+            </h1>
+            <p className="text-sm md:text-base text-blue-100 font-medium italic">
+              "Discipline today leads to success tomorrow."
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => fetchDashboard(true)}
+              disabled={refreshing}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/20 text-xs font-semibold text-white transition-all cursor-pointer"
+              title="Refresh Dashboard"
+            >
+              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setEditingItem(null);
+                setIsAddTaskOpen(true);
+              }}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-blue-800 hover:bg-blue-50 font-bold text-xs shadow-lg shadow-black/10 transition-all cursor-pointer"
+            >
+              <Plus className="h-4 w-4 text-blue-600" />
+              <span>+ Add Morning Task</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Swipe status notification alerts */}
+      {swipeSuccess && (
+        <div className="flex items-center justify-between p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold animate-slide">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-            <span>{apiSuccess}</span>
+            <span>{swipeSuccess}</span>
           </div>
-          <button onClick={() => setApiSuccess(null)} className="text-emerald-600 hover:text-emerald-800">
-            <X className="h-3.5 w-3.5" />
-          </button>
+          <button onClick={() => setSwipeSuccess(null)} className="text-emerald-500 hover:text-emerald-700 font-bold">✕</button>
         </div>
       )}
-
-      {apiError && (
-        <div className="flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-800 animate-slide">
+      {swipeError && (
+        <div className="flex items-center justify-between p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-semibold animate-slide">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
-            <span>{apiError}</span>
+            <span>{swipeError}</span>
           </div>
-          <button onClick={() => setApiError(null)} className="text-rose-600 hover:text-rose-800">
-            <X className="h-3.5 w-3.5" />
-          </button>
+          <button onClick={() => setSwipeError(null)} className="text-rose-500 hover:text-rose-700 font-bold">✕</button>
         </div>
       )}
 
-      {/* ── Main Dashboard Grid ── */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-        
-        {/* ════════ COLUMN 1: Attendance Punch & Status (5 cols) ════════ */}
-        <div className="md:col-span-5 space-y-4">
-          
-          {/* Attendance / Swipe In-Out Card */}
-          <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md relative overflow-hidden">
-            {/* Header Date & Shift */}
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-slate-800">{formattedDay}</h3>
-                <p className="text-[11px] text-slate-500 font-medium mt-0.5">{formattedWeekday} | General Shift</p>
-                <div className="text-2xl font-extrabold text-slate-800 tracking-tight mt-2 font-mono">
-                  {formattedTime}
-                </div>
+      {/* ── 2. Top 6 KPI Metric Overview Cards ── */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+        {/* 1. Today's Tasks */}
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Today's Tasks</span>
+            <div className="h-7 w-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+              <ListTodo className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline gap-1.5">
+            <span className="text-2xl font-black text-slate-800">{summary.totalTasks}</span>
+            <span className="text-[10px] font-semibold text-slate-400">planned</span>
+          </div>
+        </div>
+
+        {/* 2. Completed */}
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider">Completed</span>
+            <div className="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <CheckCircle2 className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline gap-1.5">
+            <span className="text-2xl font-black text-emerald-600">{summary.completedCount}</span>
+            <span className="text-[10px] font-semibold text-emerald-600/70">done</span>
+          </div>
+        </div>
+
+        {/* 3. In Progress */}
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-amber-700 uppercase tracking-wider">In Progress</span>
+            <div className="h-7 w-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+              <Clock className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline gap-1.5">
+            <span className="text-2xl font-black text-amber-600">{summary.inProgressCount}</span>
+            <span className="text-[10px] font-semibold text-amber-600/70">active</span>
+          </div>
+        </div>
+
+        {/* 4. Not Completed */}
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-rose-700 uppercase tracking-wider">Not Done</span>
+            <div className="h-7 w-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
+              <XCircle className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline gap-1.5">
+            <span className="text-2xl font-black text-rose-600">{summary.notCompletedCount}</span>
+            <span className="text-[10px] font-semibold text-rose-600/70">pending</span>
+          </div>
+        </div>
+
+        {/* 5. Today's KPI */}
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-blue-700 uppercase tracking-wider">Today's KPI</span>
+            <div className="h-7 w-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+              <TrendingUp className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-center justify-between">
+            <span className="text-2xl font-black text-blue-700">{summary.kpiScore}%</span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+              {summary.kpiLabel}
+            </span>
+          </div>
+        </div>
+
+        {/* 6. Attendance Card */}
+        <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-4 rounded-2xl shadow-md flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Attendance</span>
+            <button
+              onClick={handleSwipe}
+              disabled={actionLoading || (hasCheckedIn && hasCheckedOut)}
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                !hasCheckedIn
+                  ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-xs'
+                  : !hasCheckedOut
+                  ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-xs'
+                  : 'bg-slate-700 text-slate-400 cursor-not-allowed'
+              }`}
+              title={!hasCheckedIn ? 'Click to Check In' : !hasCheckedOut ? 'Click to Check Out' : 'Attendance Completed'}
+            >
+              {!hasCheckedIn ? (
+                <>
+                  <LogIn className="h-3 w-3" />
+                  <span>Check In</span>
+                </>
+              ) : !hasCheckedOut ? (
+                <>
+                  <LogOut className="h-3 w-3" />
+                  <span>Check Out</span>
+                </>
+              ) : (
+                <span>Done ✓</span>
+              )}
+            </button>
+          </div>
+
+          <div className="mt-2 space-y-1 text-[11px]">
+            <div className="flex items-center justify-between text-slate-300">
+              <span>In:</span>
+              <span className="font-bold text-white">{summary.checkInTime}</span>
+            </div>
+            <div className="flex items-center justify-between text-slate-300">
+              <span>Out:</span>
+              <span className="font-bold text-white">{summary.checkOutTime}</span>
+            </div>
+            <div className="flex items-center justify-between text-slate-300 pt-1 border-t border-slate-700">
+              <span>Hours:</span>
+              <span className="font-bold text-emerald-400">{summary.workHoursFormatted}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 3. Morning - Daily Work Plan Section ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* Left 2 Cols: Morning Work Plan Table */}
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border-b border-slate-100 gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="h-2.5 w-2.5 rounded-full bg-blue-600" />
+                <h2 className="text-base font-bold text-slate-800">
+                  Morning - Daily Work Plan
+                </h2>
               </div>
-              
-              {/* Online / GPS status dot indicator */}
-              <div className="flex items-center gap-1.5 pt-1">
-                <span
-                  className={`h-3 w-3 rounded-full ${
-                    isLocationVerified
-                      ? 'bg-emerald-500 animate-pulse'
-                      : geoLoading || checkingLocation
-                      ? 'bg-amber-400 animate-pulse'
-                      : 'bg-emerald-400'
-                  }`}
-                  title={isLocationVerified ? 'Within office boundary' : 'GPS Active'}
+              <p className="text-xs text-slate-500 mt-0.5">
+                Plan your tasks for today before 10:30 AM
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                setEditingItem(null);
+                setIsAddTaskOpen(true);
+              }}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 transition-all cursor-pointer self-start sm:self-auto"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>Add Task</span>
+            </button>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50/80 text-slate-500 font-semibold border-b border-slate-100">
+                <tr>
+                  <th className="py-3 px-4 w-12 text-center">S.No</th>
+                  <th className="py-3 px-4">Planned Task</th>
+                  <th className="py-3 px-4">Category</th>
+                  <th className="py-3 px-4">Priority</th>
+                  <th className="py-3 px-4">Target for Today</th>
+                  <th className="py-3 px-4">Remarks</th>
+                  <th className="py-3 px-4 w-20 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {plans.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-10 text-center text-slate-400">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <ListTodo className="h-8 w-8 text-slate-300" />
+                        <span className="font-medium">No planned tasks for today yet.</span>
+                        <button
+                          onClick={() => setIsAddTaskOpen(true)}
+                          className="text-blue-600 font-semibold text-xs hover:underline mt-1"
+                        >
+                          + Click here to add your first morning task
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  plans.map((p, idx) => {
+                    const pri = PRIORITY_BADGES[p.priority] || PRIORITY_BADGES.NOT_SET;
+                    return (
+                      <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="py-3.5 px-4 text-center font-bold text-slate-400">
+                          {idx + 1}
+                        </td>
+                        <td className="py-3.5 px-4 font-bold text-slate-800">
+                          {p.taskName}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-medium text-[11px]">
+                            {p.category || 'General'}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[11px] ${pri.bg} ${pri.text}`}
+                          >
+                            <span className={`h-1.5 w-1.5 rounded-full ${pri.dot}`} />
+                            <span>{pri.label}</span>
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-slate-600">
+                          {p.targetDescription || '—'}
+                        </td>
+                        <td className="py-3.5 px-4 text-slate-500 italic">
+                          {p.remarks || '—'}
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => {
+                                setEditingItem(p);
+                                setIsAddTaskOpen(true);
+                              }}
+                              className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer"
+                              title="Edit Task"
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteTask(p.id)}
+                              className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors cursor-pointer"
+                              title="Delete Task"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Right 1 Col: Today's Planned Tasks Donut Chart */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="font-bold text-slate-800 text-sm">Today's Planned Tasks</h3>
+              <span className="text-[10px] font-semibold text-slate-400">By Priority</span>
+            </div>
+            <div className="pt-2">
+              <PriorityDonutChart summary={summary} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 4. Evening - Work Status Update Section ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* Left 2 Cols: Evening Work Status Table */}
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border-b border-slate-100 gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="h-2.5 w-2.5 rounded-full bg-emerald-600" />
+                <h2 className="text-base font-bold text-slate-800">
+                  Evening - Work Status Update
+                </h2>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Update your actual progress before 6:30 PM
+              </p>
+            </div>
+
+            <button
+              onClick={() => setIsBulkUpdateOpen(true)}
+              disabled={plans.length === 0}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 transition-all cursor-pointer self-start sm:self-auto disabled:opacity-50"
+            >
+              <CheckSquare className="h-3.5 w-3.5" />
+              <span>Update All</span>
+            </button>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50/80 text-slate-500 font-semibold border-b border-slate-100">
+                <tr>
+                  <th className="py-3 px-4 w-12 text-center">S.No</th>
+                  <th className="py-3 px-4">Task</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4">Reason / Remarks</th>
+                  <th className="py-3 px-4">Time Spent</th>
+                  <th className="py-3 px-4 w-16 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {plans.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-10 text-center text-slate-400">
+                      No tasks to update for today.
+                    </td>
+                  </tr>
+                ) : (
+                  plans.map((p, idx) => {
+                    const st = STATUS_BADGES[p.status] || STATUS_BADGES.NOT_STARTED;
+                    return (
+                      <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="py-3.5 px-4 text-center font-bold text-slate-400">
+                          {idx + 1}
+                        </td>
+                        <td className="py-3.5 px-4 font-bold text-slate-800">
+                          {p.taskName}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <select
+                            value={p.status}
+                            onChange={(e) => handleStatusChange(p.id, e.target.value as WorkPlanStatus)}
+                            className={`px-2 py-1 rounded-lg border text-xs font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 ${st.bg} ${st.text}`}
+                          >
+                            <option value="COMPLETED">✅ Completed</option>
+                            <option value="IN_PROGRESS">🟡 In Progress</option>
+                            <option value="NOT_COMPLETED">🔴 Not Completed</option>
+                            <option value="NOT_STARTED">⚪ Not Started</option>
+                          </select>
+                        </td>
+                        <td className="py-3.5 px-4 text-slate-600">
+                          {p.reasonRemarks || '—'}
+                        </td>
+                        <td className="py-3.5 px-4 font-medium text-slate-700">
+                          {p.timeSpent ? (
+                            <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-semibold text-[11px]">
+                              {p.timeSpent}
+                            </span>
+                          ) : (
+                            '—'
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          <button
+                            onClick={() => {
+                              setEditingItem(p);
+                              setIsAddTaskOpen(true);
+                            }}
+                            className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors cursor-pointer"
+                            title="Edit"
+                          >
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Right 1 Col: Today's Task Completion Donut Chart */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="font-bold text-slate-800 text-sm">Today's Task Completion</h3>
+              <span className="text-[10px] font-semibold text-slate-400">Progress</span>
+            </div>
+            <div className="pt-2">
+              <CompletionDonutChart summary={summary} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 5. Bottom 3-Card Section: KPI Score + Task Summary + My Notes ── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+        {/* Card 1: Today's KPI Score */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 flex flex-col justify-between">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <Award className="h-4 w-4 text-blue-600" />
+              <h3 className="font-bold text-slate-800 text-sm">Today's KPI Score</h3>
+            </div>
+            <span className="text-[10px] font-semibold text-slate-400">Speedometer</span>
+          </div>
+
+          <div className="my-auto py-2">
+            <KpiGauge score={summary.kpiScore} label={summary.kpiLabel} />
+          </div>
+        </div>
+
+        {/* Card 2: Task Summary */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 flex flex-col justify-between">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <CheckSquare className="h-4 w-4 text-emerald-600" />
+              <h3 className="font-bold text-slate-800 text-sm">Task Summary</h3>
+            </div>
+            <span className="text-[10px] font-semibold text-slate-400">
+              Total: {summary.totalTasks}
+            </span>
+          </div>
+
+          {/* 4 Status Badges */}
+          <div className="space-y-2.5 my-auto py-2">
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-100">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                <span className="text-xs font-bold text-emerald-900">Completed</span>
+              </div>
+              <span className="text-sm font-black text-emerald-700">{summary.completedCount}</span>
+            </div>
+
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-amber-50/70 border border-amber-100">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-amber-500" />
+                <span className="text-xs font-bold text-amber-900">In Progress</span>
+              </div>
+              <span className="text-sm font-black text-amber-700">{summary.inProgressCount}</span>
+            </div>
+
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-rose-50/70 border border-rose-100">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-rose-500" />
+                <span className="text-xs font-bold text-rose-900">Not Completed</span>
+              </div>
+              <span className="text-sm font-black text-rose-700">{summary.notCompletedCount}</span>
+            </div>
+
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-blue-50/70 border border-blue-100">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-blue-500" />
+                <span className="text-xs font-bold text-blue-900">Not Started</span>
+              </div>
+              <span className="text-sm font-black text-blue-700">{summary.notStartedCount}</span>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          {summary.totalTasks > 0 && (
+            <div className="pt-2">
+              <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden flex">
+                <div
+                  style={{ width: `${(summary.completedCount / summary.totalTasks) * 100}%` }}
+                  className="bg-emerald-500"
+                />
+                <div
+                  style={{ width: `${(summary.inProgressCount / summary.totalTasks) * 100}%` }}
+                  className="bg-amber-500"
+                />
+                <div
+                  style={{ width: `${(summary.notCompletedCount / summary.totalTasks) * 100}%` }}
+                  className="bg-rose-500"
+                />
+                <div
+                  style={{ width: `${(summary.notStartedCount / summary.totalTasks) * 100}%` }}
+                  className="bg-blue-400"
                 />
               </div>
             </div>
+          )}
+        </div>
 
-            {/* Today's Attendance Details Box */}
-            <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 grid grid-cols-3 gap-2 text-center">
-              <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">Login</span>
-                <span className="text-xs font-bold text-slate-800 font-mono">
-                  {attendance.loginTime ? formatTime(attendance.loginTime) : '--'}
-                </span>
-              </div>
-              <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">Logout</span>
-                <span className="text-xs font-bold text-slate-800 font-mono">
-                  {attendance.logoutTime ? formatTime(attendance.logoutTime) : '--'}
-                </span>
-              </div>
-              <div className={`p-1 rounded-lg ${attendance.status === 'LOGGED_IN' ? 'bg-blue-50/80 border border-blue-200/60' : attendance.status === 'COMPLETED' ? 'bg-emerald-50/80 border border-emerald-200/60' : ''}`}>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide flex items-center justify-center gap-1">
-                  {attendance.status === 'LOGGED_IN' ? 'Live Hours' : 'Hours'}
-                  {attendance.status === 'LOGGED_IN' && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse" />
-                  )}
-                </span>
-                <span className={`text-xs font-bold font-mono ${attendance.status === 'LOGGED_IN' ? 'text-blue-700' : attendance.status === 'COMPLETED' ? 'text-emerald-700' : 'text-slate-800'}`}>
-                  {getWorkingDuration()}
-                </span>
-              </div>
+        {/* Card 3: My Notes / Comments */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 flex flex-col justify-between">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-purple-600" />
+              <h3 className="font-bold text-slate-800 text-sm">My Notes / Comments</h3>
             </div>
-
-            {/* Attendance state helper banner */}
-            <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px]">
-              <span className="text-slate-500 font-medium">
-                Status:{' '}
-                {attendance.timingStatus === 'LEAVE' ? (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                    On Leave
-                  </span>
-                ) : attendance.timingStatus === 'PERMISSION' ? (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                    Permission
-                  </span>
-                ) : attendance.timingStatus === 'LATE' ? (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                    Late
-                  </span>
-                ) : attendance.status === 'LOGGED_IN' ? (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                    Working
-                  </span>
-                ) : attendance.status === 'COMPLETED' ? (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    Present
-                  </span>
-                ) : (
-                  <span className="font-bold text-slate-600">Not Signed In</span>
-                )}
+            {notesMessage && (
+              <span className="text-[10px] font-semibold text-emerald-600 animate-fade-in">
+                {notesMessage}
               </span>
-              <button
-                onClick={checkCurrentLocation}
-                className="text-blue-600 hover:text-blue-700 flex items-center gap-1 font-semibold text-[10px]"
-                title="Refresh GPS location"
-              >
-                <RefreshCw className={`h-3 w-3 ${checkingLocation ? 'animate-spin' : ''}`} />
-                {calculatedDistance !== null ? `${Math.round(calculatedDistance)}m from office` : 'Detecting'}
-              </button>
-            </div>
-
-            {/* Bottom Actions Row: "View Swipes" + "Sign In / Sign Out" Button */}
-            <div className="mt-4 flex items-center justify-between">
-              <button
-                onClick={() => setShowSwipesModal(true)}
-                className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors"
-              >
-                View Swipes
-              </button>
-
-              {attendance.status === 'NOT_LOGGED_IN' && (
-                <button
-                  onClick={handleSignIn}
-                  disabled={actionLoading || geoLoading || checkingLocation}
-                  className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition-all duration-200 disabled:opacity-60"
-                >
-                  {actionLoading ? 'Signing In...' : 'Sign In'}
-                </button>
-              )}
-
-              {attendance.status === 'LOGGED_IN' && (
-                <button
-                  onClick={handleSignOut}
-                  disabled={actionLoading || geoLoading || checkingLocation}
-                  className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition-all duration-200 disabled:opacity-60"
-                >
-                  {actionLoading ? 'Signing Out...' : 'Sign Out'}
-                </button>
-              )}
-
-              {attendance.status === 'COMPLETED' && (
-                <div className="px-4 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold">
-                  Completed ✓
-                </div>
-              )}
-            </div>
-
-            {/* GPS Warning if outside radius */}
-            {!isLocationVerified && calculatedDistance !== null && calculatedDistance > resolvedLocation.allowedRadius && (
-              <div className="mt-3 p-2 rounded-lg bg-amber-50 border border-amber-200 text-[10px] text-amber-800 flex items-center gap-1.5">
-                <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-600" />
-                <span>You are {Math.round(calculatedDistance)}m away (max {resolvedLocation.allowedRadius}m allowed).</span>
-              </div>
             )}
           </div>
 
-          {/* Track card */}
-          <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md">
-            <h2 className="text-xs font-bold text-slate-700">Track</h2>
-            <div className="flex flex-col items-center justify-center py-5 text-center">
-              <TrackIllustration className="w-24 h-20 mb-2" />
-              <p className="text-xs text-slate-500 font-medium">All good! You've nothing new to track.</p>
-            </div>
+          <div className="flex-1 my-3 flex flex-col">
+            <textarea
+              value={notesText}
+              onChange={(e) => setNotesText(e.target.value)}
+              placeholder="Record daily achievements, challenges, blockers, or notes for the manager..."
+              className="w-full flex-1 min-h-[140px] p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
+            />
           </div>
 
+          <button
+            onClick={handleSaveNotes}
+            disabled={notesSaving}
+            className="w-full py-2 px-4 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+          >
+            <Save className="h-3.5 w-3.5" />
+            <span>{notesSaving ? 'Saving...' : 'Save Notes'}</span>
+          </button>
         </div>
-
-        {/* ════════ COLUMN 2: Tasks, Requests & Leaves (4 cols) ════════ */}
-        <div className="md:col-span-4 space-y-4">
-          
-          {/* Assigned Tasks Widget */}
-          <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                <CheckSquare className="h-4 w-4 text-blue-600" /> My Tasks
-              </h2>
-              <button
-                onClick={() => navigate('/employee/tasks')}
-                className="text-[11px] font-semibold text-blue-600 hover:underline"
-              >
-                View All ({myTasks.length})
-              </button>
-            </div>
-
-            {myTasks.filter(t => t.status !== 'COMPLETED').length > 0 ? (
-              <div className="space-y-2.5 mb-3">
-                {myTasks
-                  .filter(t => t.status !== 'COMPLETED')
-                  .slice(0, 2)
-                  .map(task => (
-                    <div
-                      key={task.id}
-                      onClick={() => navigate('/employee/tasks')}
-                      className="p-2.5 rounded-lg bg-slate-50 hover:bg-blue-50/50 border border-slate-100 cursor-pointer transition-colors"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-800 line-clamp-1">{task.title}</span>
-                        {task.priority === 'URGENT' && (
-                          <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.2 rounded shrink-0">
-                            Urgent
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center justify-between mt-1 text-[10px] text-slate-400">
-                        <span>Status: <strong className="text-blue-600">{task.status}</strong></span>
-                        {task.dueDate && <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>}
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            ) : (
-              <p className="text-[11px] text-slate-500 mb-3 leading-relaxed">
-                {myTasks.length > 0
-                  ? 'All assigned tasks completed! Great work.'
-                  : 'No active tasks assigned yet.'}
-              </p>
-            )}
-
-            <button
-              onClick={() => navigate('/employee/tasks')}
-              className="w-full py-2 px-3 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
-            >
-              Open Task Dashboard <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-
-          {/* Permission Requests Section */}
-          <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                <Clock className="h-4 w-4 text-blue-600" /> Permission
-              </h2>
-              <button
-                onClick={() => navigate('/employee/permissions')}
-                className="text-[11px] font-semibold text-blue-600 hover:underline"
-              >
-                My Requests
-              </button>
-            </div>
-            <p className="text-[11px] text-slate-500 mb-3 leading-relaxed">
-              Need temporary time off during work hours? Apply for permission.
-            </p>
-            <button
-              onClick={() => navigate('/employee/permissions')}
-              className="w-full py-2 px-3 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
-            >
-              Apply Permission <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-
-          {/* Leave Section */}
-          <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                <Calendar className="h-4 w-4 text-blue-600" /> Leave
-              </h2>
-              <button
-                onClick={() => navigate('/employee/leaves')}
-                className="text-[11px] font-semibold text-blue-600 hover:underline"
-              >
-                My Leaves
-              </button>
-            </div>
-            <p className="text-[11px] text-slate-500 mb-3 leading-relaxed">
-              Planning time off? Apply for casual, sick, or personal leave.
-            </p>
-            <button
-              onClick={() => navigate('/employee/leaves')}
-              className="w-full py-2 px-3 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
-            >
-              Apply Leave <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-
-        </div>
-
-        {/* ════════ COLUMN 3: Quick Access & Holidays (3 cols) ════════ */}
-        <div className="md:col-span-3 space-y-4">
-          
-          {/* Quick Access */}
-          <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md">
-            <h2 className="text-xs font-bold text-slate-700 mb-3">Quick Access</h2>
-            <div className="space-y-2.5 text-xs text-slate-600 font-medium">
-              <div onClick={() => navigate('/employee/attendance')} className="hover:text-blue-600 cursor-pointer transition-colors flex items-center justify-between py-1 border-b border-slate-100">
-                <span>Attendance History</span>
-                <ArrowRight className="h-3 w-3 text-slate-400" />
-              </div>
-              <div onClick={() => navigate('/employee/leaves')} className="hover:text-blue-600 cursor-pointer transition-colors flex items-center justify-between py-1 border-b border-slate-100">
-                <span>Apply Leave</span>
-                <ArrowRight className="h-3 w-3 text-slate-400" />
-              </div>
-              <div onClick={() => navigate('/employee/permissions')} className="hover:text-blue-600 cursor-pointer transition-colors flex items-center justify-between py-1 border-b border-slate-100">
-                <span>Apply Permission</span>
-                <ArrowRight className="h-3 w-3 text-slate-400" />
-              </div>
-              <div onClick={() => navigate('/employee/profile')} className="hover:text-blue-600 cursor-pointer transition-colors flex items-center justify-between py-1">
-                <span>My Profile</span>
-                <ArrowRight className="h-3 w-3 text-slate-400" />
-              </div>
-            </div>
-          </div>
-
-          {/* Upcoming Holidays */}
-          <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xs font-bold text-slate-700">Upcoming Holidays</h2>
-              <ArrowRight className="h-4 w-4 text-slate-400 hover:text-slate-700 cursor-pointer transition-colors" />
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="border-b border-slate-100 pb-2">
-                <p className="text-[11px] font-bold text-slate-800">01 Sep <span className="font-medium text-slate-400">Tuesday</span></p>
-                <p className="text-xs text-slate-500 font-medium mt-0.5">Vinayakar Chathurthi</p>
-              </div>
-
-              <div className="border-b border-slate-100 pb-2">
-                <p className="text-[11px] font-bold text-slate-800">04 Sep <span className="font-medium text-slate-400">Friday</span></p>
-                <p className="text-xs text-slate-500 font-medium mt-0.5">Krishna Jayanthi</p>
-              </div>
-
-              <div className="pb-1">
-                <p className="text-[11px] font-bold text-slate-800">01 Oct <span className="font-medium text-slate-400">Thursday</span></p>
-                <p className="text-xs text-slate-500 font-medium mt-0.5">Gandhi Jayanthi</p>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
       </div>
 
-      {/* ════════ VIEW SWIPES MODAL ════════ */}
-      {showSwipesModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-slide">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-blue-600" />
-                <h3 className="text-sm font-bold text-slate-800">Today's Swipe Details</h3>
-              </div>
-              <button
-                onClick={() => setShowSwipesModal(false)}
-                className="rounded-lg p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
+      {/* ── 6. Footer ── */}
+      <footer className="pt-6 pb-2 text-center text-xs text-slate-400 border-t border-slate-200/70 space-y-1">
+        <p className="font-bold text-slate-600">
+          Eclearnix EDTECH | Making Education a Global Impact
+        </p>
+        <p className="text-[11px] text-slate-400">
+          Work Smart | Stay Focused | Grow Together
+        </p>
+      </footer>
 
-            <div className="py-4 space-y-3.5 text-xs">
-              <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
-                <span className="text-slate-500 font-medium">Date</span>
-                <span className="font-bold text-slate-800">{attendance.attendanceDate}</span>
-              </div>
-              <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
-                <span className="text-slate-500 font-medium">Sign In Time</span>
-                <span className="font-bold text-slate-800">
-                  {attendance.loginTime ? formatTime(attendance.loginTime) : '--'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
-                <span className="text-slate-500 font-medium">Sign Out Time</span>
-                <span className="font-bold text-slate-800">
-                  {attendance.logoutTime ? formatTime(attendance.logoutTime) : '--'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
-                <span className="text-slate-500 font-medium">Attendance Status</span>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-700">
-                  {attendance.status}
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
-                <span className="text-slate-500 font-medium">Work Duration</span>
-                <span className="font-bold text-slate-800 font-mono">
-                  {getWorkingDuration()}
-                  {attendance.status === 'LOGGED_IN' && ' (Ticking)'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
-                <span className="text-slate-500 font-medium">Recorded Distance</span>
-                <span className="font-bold text-slate-800">
-                  {attendance.loginDistance ? `${Math.round(attendance.loginDistance)} meters` : '--'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-1.5">
-                <span className="text-slate-500 font-medium">Office Geofence</span>
-                <span className="font-bold text-emerald-600">
-                  {resolvedLocation.companyName} (≤ {resolvedLocation.allowedRadius}m)
-                </span>
-              </div>
-            </div>
+      {/* ── Modals ── */}
+      <AddTaskModal
+        isOpen={isAddTaskOpen}
+        onClose={() => {
+          setIsAddTaskOpen(false);
+          setEditingItem(null);
+        }}
+        onSave={handleSaveTask}
+        editItem={editingItem}
+      />
 
-            <div className="pt-3 border-t border-slate-100 flex justify-end gap-2">
-              <button
-                onClick={() => { setShowSwipesModal(false); navigate('/employee/attendance'); }}
-                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors"
-              >
-                View Full Monthly History
-              </button>
-              <button
-                onClick={() => setShowSwipesModal(false)}
-                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors"
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <BulkUpdateModal
+        isOpen={isBulkUpdateOpen}
+        onClose={() => setIsBulkUpdateOpen(false)}
+        plans={plans}
+        onSave={handleBulkUpdate}
+      />
     </div>
   );
 };

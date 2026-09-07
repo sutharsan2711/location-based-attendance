@@ -397,3 +397,35 @@ export async function calculateEmployeeLeaveBalance(emp: any, targetYear: number
     ],
   };
 }
+
+export function formatWorkPlan(plan: any) {
+  return {
+    id: Number(plan.id),
+    employeeId: Number(plan.employeeId),
+    planDate: plan.planDate ? plan.planDate.toISOString().split("T")[0] : null,
+    taskName: plan.taskName,
+    category: plan.category || "Development",
+    priority: plan.priority || "MEDIUM",
+    targetDescription: plan.targetDescription || "",
+    remarks: plan.remarks || "",
+    status: plan.status || "NOT_STARTED",
+    reasonRemarks: plan.reasonRemarks || "",
+    timeSpent: plan.timeSpent || "",
+    sortOrder: plan.sortOrder || 0,
+    createdAt: plan.createdAt?.toISOString(),
+    updatedAt: plan.updatedAt?.toISOString(),
+  };
+}
+
+export function formatWorkNote(note: any) {
+  return {
+    id: Number(note.id),
+    employeeId: Number(note.employeeId),
+    noteDate: note.noteDate ? note.noteDate.toISOString().split("T")[0] : null,
+    notes: note.notes || "",
+    kpiScore: note.kpiScore ?? null,
+    createdAt: note.createdAt?.toISOString(),
+    updatedAt: note.updatedAt?.toISOString(),
+  };
+}
+

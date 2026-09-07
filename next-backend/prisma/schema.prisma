@@ -32,6 +32,8 @@ model User {
   stickyNotes        StickyNote[]
   assignedTasks      Task[]              @relation("TaskAssignedEmployee")
   createdTasks       Task[]              @relation("TaskAssignedBy")
+  dailyPlans         DailyWorkPlan[]     @relation("UserDailyPlans")
+  dailyNotes         DailyWorkNote[]     @relation("UserDailyNotes")
 
   @@index([email], map: "idx_users_email")
   @@index([employeeCode], map: "idx_users_employee_code")
@@ -338,4 +340,39 @@ enum payroll_status {
   DRAFT
   GENERATED
   PAID
+}
+
+model DailyWorkPlan {
+  id                BigInt    @id @default(autoincrement())
+  employeeId        BigInt    @map("employee_id")
+  planDate          DateTime  @map("plan_date") @db.Date
+  taskName          String    @map("task_name") @db.VarChar(255)
+  category          String    @default("Development") @db.VarChar(100)
+  priority          String    @default("MEDIUM") @db.VarChar(20)
+  targetDescription String?   @map("target_description") @db.Text
+  remarks           String?   @db.Text
+  status            String    @default("NOT_STARTED") @db.VarChar(30)
+  reasonRemarks     String?   @map("reason_remarks") @db.Text
+  timeSpent         String?   @map("time_spent") @db.VarChar(50)
+  sortOrder         Int       @default(0) @map("sort_order")
+  createdAt         DateTime? @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt         DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  employee          User      @relation("UserDailyPlans", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId, planDate], map: "idx_work_plan_emp_date")
+  @@map("daily_work_plans")
+}
+
+model DailyWorkNote {
+  id         BigInt    @id @default(autoincrement())
+  employeeId BigInt    @map("employee_id")
+  noteDate   DateTime  @map("note_date") @db.Date
+  notes      String?   @db.Text
+  kpiScore   Int?      @map("kpi_score")
+  createdAt  DateTime? @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt  DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  employee   User      @relation("UserDailyNotes", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, noteDate], map: "uk_work_note_emp_date")
+  @@map("daily_work_notes")
 }

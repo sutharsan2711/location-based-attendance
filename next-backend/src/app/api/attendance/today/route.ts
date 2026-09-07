@@ -10,13 +10,21 @@ export async function GET(req: NextRequest) {
       return errorResponse("Unauthorized", 401);
     }
 
-    const now = new Date();
-    const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const { searchParams } = new URL(req.url);
+    const dateQuery = searchParams.get("date");
+    const now = dateQuery ? new Date(dateQuery) : new Date();
+
+    // Query whole day window to avoid any timezone/offset mismatch
+    const startOfDay = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0));
+    const endOfDay = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999));
 
     const attendance = await prisma.attendance.findFirst({
       where: {
         employeeId: BigInt(authUser.id),
-        attendanceDate: todayDate,
+        attendanceDate: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
       },
       include: {
         employee: {
@@ -31,6 +39,7 @@ export async function GET(req: NextRequest) {
           },
         },
       },
+      orderBy: { id: "desc" },
     });
 
     if (!attendance) {

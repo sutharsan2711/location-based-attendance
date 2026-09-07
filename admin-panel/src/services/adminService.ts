@@ -89,6 +89,23 @@ export const adminService = {
       responseType: 'blob',
     });
     return response.data;
-  }
+  },
+
+  getEmployeesKpi: async (year?: number, month?: number): Promise<any> => {
+    const params = new URLSearchParams();
+    if (year) params.append('year', String(year));
+    if (month) params.append('month', String(month));
+    const response = await api.get('/admin/kpi/employees', { params });
+    return response.data;
+  },
+
+  getEmployeeKpiDetail: async (id: number, year?: number, month?: number): Promise<any> => {
+    const params = new URLSearchParams();
+    if (year) params.append('year', String(year));
+    if (month) params.append('month', String(month));
+    const response = await api.get(`/admin/kpi/employee/${id}`, { params });
+    return response.data;
+  },
 };
+
 

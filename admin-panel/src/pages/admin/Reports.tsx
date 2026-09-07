@@ -47,9 +47,14 @@ import {
 } from 'lucide-react';
 
 const Reports: React.FC = () => {
-  // Report Views: 'leave_balance_sheet' (Exact leave report) | 'monthly_excel' (2-Tier Spreadsheet) | 'daily_logs'
-  const [reportView, setReportView] = useState<'leave_balance_sheet' | 'monthly_excel' | 'daily_logs'>('leave_balance_sheet');
+  // Report Views: 'leave_balance_sheet' (Exact leave report) | 'monthly_excel' (2-Tier Spreadsheet) | 'daily_logs' | 'kpi_report'
+  const [reportView, setReportView] = useState<'leave_balance_sheet' | 'monthly_excel' | 'daily_logs' | 'kpi_report'>('leave_balance_sheet');
 
+  // KPI Inspection State
+  const [kpiEmployees, setKpiEmployees] = useState<any[]>([]);
+  const [selectedKpiEmpId, setSelectedKpiEmpId] = useState<string>('');
+  const [employeeKpiDetail, setEmployeeKpiDetail] = useState<any | null>(null);
+  const [kpiLoading, setKpiLoading] = useState<boolean>(false);
 
   // Month & Year State for Excel Sheet
   const currentDate = new Date();
@@ -173,6 +178,49 @@ const Reports: React.FC = () => {
   useEffect(() => {
     runDailyReport();
   }, [runDailyReport]);
+
+  // Fetch KPI Employees List
+  const fetchKpiEmployees = useCallback(async () => {
+    try {
+      setKpiLoading(true);
+      const res = await adminService.getEmployeesKpi(selectedYear, selectedMonth);
+      if (res && res.employees) {
+        setKpiEmployees(res.employees);
+        if (!selectedKpiEmpId && res.employees.length > 0) {
+          setSelectedKpiEmpId(String(res.employees[0].id));
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load KPI employees', err);
+    } finally {
+      setKpiLoading(false);
+    }
+  }, [selectedYear, selectedMonth, selectedKpiEmpId]);
+
+  useEffect(() => {
+    if (reportView === 'kpi_report') {
+      fetchKpiEmployees();
+    }
+  }, [reportView, fetchKpiEmployees]);
+
+  // Fetch Selected Employee KPI Detail
+  const fetchEmployeeKpiDetail = useCallback(async (empId: number) => {
+    try {
+      setKpiLoading(true);
+      const res = await adminService.getEmployeeKpiDetail(empId, selectedYear, selectedMonth);
+      setEmployeeKpiDetail(res);
+    } catch (err) {
+      console.error('Failed to load employee KPI detail', err);
+    } finally {
+      setKpiLoading(false);
+    }
+  }, [selectedYear, selectedMonth]);
+
+  useEffect(() => {
+    if (reportView === 'kpi_report' && selectedKpiEmpId) {
+      fetchEmployeeKpiDetail(Number(selectedKpiEmpId));
+    }
+  }, [reportView, selectedKpiEmpId, fetchEmployeeKpiDetail]);
 
   // Helper date lists for 2-tier header
   const daysInMonth = monthlyData?.daysInMonth || 31;
@@ -449,6 +497,18 @@ const Reports: React.FC = () => {
               >
                 <List className="h-4 w-4" />
                 <span>Punch Logs</span>
+              </button>
+
+              <button
+                onClick={() => setReportView('kpi_report')}
+                className={`px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
+                  reportView === 'kpi_report'
+                    ? 'bg-amber-400 text-slate-950 font-black shadow-lg shadow-amber-400/30'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                <Award className="h-4 w-4" />
+                <span>Employee KPI Inspector</span>
               </button>
             </div>
 
@@ -1097,8 +1157,213 @@ const Reports: React.FC = () => {
           </div>
         </Card>
       )}
+
+      {/* ═════════════════════════════════════════════════════════════════════════ */}
+      {/* 🏆 EMPLOYEE KPI & WORK PLAN PERFORMANCE INSPECTOR VIEW                   */}
+      {/* ═════════════════════════════════════════════════════════════════════════ */}
+      {reportView === 'kpi_report' && (
+        <div className="space-y-6">
+          {/* Controls: Employee Selector & Month/Year */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <Award className="h-5 w-5 text-amber-500" />
+                <span>Employee Monthly KPI & Work Plan Inspector</span>
+              </h2>
+              <p className="text-xs text-slate-500">
+                Select an employee to inspect their daily work plans, completion rate, and KPI performance
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Employee Select */}
+              <div className="min-w-[220px]">
+                <select
+                  value={selectedKpiEmpId}
+                  onChange={(e) => setSelectedKpiEmpId(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                >
+                  <option value="">-- Select Employee --</option>
+                  {kpiEmployees.map((emp) => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.name} ({emp.employeeCode}) - {emp.kpiScore}% KPI
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Month Picker */}
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none"
+              >
+                {months.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+
+              {/* Year Picker */}
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none"
+              >
+                {[2024, 2025, 2026, 2027].map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                onClick={() => {
+                  fetchKpiEmployees();
+                  if (selectedKpiEmpId) fetchEmployeeKpiDetail(Number(selectedKpiEmpId));
+                }}
+                className="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-600 transition-colors"
+                title="Refresh KPI Data"
+              >
+                <RefreshCw className={`h-4 w-4 ${kpiLoading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+          </div>
+
+          {/* Selected Employee Summary Cards */}
+          {employeeKpiDetail && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Employee</span>
+                  <p className="text-base font-black text-slate-800 mt-1 truncate">
+                    {employeeKpiDetail.employee?.name}
+                  </p>
+                  <p className="text-xs text-slate-500 font-medium">
+                    {employeeKpiDetail.employee?.employeeCode} • {employeeKpiDetail.employee?.department || 'General'}
+                  </p>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
+                  <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Average Monthly KPI</span>
+                  <div className="mt-1 flex items-baseline gap-2">
+                    <span className="text-2xl font-black text-slate-800">
+                      {employeeKpiDetail.summary?.averageKpiScore}%
+                    </span>
+                    <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                      {employeeKpiDetail.summary?.monthlyLabel}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
+                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Tasks Delivered</span>
+                  <p className="text-2xl font-black text-emerald-600 mt-1">
+                    {employeeKpiDetail.summary?.totalCompletedTasks} / {employeeKpiDetail.summary?.totalMonthlyTasks}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {employeeKpiDetail.summary?.completionRate}% completion rate
+                  </p>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
+                  <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Attendance Present</span>
+                  <p className="text-2xl font-black text-blue-700 mt-1">
+                    {employeeKpiDetail.summary?.presentDays} days
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {employeeKpiDetail.summary?.onTimeDays} on-time check-ins
+                  </p>
+                </div>
+              </div>
+
+              {/* Day-by-day Breakdown Table */}
+              <Card title={`Daily Work Plan & KPI History for ${months.find((m) => m.value === selectedMonth)?.name} ${selectedYear}`} className="bg-white">
+                <div className="overflow-x-auto my-2">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
+                      <tr>
+                        <th className="py-3 px-4 w-28">Date</th>
+                        <th className="py-3 px-4">Daily Work Plan Tasks</th>
+                        <th className="py-3 px-4 text-center w-28">Tasks (Done/Total)</th>
+                        <th className="py-3 px-4 text-center w-28">Attendance</th>
+                        <th className="py-3 px-4 text-center w-28">Daily KPI</th>
+                        <th className="py-3 px-4">Employee Notes</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {(employeeKpiDetail.dailyBreakdown || []).map((day: any) => {
+                        const dayDate = new Date(day.date);
+                        const dayName = dayDate.toLocaleDateString('en-US', { weekday: 'short' });
+                        const isWeekend = dayName === 'Sun' || dayName === 'Sat';
+                        const hasTasks = day.totalTasks > 0;
+
+                        return (
+                          <tr key={day.date} className={`hover:bg-slate-50 ${isWeekend ? 'bg-slate-50/50' : ''}`}>
+                            <td className="py-3.5 px-4 font-bold text-slate-800">
+                              <div>{day.date}</div>
+                              <span className="text-[10px] text-slate-400 font-normal">{dayName}</span>
+                            </td>
+                            <td className="py-3.5 px-4">
+                              {day.plans.length === 0 ? (
+                                <span className="text-slate-400 italic text-[11px]">No planned tasks</span>
+                              ) : (
+                                <div className="space-y-1">
+                                  {day.plans.map((p: any, idx: number) => (
+                                    <div key={p.id || idx} className="flex items-center gap-1.5 text-[11px]">
+                                      <span>{p.status === 'COMPLETED' ? '✅' : p.status === 'IN_PROGRESS' ? '🟡' : '🔴'}</span>
+                                      <span className="font-semibold text-slate-800">{p.taskName}</span>
+                                      {p.timeSpent && <span className="text-blue-600 font-bold">({p.timeSpent})</span>}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </td>
+                            <td className="py-3.5 px-4 text-center font-bold text-slate-700">
+                              {hasTasks ? (
+                                <span>
+                                  <strong className="text-emerald-600">{day.completedCount}</strong> / {day.totalTasks}
+                                </span>
+                              ) : (
+                                <span className="text-slate-400">—</span>
+                              )}
+                            </td>
+                            <td className="py-3.5 px-4 text-center">
+                              {day.attendance ? (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                  {day.attendance.timingStatus || 'PRESENT'}
+                                </span>
+                              ) : (
+                                <span className="text-slate-400 text-[10px]">{isWeekend ? 'Weekend' : '—'}</span>
+                              )}
+                            </td>
+                            <td className="py-3.5 px-4 text-center">
+                              {hasTasks || (day.note && day.note.kpiScore !== null) ? (
+                                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                  {day.kpiScore}%
+                                </span>
+                              ) : (
+                                <span className="text-slate-300">—</span>
+                              )}
+                            </td>
+                            <td className="py-3.5 px-4 text-slate-600 italic text-[11px]">
+                              {day.note?.notes || '—'}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 };
 
 export default Reports;
+

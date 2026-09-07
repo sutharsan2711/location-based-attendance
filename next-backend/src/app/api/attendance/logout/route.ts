@@ -15,23 +15,24 @@ export async function POST(req: NextRequest) {
       return errorResponse("Your employee account is inactive.", 403);
     }
 
-    const body = await req.json();
-    const lat = Number(body.latitude);
-    const lng = Number(body.longitude);
+    const body = await req.json().catch(() => ({}));
+    let lat = Number(body.latitude);
+    let lng = Number(body.longitude);
     const accuracy = Number(body.accuracy || 15);
 
-    if (isNaN(lat) || isNaN(lng)) {
-      return errorResponse("Valid GPS latitude and longitude are required", 400);
-    }
-
     const now = new Date();
-    const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfDay = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0));
+    const endOfDay = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999));
 
     const attendance = await prisma.attendance.findFirst({
       where: {
         employeeId: BigInt(authUser.id),
-        attendanceDate: todayDate,
+        attendanceDate: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
       },
+      orderBy: { id: "desc" },
     });
 
     if (!attendance) {
@@ -43,43 +44,22 @@ export async function POST(req: NextRequest) {
     }
 
     const locations = await prisma.companyLocation.findMany();
-    if (locations.length === 0) {
-      return errorResponse("Company location settings not configured.", 400);
-    }
-
-    let matchedLocation: typeof locations[0] | null = null;
-    let minDistance = Infinity;
+    let minDistance = 0;
     let nearestLocation = locations[0];
 
-    for (const loc of locations) {
-      const dist = calculateDistance(lat, lng, loc.latitude, loc.longitude);
-      if (dist < minDistance) {
-        minDistance = dist;
-        nearestLocation = loc;
+    if (!isNaN(lat) && !isNaN(lng) && (lat !== 0 || lng !== 0) && locations.length > 0) {
+      minDistance = Infinity;
+      for (const loc of locations) {
+        const dist = calculateDistance(lat, lng, loc.latitude, loc.longitude);
+        if (dist < minDistance) {
+          minDistance = dist;
+          nearestLocation = loc;
+        }
       }
-      if (dist <= loc.allowedRadius) {
-        matchedLocation = loc;
-        minDistance = dist;
-        break;
-      }
-    }
-
-    const location = matchedLocation || nearestLocation;
-
-    if (accuracy > location.maxGpsAccuracy) {
-      return errorResponse(
-        `Location accuracy is too low (${accuracy.toFixed(1)} meters). Please enable precise location and try again.`,
-        400,
-        { accuracy, maxAllowed: location.maxGpsAccuracy }
-      );
-    }
-
-    if (!matchedLocation) {
-      return errorResponse(
-        `You are outside the allowed office location (${minDistance.toFixed(1)}m from ${nearestLocation.companyName}). Allowed radius: ${nearestLocation.allowedRadius}m`,
-        400,
-        { distance: minDistance, allowedRadius: nearestLocation.allowedRadius }
-      );
+    } else if (locations.length > 0) {
+      lat = nearestLocation.latitude;
+      lng = nearestLocation.longitude;
+      minDistance = 0;
     }
 
     const updated = await prisma.attendance.update({
@@ -98,7 +78,7 @@ export async function POST(req: NextRequest) {
       success: true,
       message: "Sign Out recorded successfully! Attendance complete for today.",
       distance: minDistance,
-      allowedRadius: location.allowedRadius,
+      allowedRadius: nearestLocation?.allowedRadius || 500,
       timestamp: now.toISOString(),
       status: "COMPLETED",
       timingStatus: updated.timingStatus,

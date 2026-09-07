@@ -56,8 +56,8 @@ const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      {/* Menu links */}
-      <nav className="flex-1 space-y-1.5 px-4 py-6">
+      {/* Menu links with smooth scrolling */}
+      <nav className="flex-1 space-y-1 px-4 py-3 overflow-y-auto min-h-0">
         {adminMenu.map((item) => {
           const Icon = item.icon;
           return (
@@ -65,24 +65,24 @@ const Sidebar: React.FC = () => {
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `flex items-center gap-3.5 px-4 py-3 text-sm font-semibold rounded-2xl transition-all duration-200 ${
+                `flex items-center gap-3.5 px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200 ${
                   isActive
-                    ? 'bg-primary-50 text-primary-600'
+                    ? 'bg-primary-50 text-primary-600 font-bold'
                     : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
                 }`
               }
             >
-              <Icon className="h-5 w-5 shrink-0" />
+              <Icon className="h-4.5 w-4.5 shrink-0" />
               {item.name}
             </NavLink>
           );
         })}
       </nav>
 
-      {/* Bottom user + logout section */}
-      <div className="border-t border-slate-100 p-4 space-y-2">
-        <div className="flex items-center gap-3 px-2 py-1.5 rounded-xl bg-slate-50">
-          <div className="h-9 w-9 rounded-xl bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-sm shrink-0">
+      {/* Bottom user + logout section - Always visible */}
+      <div className="border-t border-slate-100 p-3.5 space-y-2 shrink-0 bg-white shadow-sm">
+        <div className="flex items-center gap-3 px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-100">
+          <div className="h-8 w-8 rounded-lg bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-sm shrink-0">
             {user.name.charAt(0)}
           </div>
           <div className="flex-1 min-w-0">
@@ -92,9 +92,9 @@ const Sidebar: React.FC = () => {
         </div>
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-rose-500 hover:bg-rose-50 rounded-xl transition-all duration-200"
+          className="flex w-full items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-rose-600 bg-rose-50/80 hover:bg-rose-100 border border-rose-100 rounded-xl transition-all duration-200 shadow-sm"
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-3.5 w-3.5" />
           Sign Out
         </button>
       </div>

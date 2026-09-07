@@ -441,73 +441,75 @@ const Reports: React.FC = () => {
 
   return (
     <div className="space-y-6 select-none animate-fade-in text-slate-800 pb-16">
-      {/* ── Top Page Header Banner ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 md:p-8 text-white shadow-xl">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-emerald-500/15 blur-3xl" />
-        <div className="absolute bottom-0 left-1/3 -mb-16 h-48 w-48 rounded-full bg-indigo-500/20 blur-2xl" />
+      {/* ── Top Page Header Banner (Sleek & Compact) ── */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-4 sm:p-5 text-white shadow-lg border border-slate-800/80">
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/3 -mb-16 h-36 w-36 rounded-full bg-indigo-500/15 blur-2xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 backdrop-blur-md border border-emerald-500/30 text-xs font-semibold text-emerald-300">
-              <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-400" />
-              Official Attendance Register Formation & Saturday Policy
+        <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                Attendance Reports & Excel Register Sheet
+              </h1>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-300">
+                <FileSpreadsheet className="h-3 w-3 text-emerald-400" />
+                Register & Policy
+              </span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white flex items-center gap-3">
-              Attendance Reports & Excel Register Sheet
-            </h1>
-            <p className="text-xs md:text-sm text-slate-300 max-w-2xl font-normal leading-relaxed">
-              Standard 2-tier monthly attendance register spreadsheet with login timings, <strong>custom Saturday working/leave controls (3 working & 1 leave)</strong>, and direct <strong>.xlsx Excel</strong> download matching company payroll format.
+            <p className="text-xs text-slate-300 font-normal leading-relaxed">
+              Standard 2-tier monthly attendance register spreadsheet with login timings, Saturday working policy, and direct <strong>.xlsx Excel</strong> download.
             </p>
           </div>
 
-          <div className="shrink-0 flex flex-wrap items-center gap-3">
+          <div className="shrink-0 flex flex-wrap items-center gap-2.5">
             {/* View Mode Switcher */}
-            <div className="flex items-center bg-white/10 backdrop-blur-md p-1 rounded-2xl border border-white/15 text-xs font-bold text-white">
+            <div className="flex items-center bg-white/10 backdrop-blur-md p-1 rounded-xl border border-white/15 text-xs font-bold text-white">
               <button
                 onClick={() => setReportView('leave_balance_sheet')}
-                className={`px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer text-xs ${
                   reportView === 'leave_balance_sheet'
-                    ? 'bg-cyan-400 text-slate-950 font-black shadow-lg shadow-cyan-400/30'
+                    ? 'bg-cyan-400 text-slate-950 font-black shadow-md shadow-cyan-400/30'
                     : 'text-slate-300 hover:text-white'
                 }`}
               >
-                <TableIcon className="h-4 w-4" />
-                <span>Leave Balance Report (Exact)</span>
+                <TableIcon className="h-3.5 w-3.5" />
+                <span>Leave Balance Report</span>
               </button>
 
               <button
                 onClick={() => setReportView('monthly_excel')}
-                className={`px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer text-xs ${
                   reportView === 'monthly_excel'
-                    ? 'bg-emerald-500 text-slate-950 font-black shadow-lg shadow-emerald-500/30'
+                    ? 'bg-emerald-500 text-slate-950 font-black shadow-md shadow-emerald-500/30'
                     : 'text-slate-300 hover:text-white'
                 }`}
               >
-                <FileSpreadsheet className="h-4 w-4" />
+                <FileSpreadsheet className="h-3.5 w-3.5" />
                 <span>Monthly Register (2-Tier)</span>
               </button>
 
               <button
                 onClick={() => setReportView('daily_logs')}
-                className={`px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer text-xs ${
                   reportView === 'daily_logs'
-                    ? 'bg-indigo-600 text-white shadow-lg'
+                    ? 'bg-indigo-600 text-white shadow-md'
                     : 'text-slate-300 hover:text-white'
                 }`}
               >
-                <List className="h-4 w-4" />
+                <List className="h-3.5 w-3.5" />
                 <span>Punch Logs</span>
               </button>
 
               <button
                 onClick={() => setReportView('kpi_report')}
-                className={`px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer text-xs ${
                   reportView === 'kpi_report'
-                    ? 'bg-amber-400 text-slate-950 font-black shadow-lg shadow-amber-400/30'
+                    ? 'bg-amber-400 text-slate-950 font-black shadow-md shadow-amber-400/30'
                     : 'text-slate-300 hover:text-white'
                 }`}
               >
-                <Award className="h-4 w-4" />
+                <Award className="h-3.5 w-3.5" />
                 <span>Employee KPI Inspector</span>
               </button>
             </div>
@@ -527,9 +529,9 @@ const Reports: React.FC = () => {
                   handleExportCsv();
                 }
               }}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-cyan-400 via-emerald-400 to-teal-500 hover:from-cyan-300 hover:to-teal-400 text-slate-950 font-black text-xs shadow-xl shadow-cyan-400/25 transition-all cursor-pointer active:scale-95"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-400 via-emerald-400 to-teal-500 hover:from-cyan-300 hover:to-teal-400 text-slate-950 font-bold text-xs shadow-md shadow-cyan-400/20 transition-all cursor-pointer active:scale-95"
             >
-              <Download className="h-4 w-4 stroke-[2.5]" />
+              <Download className="h-3.5 w-3.5 stroke-[2.5]" />
               <span>Download Excel (.xlsx)</span>
             </button>
           </div>

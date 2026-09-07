@@ -43,6 +43,9 @@ export interface TaskRequest {
   department?: string;
   assignedEmployeeId?: number;
   employeeId?: number;
+  assignedById?: number;
+  assignedByName?: string;
+  whoAssigned?: string;
   completionNotes?: string;
   checklistJson?: string;
 }

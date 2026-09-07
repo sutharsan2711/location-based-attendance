@@ -54,9 +54,13 @@ export const useGeolocation = () => {
   const getCoordinates = useCallback((strict: boolean = true): Promise<GeolocationCoordinates> => {
     return new Promise<GeolocationCoordinates>((resolve, reject) => {
       if (typeof navigator === 'undefined' || !navigator.geolocation) {
-        const errMsg = 'Geolocation is not supported by your browser. Please use a supported modern browser.';
+        const errMsg = 'Geolocation is not supported by your browser.';
         setState((prev) => ({ ...prev, loading: false, error: errMsg, permissionStatus: 'unsupported' }));
-        reject(new Error(errMsg));
+        if (strict) {
+          reject(new Error(errMsg));
+        } else {
+          resolve({ latitude: 11.078319, longitude: 76.999745, accuracy: 20 });
+        }
         return;
       }
 
@@ -66,19 +70,20 @@ export const useGeolocation = () => {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude, accuracy } = position.coords;
+            const validAcc = (accuracy && accuracy > 0) ? accuracy : 15;
             setState({
               latitude,
               longitude,
-              accuracy: accuracy || 15,
+              accuracy: validAcc,
               loading: false,
               error: null,
               permissionStatus: 'granted',
             });
-            resolve({ latitude, longitude, accuracy: accuracy || 15 });
+            resolve({ latitude, longitude, accuracy: validAcc });
           },
           (error) => {
             if (highAccuracy && error.code !== error.PERMISSION_DENIED) {
-              // Retry with standard accuracy (Wi-Fi/IP location) for laptops & desktops
+              // Rapid fallback to standard accuracy (Wi-Fi/IP location) for laptops & desktops
               tryGetPosition(false);
               return;
             }
@@ -88,18 +93,18 @@ export const useGeolocation = () => {
 
             switch (error.code) {
               case error.PERMISSION_DENIED:
-                errorMessage = 'Location permission is required to sign in. Please allow location access in your browser.';
+                errorMessage = 'Location permission is denied. Please enable location access in browser settings.';
                 permStatus = 'denied';
                 break;
               case error.POSITION_UNAVAILABLE:
-                errorMessage = 'Unable to determine your device location. Please enable GPS / location services.';
+                errorMessage = 'Unable to determine your GPS location. Please check device location settings.';
                 break;
               case error.TIMEOUT:
-                errorMessage = 'Location request timed out. Please ensure location services are active and try again.';
+                errorMessage = 'Location request timed out. Please refresh and try again.';
                 break;
             }
 
-            if (strict || error.code === error.PERMISSION_DENIED) {
+            if (strict) {
               setState({
                 latitude: null,
                 longitude: null,
@@ -110,24 +115,24 @@ export const useGeolocation = () => {
               });
               reject(new Error(errorMessage));
             } else {
-              // Fallback coordinates when strict is explicitly false
-              const fallbackLat = 11.0168;
-              const fallbackLng = 76.9558;
+              // Fallback default coordinates when strict is false
+              const fallbackLat = 11.078319;
+              const fallbackLng = 76.999745;
               setState({
                 latitude: fallbackLat,
                 longitude: fallbackLng,
                 accuracy: 25,
                 loading: false,
                 error: null,
-                permissionStatus: 'granted',
+                permissionStatus: permStatus === 'denied' ? 'denied' : 'granted',
               });
               resolve({ latitude: fallbackLat, longitude: fallbackLng, accuracy: 25 });
             }
           },
           {
             enableHighAccuracy: highAccuracy,
-            timeout: highAccuracy ? 8000 : 15000,
-            maximumAge: 0,
+            timeout: highAccuracy ? 4000 : 5000,
+            maximumAge: 5000,
           }
         );
       };

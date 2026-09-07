@@ -59,14 +59,20 @@ public class TaskResponse {
             dto.setAssignedEmployeeName(empName);
             dto.setAssignedEmployeeEmail(empEmail);
         }
-        if (task.getAssignedBy() != null) {
-            Long creatorId = task.getAssignedBy().getId();
-            String creatorName = task.getAssignedBy().getName();
+        String assignerName = task.getAssignedByName();
+        if (assignerName == null && task.getAssignedBy() != null) {
+            assignerName = task.getAssignedBy().getName();
+        }
+        if (assignerName == null || assignerName.isBlank()) {
+            assignerName = "System Admin";
+        }
 
-            dto.setAssignedById(creatorId);
-            dto.setAssignedByName(creatorName);
-            dto.setCreatedById(creatorId);
-            dto.setCreatedByName(creatorName);
+        dto.setAssignedByName(assignerName);
+        dto.setCreatedByName(assignerName);
+
+        if (task.getAssignedBy() != null) {
+            dto.setAssignedById(task.getAssignedBy().getId());
+            dto.setCreatedById(task.getAssignedBy().getId());
         }
         dto.setDepartment(task.getDepartment());
         dto.setPriority(task.getPriority());

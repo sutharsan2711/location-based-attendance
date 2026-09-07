@@ -6,8 +6,10 @@ export interface StickyNote {
   content: string;
   color: NoteColor | string;
   category: string;
-  pinned: boolean;
-  checklistData?: string; // JSON string array or checklist items
+  pinned?: boolean;
+  isPinned?: boolean;
+  checklistData?: string;
+  checklistJson?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -18,5 +20,7 @@ export interface StickyNoteRequest {
   color?: NoteColor | string;
   category?: string;
   pinned?: boolean;
+  isPinned?: boolean;
   checklistData?: string;
+  checklistJson?: string;
 }

@@ -1,5 +1,7 @@
 package com.company.attendance.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class StickyNoteRequest {
     private String title;
     private String content;
@@ -25,6 +27,20 @@ public class StickyNoteRequest {
     public Boolean getIsPinned() { return isPinned; }
     public void setIsPinned(Boolean isPinned) { this.isPinned = isPinned; }
 
+    @JsonProperty("pinned")
+    public void setPinned(Boolean pinned) {
+        if (pinned != null) {
+            this.isPinned = pinned;
+        }
+    }
+
     public String getChecklistJson() { return checklistJson; }
     public void setChecklistJson(String checklistJson) { this.checklistJson = checklistJson; }
+
+    @JsonProperty("checklistData")
+    public void setChecklistData(String checklistData) {
+        if (checklistData != null) {
+            this.checklistJson = checklistData;
+        }
+    }
 }

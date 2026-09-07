@@ -137,9 +137,10 @@ const AdminStickyNotes: React.FC = () => {
       setContent(noteToEdit.content || '');
       setColor((noteToEdit.color as NoteColor) || 'yellow');
       setCategory(noteToEdit.category || 'General');
-      setPinned(noteToEdit.pinned || false);
+      setPinned(noteToEdit.pinned ?? noteToEdit.isPinned ?? false);
+      const rawJson = noteToEdit.checklistJson || noteToEdit.checklistData;
       try {
-        setChecklists(noteToEdit.checklistData ? JSON.parse(noteToEdit.checklistData) : []);
+        setChecklists(rawJson ? JSON.parse(rawJson) : []);
       } catch (e) {
         setChecklists([]);
       }
@@ -163,13 +164,16 @@ const AdminStickyNotes: React.FC = () => {
       return;
     }
 
+    const checklistString = checklists.length > 0 ? JSON.stringify(checklists) : undefined;
     const payload: StickyNoteRequest = {
-      title,
-      content,
+      title: title.trim(),
+      content: content.trim(),
       color,
       category,
       pinned,
-      checklistData: checklists.length > 0 ? JSON.stringify(checklists) : undefined,
+      isPinned: pinned,
+      checklistData: checklistString,
+      checklistJson: checklistString,
     };
 
     try {
@@ -211,23 +215,41 @@ const AdminStickyNotes: React.FC = () => {
 
   const handleToggleCheckItem = async (note: StickyNote, itemId: string) => {
     try {
+      const rawJson = note.checklistJson || note.checklistData;
       let items: ChecklistItem[] = [];
-      if (note.checklistData) {
-        items = JSON.parse(note.checklistData);
+      if (rawJson) {
+        try {
+          items = JSON.parse(rawJson);
+        } catch (e) {
+          items = [];
+        }
       }
       items = items.map((it) => (it.id === itemId ? { ...it, completed: !it.completed } : it));
+      const updatedString = JSON.stringify(items);
+
+      // Optimistic UI update
+      setNotes((prevNotes) =>
+        prevNotes.map((n) =>
+          n.id === note.id
+            ? { ...n, checklistJson: updatedString, checklistData: updatedString }
+            : n
+        )
+      );
+
       const payload: StickyNoteRequest = {
         title: note.title,
         content: note.content,
         color: note.color,
         category: note.category,
-        pinned: note.pinned,
-        checklistData: JSON.stringify(items),
+        pinned: note.pinned ?? note.isPinned ?? false,
+        isPinned: note.isPinned ?? note.pinned ?? false,
+        checklistData: updatedString,
+        checklistJson: updatedString,
       };
       await stickyNoteService.updateNote(note.id, payload);
-      await fetchNotes();
     } catch (err) {
       console.error('Failed to toggle checklist item', err);
+      await fetchNotes();
     }
   };
 
@@ -238,12 +260,18 @@ const AdminStickyNotes: React.FC = () => {
       text: newChecklistText.trim(),
       completed: false,
     };
-    setChecklists([...checklists, newItem]);
+    setChecklists((prev) => [...prev, newItem]);
     setNewChecklistText('');
   };
 
+  const handleToggleModalCheckItem = (id: string) => {
+    setChecklists((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, completed: !item.completed } : item))
+    );
+  };
+
   const handleRemoveChecklistItem = (id: string) => {
-    setChecklists(checklists.filter((item) => item.id !== id));
+    setChecklists((prev) => prev.filter((item) => item.id !== id));
   };
 
   if (loading && notes.length === 0) {
@@ -309,13 +337,15 @@ const AdminStickyNotes: React.FC = () => {
         {filteredNotes.map((note) => {
           const theme = colorThemes[(note.color as NoteColor) || 'yellow'] || colorThemes.yellow;
           let checklistItems: ChecklistItem[] = [];
-          if (note.checklistData) {
+          const rawJson = note.checklistJson || note.checklistData;
+          if (rawJson) {
             try {
-              checklistItems = JSON.parse(note.checklistData);
+              checklistItems = JSON.parse(rawJson);
             } catch (e) {
               checklistItems = [];
             }
           }
+          const isPinned = note.pinned ?? note.isPinned ?? false;
 
           return (
             <div
@@ -334,12 +364,12 @@ const AdminStickyNotes: React.FC = () => {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleTogglePin(note.id)}
-                      title={note.pinned ? 'Unpin' : 'Pin to Top'}
+                      title={isPinned ? 'Unpin' : 'Pin to Top'}
                       className={`p-1 rounded-full transition ${
-                        note.pinned ? theme.pin : 'text-slate-400 hover:text-slate-600'
+                        isPinned ? theme.pin : 'text-slate-400 hover:text-slate-600'
                       }`}
                     >
-                      <Pin className={`w-4 h-4 ${note.pinned ? 'rotate-45' : ''}`} />
+                      <Pin className={`w-4 h-4 ${isPinned ? 'rotate-45' : ''}`} />
                     </button>
                     <button
                       onClick={() => handleOpenModal(note)}
@@ -375,7 +405,7 @@ const AdminStickyNotes: React.FC = () => {
                       <div
                         key={item.id}
                         onClick={() => handleToggleCheckItem(note, item.id)}
-                        className="flex items-start gap-2 cursor-pointer text-xs select-none group/item"
+                        className="flex items-start gap-2 cursor-pointer text-xs select-none group/item hover:opacity-80 transition"
                       >
                         {item.completed ? (
                           <CheckSquare className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
@@ -399,7 +429,7 @@ const AdminStickyNotes: React.FC = () => {
               <div className="mt-4 pt-3 border-t border-black/5 flex items-center justify-between text-[10px] opacity-60">
                 <span>{new Date(note.updatedAt || note.createdAt).toLocaleDateString()}</span>
                 {checklistItems.length > 0 && (
-                  <span>
+                  <span className="font-semibold">
                     {checklistItems.filter((i) => i.completed).length} / {checklistItems.length} Done
                   </span>
                 )}
@@ -538,34 +568,58 @@ const AdminStickyNotes: React.FC = () => {
 
               {/* Checklist builder */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Interactive Checklists
-                </label>
-                <div className="space-y-2 mb-2">
-                  {checklists.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100 text-xs"
-                    >
-                      <div className="flex items-center gap-2">
-                        <CheckSquare className="w-3.5 h-3.5 text-slate-400" />
-                        <span className="font-medium text-slate-700">{item.text}</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveChecklistItem(item.id)}
-                        className="text-slate-400 hover:text-rose-600"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Interactive Checklists
+                  </label>
+                  {checklists.length > 0 && (
+                    <span className="text-[11px] font-bold text-slate-400">
+                      {checklists.filter((i) => i.completed).length} of {checklists.length} completed
+                    </span>
+                  )}
                 </div>
+
+                {checklists.length > 0 && (
+                  <div className="space-y-1.5 mb-2.5 max-h-48 overflow-y-auto pr-1">
+                    {checklists.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between bg-slate-50 hover:bg-slate-100/80 px-3 py-2 rounded-xl border border-slate-200/70 text-xs transition-colors"
+                      >
+                        <div
+                          className="flex items-center gap-2.5 flex-1 cursor-pointer select-none"
+                          onClick={() => handleToggleModalCheckItem(item.id)}
+                        >
+                          {item.completed ? (
+                            <CheckSquare className="w-4 h-4 text-emerald-600 shrink-0" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-400 shrink-0" />
+                          )}
+                          <span
+                            className={`font-medium ${
+                              item.completed ? 'line-through text-slate-400' : 'text-slate-700'
+                            }`}
+                          >
+                            {item.text}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveChecklistItem(item.id)}
+                          className="text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition-colors"
+                          title="Remove item"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
-                    placeholder="Add a checklist step..."
+                    placeholder="Add a checklist step (press Enter or click + Add)..."
                     value={newChecklistText}
                     onChange={(e) => setNewChecklistText(e.target.value)}
                     onKeyDown={(e) => {
@@ -580,7 +634,7 @@ const AdminStickyNotes: React.FC = () => {
                     type="button"
                     variant="outline"
                     onClick={handleAddChecklistItem}
-                    className="text-xs py-2 px-3"
+                    className="text-xs py-2 px-3 shrink-0"
                   >
                     <Plus className="w-3.5 h-3.5 mr-1" /> Add
                   </Button>

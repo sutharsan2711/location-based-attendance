@@ -9,6 +9,9 @@ public class TaskRequest {
     private String description;
     private Long employeeId;
     private Long assignedEmployeeId;
+    private Long assignedById;
+    private String assignedByName;
+    private String whoAssigned;
     private String department;
     private TaskPriority priority = TaskPriority.MEDIUM;
     private TaskStatus status = TaskStatus.PENDING;
@@ -41,6 +44,26 @@ public class TaskRequest {
         this.assignedEmployeeId = assignedEmployeeId;
         if (this.employeeId == null) {
             this.employeeId = assignedEmployeeId;
+        }
+    }
+
+    public Long getAssignedById() { return assignedById; }
+    public void setAssignedById(Long assignedById) { this.assignedById = assignedById; }
+
+    public String getAssignedByName() {
+        return assignedByName != null && !assignedByName.isBlank() ? assignedByName : whoAssigned;
+    }
+    public void setAssignedByName(String assignedByName) {
+        this.assignedByName = assignedByName;
+    }
+
+    public String getWhoAssigned() {
+        return whoAssigned != null && !whoAssigned.isBlank() ? whoAssigned : assignedByName;
+    }
+    public void setWhoAssigned(String whoAssigned) {
+        this.whoAssigned = whoAssigned;
+        if (this.assignedByName == null) {
+            this.assignedByName = whoAssigned;
         }
     }
 

@@ -78,7 +78,18 @@ const AdminTasks: React.FC = () => {
     priority: 'MEDIUM',
     dueDate: '',
     assignedEmployeeId: 0,
+    assignedByName: 'System Admin',
   });
+
+  const [assignerOptions, setAssignerOptions] = useState<string[]>([
+    'System Admin',
+    'Operations Lead',
+    'HR Team Lead',
+    'Project Manager',
+    'Technical Lead',
+  ]);
+  const [showAddAssignerInput, setShowAddAssignerInput] = useState<boolean>(false);
+  const [newAssignerName, setNewAssignerName] = useState<string>('');
 
   const fetchData = async () => {
     try {
@@ -106,11 +117,13 @@ const AdminTasks: React.FC = () => {
     return tasks.filter((t) => {
       const empName = t.assignedEmployeeName || t.employeeName || '';
       const empCode = t.assignedEmployeeCode || t.employeeCode || '';
+      const assigner = t.assignedByName || t.createdByName || '';
       const matchSearch =
         t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (t.description && t.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
         empName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        empCode.toLowerCase().includes(searchQuery.toLowerCase());
+        empCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        assigner.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchStatus = statusFilter === 'ALL' || t.status === statusFilter;
       const matchPriority = priorityFilter === 'ALL' || t.priority === priorityFilter;
@@ -122,9 +135,15 @@ const AdminTasks: React.FC = () => {
   }, [tasks, searchQuery, statusFilter, priorityFilter, employeeFilter]);
 
   const handleOpenCreateModal = (taskToEdit?: Task) => {
+    setShowAddAssignerInput(false);
+    setNewAssignerName('');
     if (taskToEdit) {
       setSelectedTask(taskToEdit);
       const empId = taskToEdit.assignedEmployeeId || taskToEdit.employeeId || 0;
+      const assigner = taskToEdit.assignedByName || taskToEdit.createdByName || 'System Admin';
+      if (!assignerOptions.includes(assigner)) {
+        setAssignerOptions((prev) => [assigner, ...prev]);
+      }
       setFormData({
         title: taskToEdit.title,
         description: taskToEdit.description || '',
@@ -133,6 +152,8 @@ const AdminTasks: React.FC = () => {
         dueDate: taskToEdit.dueDate ? taskToEdit.dueDate.substring(0, 10) : '',
         assignedEmployeeId: empId,
         employeeId: empId,
+        assignedByName: assigner,
+        whoAssigned: assigner,
       });
     } else {
       setSelectedTask(null);
@@ -144,9 +165,22 @@ const AdminTasks: React.FC = () => {
         dueDate: new Date().toISOString().substring(0, 10),
         assignedEmployeeId: defaultEmpId,
         employeeId: defaultEmpId,
+        assignedByName: 'System Admin',
+        whoAssigned: 'System Admin',
       });
     }
     setIsCreateModalOpen(true);
+  };
+
+  const handleAddCustomAssigner = () => {
+    if (!newAssignerName.trim()) return;
+    const name = newAssignerName.trim();
+    if (!assignerOptions.includes(name)) {
+      setAssignerOptions((prev) => [name, ...prev]);
+    }
+    setFormData((prev) => ({ ...prev, assignedByName: name, whoAssigned: name }));
+    setNewAssignerName('');
+    setShowAddAssignerInput(false);
   };
 
   const handleSaveTask = async (e: React.FormEvent) => {
@@ -159,6 +193,7 @@ const AdminTasks: React.FC = () => {
 
     try {
       setIsSubmitting(true);
+      const assigner = formData.assignedByName?.trim() || 'System Admin';
       const payload: TaskRequest = {
         title: formData.title.trim(),
         description: formData.description?.trim() || undefined,
@@ -167,6 +202,8 @@ const AdminTasks: React.FC = () => {
         dueDate: formData.dueDate || undefined,
         assignedEmployeeId: targetEmpId,
         employeeId: targetEmpId,
+        assignedByName: assigner,
+        whoAssigned: assigner,
       };
 
       if (selectedTask) {
@@ -663,23 +700,92 @@ const AdminTasks: React.FC = () => {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Assign Employee <span className="text-rose-500">*</span>
-                </label>
-                <select
-                  required
-                  value={formData.assignedEmployeeId}
-                  onChange={(e) => setFormData({ ...formData, assignedEmployeeId: Number(e.target.value) })}
-                  className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 font-medium"
-                >
-                  <option value={0} disabled>Select an employee</option>
-                  {employees.map((emp) => (
-                    <option key={emp.id} value={emp.id}>
-                      {emp.name} — {emp.employeeCode} ({emp.role || 'Staff'})
-                    </option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Assign Employee <span className="text-rose-500">*</span>
+                  </label>
+                  <select
+                    required
+                    value={formData.assignedEmployeeId}
+                    onChange={(e) => setFormData({ ...formData, assignedEmployeeId: Number(e.target.value) })}
+                    className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 font-medium bg-white"
+                  >
+                    <option value={0} disabled>Select an employee</option>
+                    {employees.map((emp) => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.name} — {emp.employeeCode} ({emp.role || 'Staff'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Who Assigned (Assigned By) <span className="text-rose-500">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddAssignerInput(!showAddAssignerInput);
+                        setNewAssignerName('');
+                      }}
+                      className="text-[11px] font-bold text-primary-600 hover:text-primary-800 flex items-center gap-1 cursor-pointer transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      {showAddAssignerInput ? 'Choose from list' : '+ Add Name'}
+                    </button>
+                  </div>
+
+                  {showAddAssignerInput ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        placeholder="Type name (e.g. Sriram (Lead))..."
+                        value={newAssignerName}
+                        onChange={(e) => setNewAssignerName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddCustomAssigner();
+                          }
+                        }}
+                        className="flex-1 px-3.5 py-2 text-sm border border-primary-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 font-medium bg-primary-50/20"
+                        autoFocus
+                      />
+                      <Button
+                        type="button"
+                        onClick={handleAddCustomAssigner}
+                        className="text-xs py-2 px-3 shrink-0 font-bold"
+                      >
+                        Add
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={formData.assignedByName || 'System Admin'}
+                        onChange={(e) => setFormData({ ...formData, assignedByName: e.target.value, whoAssigned: e.target.value })}
+                        className="flex-1 px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 font-medium bg-white"
+                      >
+                        {Array.from(new Set([...assignerOptions, ...employees.map((e) => e.name)])).map((name) => (
+                          <option key={name} value={name}>
+                            {name}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => setShowAddAssignerInput(true)}
+                        className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-primary-600 transition shrink-0 cursor-pointer"
+                        title="Add custom assigner name"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

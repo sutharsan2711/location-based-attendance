@@ -67,6 +67,14 @@ public class StickyNoteService {
     }
 
     @Transactional
+    public StickyNote togglePin(Long id) {
+        StickyNote note = stickyNoteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Sticky note not found with ID: " + id));
+        note.setIsPinned(note.getIsPinned() == null || !note.getIsPinned());
+        return stickyNoteRepository.save(note);
+    }
+
+    @Transactional
     public void deleteNote(Long id) {
         if (!stickyNoteRepository.existsById(id)) {
             throw new RuntimeException("Sticky note not found with ID: " + id);

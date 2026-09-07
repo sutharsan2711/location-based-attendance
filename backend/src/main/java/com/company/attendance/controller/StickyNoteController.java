@@ -36,6 +36,11 @@ public class StickyNoteController {
         return ResponseEntity.ok(stickyNoteService.updateNote(id, request));
     }
 
+    @PatchMapping("/{id}/pin")
+    public ResponseEntity<StickyNote> togglePin(@PathVariable Long id) {
+        return ResponseEntity.ok(stickyNoteService.togglePin(id));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, Object>> deleteNote(@PathVariable Long id) {
         stickyNoteService.deleteNote(id);

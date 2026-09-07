@@ -42,6 +42,7 @@ const EmployeeDashboard: React.FC = () => {
   } = useGeolocation();
 
   const [attendance, setAttendance] = useState<Attendance | null>(null);
+  const [allLocations, setAllLocations] = useState<CompanyLocation[]>([]);
   const [officeLocation, setOfficeLocation] = useState<CompanyLocation | null>(null);
   const [calculatedDistance, setCalculatedDistance] = useState<number | null>(null);
   const [checkingLocation, setCheckingLocation] = useState<boolean>(false);
@@ -64,13 +65,16 @@ const EmployeeDashboard: React.FC = () => {
   // ── 2. Data Fetching ──
   const fetchDashboardData = useCallback(async () => {
     try {
-      const [todayAtt, locationConfig, tasksData] = await Promise.all([
+      const [todayAtt, locationsData, tasksData] = await Promise.all([
         attendanceService.getTodayAttendance(),
-        locationService.getLocation(),
+        locationService.getAllLocations().catch(async () => [await locationService.getLocation()]),
         taskService.getMyTasks().catch(() => []),
       ]);
       setAttendance(todayAtt);
-      setOfficeLocation(locationConfig);
+      setAllLocations(locationsData);
+      if (locationsData.length > 0) {
+        setOfficeLocation(locationsData[0]);
+      }
       setMyTasks(tasksData || []);
     } catch (err) {
       console.error('Failed to load dashboard data', err);
@@ -91,9 +95,23 @@ const EmployeeDashboard: React.FC = () => {
     }
   }, [authLoading]);
 
-  // Handle client-side distance calculation
+  // Handle client-side distance calculation across all office locations
   useEffect(() => {
-    if (latitude && longitude && officeLocation) {
+    if (latitude && longitude && allLocations.length > 0) {
+      let minDistance = Infinity;
+      let nearestLoc = allLocations[0];
+
+      allLocations.forEach((loc) => {
+        const dist = calculateDistance(latitude, longitude, loc.latitude, loc.longitude);
+        if (dist < minDistance) {
+          minDistance = dist;
+          nearestLoc = loc;
+        }
+      });
+
+      setCalculatedDistance(minDistance);
+      setOfficeLocation(nearestLoc);
+    } else if (latitude && longitude && officeLocation) {
       const dist = calculateDistance(
         latitude,
         longitude,
@@ -104,17 +122,16 @@ const EmployeeDashboard: React.FC = () => {
     } else {
       setCalculatedDistance(null);
     }
-  }, [latitude, longitude, officeLocation]);
+  }, [latitude, longitude, allLocations, officeLocation]);
 
   // Browser geolocation check
   const checkCurrentLocation = useCallback(async () => {
     setCheckingLocation(true);
     setApiError(null);
-    setApiSuccess(null);
     try {
-      await getCoordinates();
+      await getCoordinates(true);
     } catch (err: any) {
-      console.error(err);
+      console.warn('Location check notice:', err);
     } finally {
       setCheckingLocation(false);
     }
@@ -139,14 +156,14 @@ const EmployeeDashboard: React.FC = () => {
     // Auto-retrieve coordinates if not ready
     if (!currentLat || !currentLng) {
       try {
-        const coords = await getCoordinates();
+        const coords = await getCoordinates(true);
         currentLat = coords.latitude;
         currentLng = coords.longitude;
         currentAcc = coords.accuracy;
-      } catch (e) {
-        currentLat = officeLocation?.latitude || 11.0168;
-        currentLng = officeLocation?.longitude || 76.9558;
-        currentAcc = 20;
+      } catch (locErr: any) {
+        setApiError(locErr.message || 'Location access is required to sign in. Please enable location in your browser.');
+        setActionLoading(false);
+        return;
       }
     }
 
@@ -154,39 +171,16 @@ const EmployeeDashboard: React.FC = () => {
       const response = await attendanceService.loginAttendance({
         latitude: currentLat!,
         longitude: currentLng!,
-        accuracy: currentAcc || 20,
+        accuracy: currentAcc || 15,
       });
       if (response.success) {
         setApiSuccess(response.message || 'Sign In recorded successfully!');
-        fetchDashboardData();
+        await fetchDashboardData();
       }
     } catch (err: any) {
-      console.error(err);
-      
-      // Fallback update for standalone preview or offline mode
-      const nowIso = new Date().toISOString();
-      const updatedAtt: Attendance = {
-        id: attendance?.id || 1,
-        employee: {
-          id: user?.id || 2,
-          name: user?.name || 'Employee',
-          email: user?.email || '',
-          employeeCode: user?.employeeCode || 'ECLCE2008',
-          role: user?.role || 'EMPLOYEE',
-          status: 'ACTIVE',
-        },
-        attendanceDate: nowIso.split('T')[0],
-        loginTime: nowIso,
-        loginLatitude: currentLat || 11.0168,
-        loginLongitude: currentLng || 76.9558,
-        loginAccuracy: currentAcc || 20,
-        loginDistance: 12,
-        status: 'LOGGED_IN',
-        timingStatus: 'ON_TIME',
-      } as any;
-
-      setAttendance(updatedAtt);
-      setApiSuccess('Sign In recorded successfully! (On Time)');
+      console.error('Sign In error:', err);
+      const errMsg = err.response?.data?.message || err.message || 'Failed to record Sign In. Please ensure you are within office boundary.';
+      setApiError(errMsg);
     } finally {
       setActionLoading(false);
     }
@@ -203,14 +197,14 @@ const EmployeeDashboard: React.FC = () => {
 
     if (!currentLat || !currentLng) {
       try {
-        const coords = await getCoordinates();
+        const coords = await getCoordinates(true);
         currentLat = coords.latitude;
         currentLng = coords.longitude;
         currentAcc = coords.accuracy;
-      } catch (e) {
-        currentLat = officeLocation?.latitude || 11.0168;
-        currentLng = officeLocation?.longitude || 76.9558;
-        currentAcc = 20;
+      } catch (locErr: any) {
+        setApiError(locErr.message || 'Location access is required to sign out. Please enable location in your browser.');
+        setActionLoading(false);
+        return;
       }
     }
 
@@ -218,30 +212,16 @@ const EmployeeDashboard: React.FC = () => {
       const response = await attendanceService.logoutAttendance({
         latitude: currentLat!,
         longitude: currentLng!,
-        accuracy: currentAcc || 20,
+        accuracy: currentAcc || 15,
       });
       if (response.success) {
         setApiSuccess(response.message || 'Sign Out recorded successfully!');
-        fetchDashboardData();
+        await fetchDashboardData();
       }
     } catch (err: any) {
-      console.error(err);
-      
-      // Fallback update for standalone preview or offline mode
-      const nowIso = new Date().toISOString();
-      setAttendance(prev => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          logoutTime: nowIso,
-          logoutLatitude: currentLat || 11.0168,
-          logoutLongitude: currentLng || 76.9558,
-          logoutAccuracy: currentAcc || 20,
-          logoutDistance: 15,
-          status: 'COMPLETED',
-        };
-      });
-      setApiSuccess('Sign Out recorded successfully! Attendance complete for today.');
+      console.error('Sign Out error:', err);
+      const errMsg = err.response?.data?.message || err.message || 'Failed to record Sign Out. Please ensure you are within office boundary.';
+      setApiError(errMsg);
     } finally {
       setActionLoading(false);
     }

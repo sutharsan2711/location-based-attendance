@@ -1,0 +1,341 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 BigInt              @id @default(autoincrement())
+  employeeCode       String              @unique(map: "employee_code") @map("employee_code") @db.VarChar(50)
+  name               String              @db.VarChar(100)
+  email              String              @unique(map: "email") @db.VarChar(100)
+  password           String              @db.VarChar(255)
+  phone              String?             @db.VarChar(20)
+  role               String              @db.VarChar(20)
+  status             String              @default("ACTIVE") @db.VarChar(20)
+  createdAt          DateTime?           @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt          DateTime?           @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  profileData        String?             @map("profile_data") @db.LongText
+  department         String?             @db.VarChar(50)
+  employment_type    String?             @db.VarChar(50)
+  joined_month       String?             @db.VarChar(30)
+  attendances        Attendance[]
+  leaveBalances      LeaveBalance[]
+  leaveRequests      LeaveRequest[]
+  payrolls           Payroll[]
+  permissionRequests PermissionRequest[]
+  salaryHistories    SalaryHistory[]
+  salaryStructure    SalaryStructure?
+  stickyNotes        StickyNote[]
+  assignedTasks      Task[]              @relation("TaskAssignedEmployee")
+  createdTasks       Task[]              @relation("TaskAssignedBy")
+
+  @@index([email], map: "idx_users_email")
+  @@index([employeeCode], map: "idx_users_employee_code")
+  @@map("users")
+}
+
+model Attendance {
+  id              BigInt                   @id @default(autoincrement())
+  employeeId      BigInt                   @map("employee_id")
+  attendanceDate  DateTime                 @map("attendance_date") @db.Date
+  loginTime       DateTime?                @map("login_time") @db.Timestamp(0)
+  loginLatitude   Float?                   @map("login_latitude")
+  loginLongitude  Float?                   @map("login_longitude")
+  loginAccuracy   Float?                   @map("login_accuracy")
+  loginDistance   Float?                   @map("login_distance")
+  logoutTime      DateTime?                @map("logout_time") @db.Timestamp(0)
+  logoutLatitude  Float?                   @map("logout_latitude")
+  logoutLongitude Float?                   @map("logout_longitude")
+  logoutAccuracy  Float?                   @map("logout_accuracy")
+  logoutDistance  Float?                   @map("logout_distance")
+  status          String                   @default("NOT_LOGGED_IN") @db.VarChar(20)
+  createdAt       DateTime?                @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt       DateTime?                @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  timingStatus    attendance_timing_status @map("timing_status")
+  employee        User                     @relation(fields: [employeeId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "attendance_ibfk_1")
+
+  @@unique([employeeId, attendanceDate], map: "UK21b5aixlcr00rk9odp8g3x7h0")
+  @@unique([employeeId, attendanceDate], map: "uk_employee_date")
+  @@index([attendanceDate], map: "idx_attendance_date")
+  @@index([employeeId], map: "idx_attendance_employee_id")
+  @@index([status], map: "idx_attendance_status")
+  @@map("attendance")
+}
+
+model Task {
+  id               BigInt         @id @default(autoincrement())
+  checklistJson    String?        @map("checklist_json") @db.Text
+  completionNotes  String?        @map("completion_notes") @db.Text
+  createdAt        DateTime?      @map("created_at") @db.DateTime(6)
+  department       String?        @db.VarChar(100)
+  description      String?        @db.Text
+  dueDate          DateTime?      @map("due_date") @db.Date
+  priority         tasks_priority
+  startDate        DateTime?      @map("start_date") @db.Date
+  status           tasks_status
+  title            String         @db.VarChar(255)
+  updatedAt        DateTime?      @updatedAt @map("updated_at") @db.DateTime(6)
+  assignedById     BigInt?        @map("assigned_by_id")
+  assignedByName   String?        @map("assigned_by_name") @db.VarChar(150)
+  employeeId       BigInt         @map("employee_id")
+  assignedEmployee User           @relation("TaskAssignedEmployee", fields: [employeeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKg6hs548hhpp8dera3e2a2e4rl")
+  assignedBy       User?          @relation("TaskAssignedBy", fields: [assignedById], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKk223sqirb7d32pd0rbgips492")
+
+  @@index([employeeId], map: "FKg6hs548hhpp8dera3e2a2e4rl")
+  @@index([assignedById], map: "FKk223sqirb7d32pd0rbgips492")
+  @@map("tasks")
+}
+
+model StickyNote {
+  id            BigInt    @id @default(autoincrement())
+  category      String?   @db.VarChar(100)
+  checklistJson String?   @map("checklist_json") @db.Text
+  color         String?   @db.VarChar(30)
+  content       String?   @db.Text
+  createdAt     DateTime? @map("created_at") @db.DateTime(6)
+  isPinned      Boolean?  @map("is_pinned") @db.Bit(1)
+  title         String    @db.VarChar(255)
+  updatedAt     DateTime? @updatedAt @map("updated_at") @db.DateTime(6)
+  userId        BigInt?   @map("user_id")
+  adminUser     User?     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK8nf3nfjj706g1la9exj0yf7u3")
+
+  @@index([userId], map: "FK8nf3nfjj706g1la9exj0yf7u3")
+  @@map("sticky_notes")
+}
+
+model CompanyLocation {
+  id                   BigInt    @id @default(autoincrement())
+  companyName          String    @map("company_name") @db.VarChar(100)
+  latitude             Float
+  longitude            Float
+  allowedRadius        Float     @default(50) @map("allowed_radius")
+  maxGpsAccuracy       Float     @default(100) @map("max_gps_accuracy")
+  createdAt            DateTime? @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt            DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  gracePeriodMinutes   Int       @map("grace_period_minutes")
+  officeLoginTime      DateTime  @map("office_login_time") @db.Time(6)
+  officeLogoutTime     DateTime  @map("office_logout_time") @db.Time(6)
+  businessGraceMinutes Int       @map("business_grace_minutes")
+  businessLoginTime    DateTime  @map("business_login_time") @db.Time(6)
+  businessLogoutTime   DateTime  @map("business_logout_time") @db.Time(6)
+  edtechGraceMinutes   Int       @map("edtech_grace_minutes")
+  edtechLoginTime      DateTime  @map("edtech_login_time") @db.Time(6)
+  edtechLogoutTime     DateTime  @map("edtech_logout_time") @db.Time(6)
+  itGraceMinutes       Int       @map("it_grace_minutes")
+  itLoginTime          DateTime  @map("it_login_time") @db.Time(6)
+  itLogoutTime         DateTime  @map("it_logout_time") @db.Time(6)
+  ogGraceMinutes       Int       @map("og_grace_minutes")
+  ogLoginTime          DateTime  @map("og_login_time") @db.Time(6)
+  ogLogoutTime         DateTime  @map("og_logout_time") @db.Time(6)
+
+  @@map("company_location")
+}
+
+model Holiday {
+  id          BigInt    @id @default(autoincrement())
+  createdAt   DateTime? @map("created_at") @db.DateTime(6)
+  dayOfWeek   String?   @map("day_of_week") @db.VarChar(30)
+  description String?   @db.VarChar(500)
+  holidayDate DateTime  @map("holiday_date") @db.Date
+  holidayType String    @map("holiday_type") @db.VarChar(50)
+  isOptional  Boolean   @map("is_optional") @db.Bit(1)
+  name        String    @db.VarChar(150)
+  updatedAt   DateTime? @updatedAt @map("updated_at") @db.DateTime(6)
+
+  @@unique([holidayDate, name], map: "UK7qomd91rd9hjp2waqs24u2fko")
+  @@map("holidays")
+}
+
+model LeaveRequest {
+  id             BigInt                           @id @default(autoincrement())
+  adminRemarks   String?                          @map("admin_remarks") @db.VarChar(255)
+  createdAt      DateTime?                        @map("created_at") @db.DateTime(6)
+  fromDate       DateTime                         @map("from_date") @db.Date
+  leaveType      leave_requests_leave_type        @map("leave_type")
+  reason         String                           @db.VarChar(255)
+  remarks        String?                          @db.VarChar(255)
+  status         leave_requests_status
+  toDate         DateTime                         @map("to_date") @db.Date
+  updatedAt      DateTime?                        @updatedAt @map("updated_at") @db.DateTime(6)
+  employeeId     BigInt                           @map("employee_id")
+  halfDaySession leave_requests_half_day_session? @map("half_day_session")
+  isHalfDay      Boolean                          @map("is_half_day") @db.Bit(1)
+  employee       User                             @relation(fields: [employeeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKsqls5en3a5v8l9md81umuu87c")
+
+  @@index([employeeId], map: "FKsqls5en3a5v8l9md81umuu87c")
+  @@map("leave_requests")
+}
+
+model LeaveBalance {
+  id                        BigInt    @id @default(autoincrement())
+  casualLeaveGranted        Float     @map("casual_leave_granted")
+  compOffGranted            Float     @map("comp_off_granted")
+  createdAt                 DateTime? @map("created_at") @db.DateTime(6)
+  lossOfPayGranted          Float     @map("loss_of_pay_granted")
+  sickLeaveGranted          Float     @map("sick_leave_granted")
+  updatedAt                 DateTime? @updatedAt @map("updated_at") @db.DateTime(6)
+  workFromHomeGranted       Float     @map("wfh_granted")
+  year                      Int
+  employeeId                BigInt    @map("employee_id")
+  casualLeaveCarriedForward Float     @map("casual_leave_carried_forward")
+  compOffCarriedForward     Float     @map("comp_off_carried_forward")
+  sickLeaveCarriedForward   Float     @map("sick_leave_carried_forward")
+  employee                  User      @relation(fields: [employeeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK3ygm1a5uoway86agyic525p4n")
+
+  @@unique([employeeId, year], map: "UKqnuwvomeqgwi23j8y3rt0c47i")
+  @@map("leave_balances")
+}
+
+model PermissionRequest {
+  id             BigInt                     @id @default(autoincrement())
+  adminRemarks   String?                    @map("admin_remarks") @db.VarChar(255)
+  createdAt      DateTime?                  @map("created_at") @db.DateTime(6)
+  fromTime       DateTime                   @map("from_time") @db.Time(6)
+  permissionDate DateTime                   @map("permission_date") @db.Date
+  reason         String                     @db.VarChar(255)
+  remarks        String?                    @db.VarChar(255)
+  status         permission_requests_status
+  toTime         DateTime                   @map("to_time") @db.Time(6)
+  updatedAt      DateTime?                  @updatedAt @map("updated_at") @db.DateTime(6)
+  employeeId     BigInt                     @map("employee_id")
+  employee       User                       @relation(fields: [employeeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK6flvtf6exhotayw06okvjxac8")
+
+  @@index([employeeId], map: "FK6flvtf6exhotayw06okvjxac8")
+  @@map("permission_requests")
+}
+
+model Payroll {
+  id                  BigInt         @id @default(autoincrement())
+  absentDays          Int            @map("absent_days")
+  basicSalary         Decimal        @map("basic_salary") @db.Decimal(12, 2)
+  conveyanceAllowance Decimal        @map("conveyance_allowance") @db.Decimal(12, 2)
+  createdAt           DateTime?      @map("created_at") @db.DateTime(6)
+  da                  Decimal        @map("da") @db.Decimal(12, 2)
+  esi                 Decimal        @map("esi") @db.Decimal(12, 2)
+  generatedAt         DateTime?      @map("generated_at") @db.DateTime(6)
+  grossSalary         Decimal        @map("gross_salary") @db.Decimal(12, 2)
+  hra                 Decimal        @map("hra") @db.Decimal(12, 2)
+  lateDays            Int            @map("late_days")
+  leaveDays           Int            @map("leave_days")
+  medicalAllowance    Decimal        @map("medical_allowance") @db.Decimal(12, 2)
+  month               Int            @map("payroll_month")
+  netSalary           Decimal        @map("net_salary") @db.Decimal(12, 2)
+  otherAllowance      Decimal        @map("other_allowance") @db.Decimal(12, 2)
+  otherDeduction      Decimal        @map("other_deduction") @db.Decimal(12, 2)
+  paidAt              DateTime?      @map("paid_at") @db.DateTime(6)
+  permissionDays      Int            @map("permission_days")
+  pf                  Decimal        @map("pf") @db.Decimal(12, 2)
+  presentDays         Int            @map("present_days")
+  professionalTax     Decimal        @map("professional_tax") @db.Decimal(12, 2)
+  status              payroll_status
+  totalDeduction      Decimal        @map("total_deduction") @db.Decimal(12, 2)
+  updatedAt           DateTime?      @updatedAt @map("updated_at") @db.DateTime(6)
+  workingDays         Int            @map("working_days")
+  year                Int            @map("payroll_year")
+  employeeId          BigInt         @map("employee_id")
+  employee            User           @relation(fields: [employeeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK9in1ydioe582q3vpndc2rnypn")
+
+  @@unique([employeeId, month, year], name: "uk_payroll_employee_month_year", map: "uk_payroll_employee_month_year")
+  @@map("payroll")
+}
+
+model SalaryStructure {
+  id                  BigInt    @id @default(autoincrement())
+  basicSalary         Decimal   @map("basic_salary") @db.Decimal(12, 2)
+  conveyanceAllowance Decimal   @map("conveyance_allowance") @db.Decimal(12, 2)
+  createdAt           DateTime? @map("created_at") @db.DateTime(6)
+  da                  Decimal   @map("da") @db.Decimal(12, 2)
+  effectiveFrom       DateTime  @map("effective_from") @db.Date
+  esi                 Decimal   @map("esi") @db.Decimal(12, 2)
+  hra                 Decimal   @map("hra") @db.Decimal(12, 2)
+  medicalAllowance    Decimal   @map("medical_allowance") @db.Decimal(12, 2)
+  otherAllowance      Decimal   @map("other_allowance") @db.Decimal(12, 2)
+  otherDeduction      Decimal   @map("other_deduction") @db.Decimal(12, 2)
+  pf                  Decimal   @map("pf") @db.Decimal(12, 2)
+  professionalTax     Decimal   @map("professional_tax") @db.Decimal(12, 2)
+  updatedAt           DateTime? @updatedAt @map("updated_at") @db.DateTime(6)
+  employeeId          BigInt    @unique(map: "UK7231n8kkjx229ennwoadmccsb") @map("employee_id")
+  employee            User      @relation(fields: [employeeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKqn9onlm0vtyw0g9k1o89cxhyv")
+
+  @@map("salary_structure")
+}
+
+model SalaryHistory {
+  id             BigInt    @id @default(autoincrement())
+  basicSalary    Decimal   @map("basic_salary") @db.Decimal(12, 2)
+  createdAt      DateTime? @map("created_at") @db.DateTime(6)
+  effectiveFrom  DateTime  @map("effective_from") @db.Date
+  grossSalary    Decimal   @map("gross_salary") @db.Decimal(12, 2)
+  netSalary      Decimal   @map("net_salary") @db.Decimal(12, 2)
+  totalDeduction Decimal   @map("total_deduction") @db.Decimal(12, 2)
+  employeeId     BigInt    @map("employee_id")
+  employee       User      @relation(fields: [employeeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK812rtr309t4p3iha43w8dyc4t")
+
+  @@index([employeeId], map: "FK812rtr309t4p3iha43w8dyc4t")
+  @@map("salary_history")
+}
+
+enum leave_requests_leave_type {
+  CASUAL_LEAVE
+  COMP_OFF
+  LOSS_OF_PAY
+  OTHER
+  PERSONAL_LEAVE
+  SICK_LEAVE
+  WORK_FROM_HOME
+}
+
+enum leave_requests_status {
+  APPROVED
+  CANCELLED
+  PENDING
+  REJECTED
+  WITHDRAWN
+}
+
+enum permission_requests_status {
+  APPROVED
+  CANCELLED
+  PENDING
+  REJECTED
+  WITHDRAWN
+}
+
+enum tasks_priority {
+  HIGH
+  LOW
+  MEDIUM
+  URGENT
+}
+
+enum tasks_status {
+  CANCELLED
+  COMPLETED
+  IN_PROGRESS
+  PENDING
+  UNDER_REVIEW
+}
+
+enum leave_requests_half_day_session {
+  FIRST_HALF
+  SECOND_HALF
+}
+
+enum attendance_timing_status {
+  ABSENT
+  LATE
+  LEAVE
+  PERMISSION
+  PRESENT
+  WORKING
+}
+
+enum payroll_status {
+  DRAFT
+  GENERATED
+  PAID
+}

@@ -28,6 +28,9 @@ public class Task {
     @JoinColumn(name = "assigned_by_id")
     private User assignedBy;
 
+    @Column(name = "assigned_by_name", length = 150)
+    private String assignedByName;
+
     @Column(length = 100)
     private String department;
 
@@ -84,6 +87,9 @@ public class Task {
 
     public User getAssignedBy() { return assignedBy; }
     public void setAssignedBy(User assignedBy) { this.assignedBy = assignedBy; }
+
+    public String getAssignedByName() { return assignedByName; }
+    public void setAssignedByName(String assignedByName) { this.assignedByName = assignedByName; }
 
     public String getDepartment() { return department; }
     public void setDepartment(String department) { this.department = department; }

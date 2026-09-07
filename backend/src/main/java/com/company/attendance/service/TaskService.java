@@ -56,7 +56,19 @@ public class TaskService {
         task.setTitle(req.getTitle() != null ? req.getTitle().trim() : "Untitled Task");
         task.setDescription(req.getDescription());
         task.setAssignedEmployee(employee);
-        task.setAssignedBy(admin);
+
+        String whoAssigned = req.getAssignedByName();
+        if (whoAssigned == null || whoAssigned.isBlank()) {
+            whoAssigned = admin.getName();
+        }
+        task.setAssignedByName(whoAssigned);
+
+        if (req.getAssignedById() != null) {
+            userRepository.findById(req.getAssignedById()).ifPresent(task::setAssignedBy);
+        } else {
+            task.setAssignedBy(admin);
+        }
+
         task.setDepartment(req.getDepartment() != null ? req.getDepartment() : employee.getDepartment());
         task.setPriority(req.getPriority() != null ? req.getPriority() : TaskPriority.MEDIUM);
         task.setStatus(req.getStatus() != null ? req.getStatus() : TaskStatus.PENDING);
@@ -104,6 +116,12 @@ public class TaskService {
             if (req.getDepartment() == null) {
                 task.setDepartment(employee.getDepartment());
             }
+        }
+        if (req.getAssignedByName() != null && !req.getAssignedByName().isBlank()) {
+            task.setAssignedByName(req.getAssignedByName());
+        }
+        if (req.getAssignedById() != null) {
+            userRepository.findById(req.getAssignedById()).ifPresent(task::setAssignedBy);
         }
         if (req.getDepartment() != null) task.setDepartment(req.getDepartment());
         if (req.getPriority() != null) task.setPriority(req.getPriority());

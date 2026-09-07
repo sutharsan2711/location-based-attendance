@@ -53,8 +53,7 @@ const Login: React.FC = () => {
     const initLocation = async () => {
       const status = await checkPermission();
       if (status === 'granted') {
-        // Pre-fetch coordinates if permission is already granted
-        getCoordinates(true).catch(() => {});
+        getCoordinates(false).catch(() => {});
       }
     };
     initLocation();
@@ -64,9 +63,9 @@ const Login: React.FC = () => {
     setError(null);
     setLocPrompted(true);
     try {
-      await getCoordinates(true);
+      await getCoordinates(false);
     } catch (err: any) {
-      setError(err.message || 'Location permission is required to sign in.');
+      console.warn('Location retrieval notice:', err);
     }
   };
 
@@ -88,36 +87,29 @@ const Login: React.FC = () => {
     const password = data.password.trim();
 
     try {
-      // 1. Mandatory Location Access Check: Acquire active GPS coordinates
-      setLoadingMessage('Verifying location access...');
-      let coords: { latitude: number; longitude: number; accuracy: number };
+      setLoadingMessage('Authenticating...');
+      let coords: { latitude: number; longitude: number; accuracy: number } | null = null;
 
       try {
-        coords = await getCoordinates(true);
+        coords = await getCoordinates(false);
       } catch (locErr: any) {
-        setError(
-          locErr.message ||
-          'Location permission is required to sign in. Please allow location access in your browser.'
-        );
-        setLoading(false);
-        return; // Strictly stop login if location permission is not granted
+        console.warn('Geolocation notice during login:', locErr);
       }
 
-      // 2. Proceed with authentication with location payload
       setLoadingMessage('Signing in to portal...');
-      const response = await authService.login(identifier, password, {
+      const response = await authService.login(identifier, password, coords ? {
         latitude: coords.latitude,
         longitude: coords.longitude,
         accuracy: coords.accuracy
-      });
+      } : undefined);
 
       login(response.token, response.user);
       navigate(response.user.role === 'ADMIN' ? '/admin/dashboard' : '/employee/dashboard');
     } catch (err: any) {
-      console.error(err);
+      console.error('Login error:', err);
       if (err.response && err.response.data && err.response.data.message) {
         setError(err.response.data.message);
-      } else if (!error) {
+      } else {
         setError('Invalid credentials or employee account not found in database.');
       }
     } finally {
@@ -267,13 +259,11 @@ const Login: React.FC = () => {
               size="lg"
               fullWidth
               loading={loading}
-              disabled={loading || isLocationDenied}
-              className={`mt-4 bg-primary-500 hover:bg-primary-600 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-primary-500/25 ${
-                isLocationDenied ? 'opacity-60 cursor-not-allowed hover:bg-primary-500' : ''
-              }`}
+              disabled={loading}
+              className="mt-4 bg-primary-500 hover:bg-primary-600 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-primary-500/25"
             >
               <ShieldCheck className="mr-2 h-4 w-4" />
-              {loading ? loadingMessage : isLocationDenied ? 'Location Permission Required to Sign In' : 'Sign In to Portal'}
+              {loading ? loadingMessage : 'Sign In to Portal'}
             </Button>
           </form>
         </div>

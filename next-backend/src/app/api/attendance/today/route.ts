@@ -1,0 +1,45 @@
+import { NextRequest } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getAuthUser } from "@/lib/auth";
+import { errorResponse, jsonResponse } from "@/lib/serializers";
+
+export async function GET(req: NextRequest) {
+  try {
+    const authUser = await getAuthUser(req);
+    if (!authUser) {
+      return errorResponse("Unauthorized", 401);
+    }
+
+    const now = new Date();
+    const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const attendance = await prisma.attendance.findFirst({
+      where: {
+        employeeId: BigInt(authUser.id),
+        attendanceDate: todayDate,
+      },
+      include: {
+        employee: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            employeeCode: true,
+            department: true,
+            role: true,
+            status: true,
+          },
+        },
+      },
+    });
+
+    if (!attendance) {
+      return jsonResponse(null);
+    }
+
+    return jsonResponse(attendance);
+  } catch (error: any) {
+    console.error("GET /api/attendance/today error:", error);
+    return errorResponse(error.message || "Failed to fetch today's attendance", 500);
+  }
+}

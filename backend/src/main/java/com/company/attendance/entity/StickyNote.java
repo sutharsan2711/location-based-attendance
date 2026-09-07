@@ -73,6 +73,12 @@ public class StickyNote {
     public String getChecklistJson() { return checklistJson; }
     public void setChecklistJson(String checklistJson) { this.checklistJson = checklistJson; }
 
+    @Transient
+    public String getChecklistData() { return checklistJson; }
+
+    @Transient
+    public Boolean getPinned() { return isPinned; }
+
     public User getAdminUser() { return adminUser; }
     public void setAdminUser(User adminUser) { this.adminUser = adminUser; }
 

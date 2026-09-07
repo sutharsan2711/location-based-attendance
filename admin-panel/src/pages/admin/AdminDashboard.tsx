@@ -35,8 +35,16 @@ import {
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
 
+  // Format local date string as YYYY-MM-DD cleanly without UTC timezone shifting
+  const formatLocalDateISO = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Selected customized date state (YYYY-MM-DD)
-  const getTodayISO = () => new Date().toISOString().split('T')[0];
+  const getTodayISO = () => formatLocalDateISO(new Date());
   const [selectedDate, setSelectedDate] = useState<string>(getTodayISO());
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [chartData, setChartData] = useState<any[]>([]);
@@ -69,13 +77,12 @@ const AdminDashboard: React.FC = () => {
     });
   };
 
-  // Quick Date Navigation
+  // Quick Date Navigation (Next / Prev Day)
   const handleShiftDate = (days: number) => {
     const [y, m, d] = selectedDate.split('-').map(Number);
     const date = new Date(y, m - 1, d);
     date.setDate(date.getDate() + days);
-    const nextStr = date.toISOString().split('T')[0];
-    setSelectedDate(nextStr);
+    setSelectedDate(formatLocalDateISO(date));
   };
 
   const handleSelectToday = () => {
@@ -85,7 +92,7 @@ const AdminDashboard: React.FC = () => {
   const handleSelectYesterday = () => {
     const d = new Date();
     d.setDate(d.getDate() - 1);
-    setSelectedDate(d.toISOString().split('T')[0]);
+    setSelectedDate(formatLocalDateISO(d));
   };
 
   const fetchDashboardData = async (targetDate: string, isManualRefresh: boolean = false) => {
@@ -227,7 +234,7 @@ const AdminDashboard: React.FC = () => {
                 !isToday && selectedDate === (() => {
                   const d = new Date();
                   d.setDate(d.getDate() - 1);
-                  return d.toISOString().split('T')[0];
+                  return formatLocalDateISO(d);
                 })()
                   ? 'bg-white text-indigo-700 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'

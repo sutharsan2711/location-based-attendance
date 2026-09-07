@@ -78,7 +78,9 @@ export interface Employee {
   email: string;
   phone?: string;
   department?: string;
-  role: 'ADMIN' | 'EMPLOYEE' | 'TRAINEE' | 'INTERN' | string;
+  role: 'ADMIN' | 'EMPLOYEE' | 'TRAINEE' | 'INTERN' | 'MANAGER' | string;
+  employment_type?: string;
+  staffType?: string;
   status: 'ACTIVE' | 'INACTIVE';
   profileData?: string;
   createdAt?: string;
@@ -92,7 +94,9 @@ export interface EmployeeRequest {
   phone?: string;
   department?: string;
   password?: string;
-  role: 'ADMIN' | 'EMPLOYEE' | 'TRAINEE' | 'INTERN' | string;
+  role: 'ADMIN' | 'EMPLOYEE' | 'TRAINEE' | 'INTERN' | 'MANAGER' | string;
+  employment_type?: string;
+  staffType?: string;
   status: 'ACTIVE' | 'INACTIVE';
   profileData?: string;
 }

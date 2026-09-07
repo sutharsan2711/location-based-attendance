@@ -55,6 +55,9 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     if (body.employeeCode !== undefined) updateData.employeeCode = body.employeeCode.trim();
     if (body.phone !== undefined) updateData.phone = body.phone?.trim() || null;
     if (body.role !== undefined) updateData.role = body.role;
+    if (body.employment_type !== undefined || body.staffType !== undefined) {
+      updateData.employment_type = body.employment_type || body.staffType;
+    }
     if (body.status !== undefined) updateData.status = body.status;
     if (body.department !== undefined) updateData.department = body.department?.trim() || "IT";
     if (body.profileData !== undefined) {

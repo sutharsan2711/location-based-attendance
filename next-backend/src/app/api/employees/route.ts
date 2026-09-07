@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
         password: hashedPassword,
         phone: body.phone?.trim() || null,
         role: body.role || "EMPLOYEE",
+        employment_type: body.employment_type || body.staffType || null,
         status: body.status || "ACTIVE",
         department: body.department?.trim() || "IT",
         profileData: body.profileData ? (typeof body.profileData === "string" ? body.profileData : JSON.stringify(body.profileData)) : null,

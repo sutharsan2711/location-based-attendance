@@ -152,6 +152,15 @@ const Employees: React.FC = () => {
     }
   });
 
+  const [customStaffTypes, setCustomStaffTypes] = useState<Array<{ id: string; label: string }>>(() => {
+    try {
+      const saved = localStorage.getItem('custom_attendance_staff_types');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [showAddTeamModal, setShowAddTeamModal] = useState<boolean>(false);
   const [newTeamName, setNewTeamName] = useState<string>('');
   const [newTeamLoginTime, setNewTeamLoginTime] = useState<string>('09:00');
@@ -160,6 +169,9 @@ const Employees: React.FC = () => {
 
   const [showAddRoleModal, setShowAddRoleModal] = useState<boolean>(false);
   const [newRoleName, setNewRoleName] = useState<string>('');
+
+  const [showAddStaffTypeModal, setShowAddStaffTypeModal] = useState<boolean>(false);
+  const [newStaffTypeName, setNewStaffTypeName] = useState<string>('');
 
   const handleCreateCustomTeam = () => {
     if (!newTeamName.trim()) return;
@@ -203,6 +215,17 @@ const Employees: React.FC = () => {
     setShowAddRoleModal(false);
   };
 
+  const handleCreateCustomStaffType = () => {
+    if (!newStaffTypeName.trim()) return;
+    const typeId = newStaffTypeName.trim().toUpperCase().replace(/[^A-Z0-9]/g, '_');
+    const updated = [...customStaffTypes.filter((r) => r.id !== typeId), { id: typeId, label: newStaffTypeName.trim() }];
+    setCustomStaffTypes(updated);
+    localStorage.setItem('custom_attendance_staff_types', JSON.stringify(updated));
+    setFormStaffType(typeId);
+    setNewStaffTypeName('');
+    setShowAddStaffTypeModal(false);
+  };
+
   // Form State for basic add/edit
   const [formCode, setFormCode] = useState<string>('');
   const [formName, setFormName] = useState<string>('');
@@ -211,6 +234,7 @@ const Employees: React.FC = () => {
   const [formPassword, setFormPassword] = useState<string>('');
   const [formDepartment, setFormDepartment] = useState<string>('IT');
   const [formRole, setFormRole] = useState<string>('EMPLOYEE');
+  const [formStaffType, setFormStaffType] = useState<string>('OJT');
   const [formStatus, setFormStatus] = useState<'ACTIVE' | 'INACTIVE'>('ACTIVE');
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -264,6 +288,7 @@ const Employees: React.FC = () => {
     setFormPhone('');
     setFormPassword('');
     setFormRole('EMPLOYEE');
+    setFormStaffType('OJT');
     setFormStatus('ACTIVE');
     setFormDepartment('IT');
     setFormError(null);
@@ -277,7 +302,8 @@ const Employees: React.FC = () => {
     setFormEmail(emp.email);
     setFormPhone(emp.phone || '');
     setFormPassword('');
-    setFormRole(emp.role as any);
+    setFormRole(emp.role || 'EMPLOYEE');
+    setFormStaffType(emp.employment_type || emp.staffType || (['OJT', 'TRAINEE', 'INTERN'].includes(emp.role) ? emp.role : 'OJT'));
     setFormStatus(emp.status);
     setFormDepartment(emp.department || 'IT');
     setFormError(null);
@@ -386,6 +412,8 @@ const Employees: React.FC = () => {
       password: formPassword || undefined,
       department: formDepartment,
       role: formRole,
+      employment_type: formStaffType,
+      staffType: formStaffType,
       status: formStatus,
     };
 
@@ -1820,7 +1848,7 @@ const Employees: React.FC = () => {
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="font-semibold text-slate-700 block text-xs">Role / Staff Type</label>
+                    <label className="font-semibold text-slate-700 block text-xs">Role</label>
                     <button
                       type="button"
                       onClick={() => setShowAddRoleModal(true)}
@@ -1834,11 +1862,17 @@ const Employees: React.FC = () => {
                     onChange={(e) => setFormRole(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white text-xs font-semibold"
                   >
-                    <option value="EMPLOYEE">EMPLOYEE (Permanent Employee)</option>
+                    <option value="EMPLOYEE">EMPLOYEE (General Employee)</option>
+                    <option value="ADMIN">ADMIN (Administrator)</option>
+                    <option value="MANAGER">MANAGER (Operations / Team Lead)</option>
+                    <option value="DEVELOPER">DEVELOPER (Software Engineer)</option>
+                    <option value="MARKETER">MARKETER (Digital Marketing)</option>
+                    <option value="CONTENT">CONTENT (Content Specialist)</option>
+                    <option value="TELECALLER">TELECALLER (Sales / Telecalling)</option>
+                    <option value="TRAINER">TRAINER (EdTech Trainer)</option>
                     <option value="TRAINEE">TRAINEE</option>
                     <option value="INTERN">INTERN</option>
-                    <option value="OJT">OJT (On-the-Job Trainee)</option>
-                    <option value="ADMIN">ADMIN (Administrator)</option>
+                    <option value="OJT">OJT</option>
                     {customRoles.map((cr) => (
                       <option key={cr.id} value={cr.id}>
                         {cr.label}
@@ -1848,16 +1882,49 @@ const Employees: React.FC = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="font-semibold text-slate-700 block mb-1">Account Status</label>
-                <select
-                  value={formStatus}
-                  onChange={(e) => setFormStatus(e.target.value as any)}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white"
-                >
-                  <option value="ACTIVE">ACTIVE</option>
-                  <option value="INACTIVE">INACTIVE</option>
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-semibold text-slate-700 block text-xs">Staff / Employment Type</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddStaffTypeModal(true)}
+                      className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <Plus className="h-3 w-3" /> Add Type
+                    </button>
+                  </div>
+                  <select
+                    value={formStaffType}
+                    onChange={(e) => setFormStaffType(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white text-xs font-semibold"
+                  >
+                    <option value="OJT">OJT (On-the-Job Trainee)</option>
+                    <option value="FULL_TIME">Permanent / Full-Time</option>
+                    <option value="INTERN">Internship</option>
+                    <option value="TRAINEE">Graduate Trainee</option>
+                    <option value="PROBATION">Probation Period</option>
+                    <option value="CONTRACT">Contract Basis</option>
+                    <option value="PART_TIME">Part Time</option>
+                    {customStaffTypes.map((st) => (
+                      <option key={st.id} value={st.id}>
+                        {st.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="font-semibold text-slate-700 block mb-1">Account Status</label>
+                  <select
+                    value={formStatus}
+                    onChange={(e) => setFormStatus(e.target.value as any)}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white"
+                  >
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="INACTIVE">INACTIVE</option>
+                  </select>
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
@@ -1869,6 +1936,78 @@ const Employees: React.FC = () => {
                 </Button>
               </div>
             </form>
+          </Card>
+        </div>
+      )}
+
+      {/* ───────────────────────────────────────────────────────────── */}
+      {/* ADD CUSTOM ROLE MODAL                                          */}
+      {/* ───────────────────────────────────────────────────────────── */}
+      {showAddRoleModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <Card title="Add Custom Role" className="w-full max-w-sm shadow-2xl bg-white animate-in fade-in">
+            <div className="space-y-4 text-xs">
+              <p className="text-slate-500 text-[11px]">
+                Create a new job role or administrative title to assign to employees.
+              </p>
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Role Title / Name</label>
+                <input
+                  type="text"
+                  required
+                  value={newRoleName}
+                  onChange={(e) => setNewRoleName(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-indigo-600 font-semibold"
+                  placeholder="e.g. Frontend Developer, Quality Analyst"
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <Button variant="outline" size="sm" type="button" onClick={() => setShowAddRoleModal(false)}>
+                  Cancel
+                </Button>
+                <Button variant="primary" size="sm" type="button" onClick={handleCreateCustomRole} disabled={!newRoleName.trim()}>
+                  Add Role
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* ───────────────────────────────────────────────────────────── */}
+      {/* ADD CUSTOM STAFF TYPE MODAL                                    */}
+      {/* ───────────────────────────────────────────────────────────── */}
+      {showAddStaffTypeModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <Card title="Add Custom Staff / Employment Type" className="w-full max-w-sm shadow-2xl bg-white animate-in fade-in">
+            <div className="space-y-4 text-xs">
+              <p className="text-slate-500 text-[11px]">
+                Define a new staff classification or employment term.
+              </p>
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Staff Type Name</label>
+                <input
+                  type="text"
+                  required
+                  value={newStaffTypeName}
+                  onChange={(e) => setNewStaffTypeName(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-indigo-600 font-semibold"
+                  placeholder="e.g. Consultant, Apprentice, Free Lancer"
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <Button variant="outline" size="sm" type="button" onClick={() => setShowAddStaffTypeModal(false)}>
+                  Cancel
+                </Button>
+                <Button variant="primary" size="sm" type="button" onClick={handleCreateCustomStaffType} disabled={!newStaffTypeName.trim()}>
+                  Add Staff Type
+                </Button>
+              </div>
+            </div>
           </Card>
         </div>
       )}

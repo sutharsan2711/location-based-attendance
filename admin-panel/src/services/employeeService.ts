@@ -6,7 +6,7 @@ export const employeeService = {
     try {
       const response = await api.get<Employee[]>('/employees');
       if (response.data && Array.isArray(response.data)) {
-        return response.data.filter(e => e.role !== 'ADMIN' && !['EMP001', 'EMP002', 'EMP003', 'EMP004', 'EMP005'].includes(e.employeeCode));
+        return response.data.filter(e => e.role !== 'ADMIN');
       }
       return [];
     } catch (e) {

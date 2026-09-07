@@ -111,7 +111,7 @@ const Reports: React.FC = () => {
   const fetchFilters = useCallback(async () => {
     try {
       const data = await employeeService.getAll();
-      setEmployees(data.filter((e) => e.role !== 'ADMIN' && !['EMP001', 'EMP002', 'EMP003', 'EMP004', 'EMP005'].includes(e.employeeCode)));
+      setEmployees(data.filter((e) => e.role !== 'ADMIN'));
     } catch (err) {
       console.error(err);
     }

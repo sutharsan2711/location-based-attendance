@@ -61,7 +61,6 @@ export const adminService = {
       if (response.data && Array.isArray(response.data.employees)) {
         response.data.employees = response.data.employees.filter(
           (e: any) =>
-            !['EMP001', 'EMP002', 'EMP003', 'EMP004', 'EMP005'].includes(e.employeeCode) &&
             !['John Doe', 'Jane Smith', 'Bob Johnson', 'Alice Williams', 'Charlie Brown'].includes(e.employeeName)
         );
       }

@@ -6,7 +6,7 @@ export const attendanceService = {
     try {
       const response = await api.get<Attendance[]>(`/attendance/employee/${employeeId}`);
       if (response.data && Array.isArray(response.data)) {
-        return response.data.filter(a => !['EMP001', 'EMP002', 'EMP003', 'EMP004', 'EMP005'].includes(a.employee?.employeeCode));
+        return response.data;
       }
       return [];
     } catch {
@@ -29,7 +29,7 @@ export const attendanceService = {
 
       const response = await api.get<Attendance[]>('/attendance', { params });
       if (response.data && Array.isArray(response.data)) {
-        return response.data.filter(a => !['EMP001', 'EMP002', 'EMP003', 'EMP004', 'EMP005'].includes(a.employee?.employeeCode));
+        return response.data;
       }
       return [];
     } catch (err) {

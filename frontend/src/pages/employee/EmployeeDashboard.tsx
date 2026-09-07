@@ -42,6 +42,7 @@ const EmployeeDashboard: React.FC = () => {
   } = useGeolocation();
 
   const [attendance, setAttendance] = useState<Attendance | null>(null);
+  const [dashboardLoading, setDashboardLoading] = useState<boolean>(true);
   const [allLocations, setAllLocations] = useState<CompanyLocation[]>([]);
   const [officeLocation, setOfficeLocation] = useState<CompanyLocation | null>(null);
   const [calculatedDistance, setCalculatedDistance] = useState<number | null>(null);
@@ -66,34 +67,64 @@ const EmployeeDashboard: React.FC = () => {
   const fetchDashboardData = useCallback(async () => {
     try {
       const [todayAtt, locationsData, tasksData] = await Promise.all([
-        attendanceService.getTodayAttendance(),
-        locationService.getAllLocations().catch(async () => [await locationService.getLocation()]),
+        attendanceService.getTodayAttendance().catch(() => null),
+        locationService
+          .getAllLocations()
+          .catch(async () => [await locationService.getLocation().catch(() => null)])
+          .then((arr) => (arr || []).filter((item): item is CompanyLocation => Boolean(item))),
         taskService.getMyTasks().catch(() => []),
       ]);
-      setAttendance(todayAtt);
-      setAllLocations(locationsData);
-      if (locationsData.length > 0) {
+
+      if (todayAtt) {
+        setAttendance(todayAtt);
+      } else {
+        setAttendance({
+          id: 0,
+          employee: {
+            id: user?.id || 0,
+            name: user?.name || '',
+            email: user?.email || '',
+            role: 'EMPLOYEE',
+            employeeCode: user?.employeeCode || '',
+            phone: '',
+            status: 'ACTIVE',
+          },
+          attendanceDate: new Date().toISOString().split('T')[0],
+          status: 'NOT_LOGGED_IN',
+        } as any);
+      }
+
+      setAllLocations(locationsData || []);
+      if (locationsData && locationsData.length > 0) {
         setOfficeLocation(locationsData[0]);
       }
       setMyTasks(tasksData || []);
     } catch (err) {
       console.error('Failed to load dashboard data', err);
-      if (!attendance) {
-        setAttendance({
-          id: 0,
-          employee: { id: 0, name: user?.name || '', email: user?.email || '', role: 'EMPLOYEE', employeeCode: '', phone: '', status: 'ACTIVE' },
-          attendanceDate: new Date().toISOString().split('T')[0],
-          status: 'NOT_LOGGED_IN',
-        } as any);
-      }
+      setAttendance({
+        id: 0,
+        employee: {
+          id: user?.id || 0,
+          name: user?.name || '',
+          email: user?.email || '',
+          role: 'EMPLOYEE',
+          employeeCode: user?.employeeCode || '',
+          phone: '',
+          status: 'ACTIVE',
+        },
+        attendanceDate: new Date().toISOString().split('T')[0],
+        status: 'NOT_LOGGED_IN',
+      } as any);
+    } finally {
+      setDashboardLoading(false);
     }
-  }, [user, attendance]);
+  }, [user]);
 
   useEffect(() => {
     if (!authLoading) {
       fetchDashboardData();
     }
-  }, [authLoading]);
+  }, [authLoading, fetchDashboardData]);
 
   // Handle client-side distance calculation across all office locations
   useEffect(() => {
@@ -227,7 +258,7 @@ const EmployeeDashboard: React.FC = () => {
     }
   };
 
-  if (authLoading || !attendance) {
+  if (authLoading || dashboardLoading) {
     return <Loading fullScreen message="Loading ESS Portal..." />;
   }
 

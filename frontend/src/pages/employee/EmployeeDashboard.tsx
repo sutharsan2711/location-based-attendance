@@ -94,9 +94,18 @@ const EmployeeDashboard: React.FC = () => {
         } as any);
       }
 
-      setAllLocations(locationsData || []);
-      if (locationsData && locationsData.length > 0) {
-        setOfficeLocation(locationsData[0]);
+      const validLocations: CompanyLocation[] = [];
+      if (Array.isArray(locationsData)) {
+        for (const loc of locationsData) {
+          if (loc && typeof loc === 'object' && 'latitude' in loc) {
+            validLocations.push(loc as CompanyLocation);
+          }
+        }
+      }
+
+      setAllLocations(validLocations);
+      if (validLocations.length > 0) {
+        setOfficeLocation(validLocations[0]);
       }
       setMyTasks(tasksData || []);
     } catch (err) {
@@ -258,7 +267,7 @@ const EmployeeDashboard: React.FC = () => {
     }
   };
 
-  if (authLoading || dashboardLoading) {
+  if (authLoading || dashboardLoading || !attendance) {
     return <Loading fullScreen message="Loading ESS Portal..." />;
   }
 

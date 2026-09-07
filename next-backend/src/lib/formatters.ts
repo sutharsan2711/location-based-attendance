@@ -402,6 +402,21 @@ export function formatWorkPlan(plan: any) {
   return {
     id: Number(plan.id),
     employeeId: Number(plan.employeeId),
+    employeeName: plan.employee?.name || null,
+    employeeCode: plan.employee?.employeeCode || null,
+    employeeDepartment: plan.employee?.department || null,
+    employeeAvatar: plan.employee?.avatarUrl || null,
+    employee: plan.employee
+      ? {
+          id: Number(plan.employee.id),
+          name: plan.employee.name,
+          employeeCode: plan.employee.employeeCode,
+          email: plan.employee.email,
+          department: plan.employee.department,
+          designation: plan.employee.designation,
+          avatarUrl: plan.employee.avatarUrl,
+        }
+      : undefined,
     planDate: plan.planDate ? plan.planDate.toISOString().split("T")[0] : null,
     taskName: plan.taskName,
     category: plan.category || "Development",

@@ -4,6 +4,8 @@ import { getAuthUser, isUserAdmin } from "@/lib/auth";
 import { errorResponse, jsonResponse } from "@/lib/serializers";
 import { formatLeave } from "@/lib/formatters";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const authUser = await getAuthUser(req);

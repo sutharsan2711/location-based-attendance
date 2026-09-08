@@ -7,7 +7,7 @@ export const taskService = {
     if (filters?.status) params.append('status', filters.status);
     if (filters?.priority) params.append('priority', filters.priority);
 
-    const response = await api.get<Task[]>('/tasks/my', { params });
+    const response = await api.get<Task[]>('/tasks/my-tasks', { params }).catch(() => api.get<Task[]>('/tasks/my', { params }));
     return response.data;
   },
 

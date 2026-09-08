@@ -21,6 +21,14 @@ import {
   Monitor,
   Package,
   Sliders,
+  Edit2,
+  Save,
+  Building2,
+  GraduationCap,
+  MapPin,
+  CreditCard,
+  Users2,
+  Sparkles,
 } from 'lucide-react';
 import { EmployeeProfileInfo, AssetItem } from '../../types/employee';
 
@@ -122,6 +130,15 @@ const EmployeeProfile: React.FC = () => {
   const [showResignModal, setShowResignModal] = useState(false);
   const [resignSubmitted, setResignSubmitted] = useState(false);
 
+  // Edit Profile Modal State
+  const [showEditModal, setShowEditModal] = useState<boolean>(false);
+  const [editModalTab, setEditModalTab] = useState<'personal' | 'address' | 'accounts' | 'family'>('personal');
+  const [editForm, setEditForm] = useState<EmployeeProfileInfo>(defaultProfileData);
+  const [editPhone, setEditPhone] = useState<string>('');
+  const [editSaving, setEditSaving] = useState<boolean>(false);
+  const [editSuccessMsg, setEditSuccessMsg] = useState<string | null>(null);
+  const [editErrorMsg, setEditErrorMsg] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchProfile = async () => {
       if (user) {
@@ -186,9 +203,7 @@ const EmployeeProfile: React.FC = () => {
 
   const displayUser = profile || user;
 
-  if (loading && !displayUser) return <Loading fullScreen message="Loading employee information..." />;
-
-  // Parse dynamic HRMS profileData if set by Admin
+  // Parse dynamic HRMS profileData if set
   let customData: Partial<EmployeeProfileInfo> = {};
   if (profile?.profileData) {
     try {
@@ -201,6 +216,60 @@ const EmployeeProfile: React.FC = () => {
   const pInfo: EmployeeProfileInfo = {
     ...defaultProfileData,
     ...customData,
+  };
+
+  const handleOpenEditModal = (tab: 'personal' | 'address' | 'accounts' | 'family' = 'personal') => {
+    // Sanitize values from '—' to empty string for comfortable input typing
+    const sanitizedForm: any = { ...defaultProfileData, ...customData };
+    Object.keys(sanitizedForm).forEach((k) => {
+      if (sanitizedForm[k] === '—') sanitizedForm[k] = '';
+    });
+    setEditForm(sanitizedForm);
+    setEditPhone(displayUser?.phone || '');
+    setEditModalTab(tab);
+    setEditSuccessMsg(null);
+    setEditErrorMsg(null);
+    setShowEditModal(true);
+  };
+
+  const handleFormChange = (field: keyof EmployeeProfileInfo, value: any) => {
+    setEditForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditSaving(true);
+    setEditSuccessMsg(null);
+    setEditErrorMsg(null);
+
+    try {
+      const targetId = profile?.id || user?.id;
+      const serialized = JSON.stringify(editForm);
+      const res = await employeeService.update(targetId, {
+        name: displayUser?.name,
+        email: displayUser?.email,
+        employeeCode: displayUser?.employeeCode,
+        role: displayUser?.role,
+        status: displayUser?.status,
+        phone: editPhone,
+        profileData: serialized,
+      });
+
+      setProfile(res);
+      setEditSuccessMsg('Your profile details have been saved successfully!');
+      setTimeout(() => {
+        setShowEditModal(false);
+        setEditSuccessMsg(null);
+      }, 1200);
+    } catch (err: any) {
+      console.error('Failed to update profile:', err);
+      setEditErrorMsg(err.response?.data?.message || 'Failed to save profile details.');
+    } finally {
+      setEditSaving(false);
+    }
   };
 
   // Dynamic values
@@ -219,20 +288,33 @@ const EmployeeProfile: React.FC = () => {
   return (
     <div className="space-y-4 max-w-7xl mx-auto pb-16 animate-slide">
       {/* ── Top Header Ribbon ── */}
-      <div className="flex items-center justify-between pb-3 border-b border-slate-200/80">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-200/80 gap-3">
         <div className="flex items-center gap-3">
           {/* Teal Ribbon Icon */}
           <div className="h-6 w-5 rounded bg-emerald-500/90 transform rotate-12 flex items-center justify-center shadow-xs" />
-          <h1 className="text-xl font-bold text-slate-800 tracking-tight">Employee Information</h1>
+          <div>
+            <h1 className="text-xl font-bold text-slate-800 tracking-tight">Employee Information</h1>
+            <p className="text-xs text-slate-500">View and update your personal and professional profile details</p>
+          </div>
         </div>
 
-        <button
-          onClick={() => setShowPasswordModal(true)}
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-xs"
-        >
-          <Lock className="h-3.5 w-3.5 text-slate-500" />
-          Change Password
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => handleOpenEditModal('personal')}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
+          >
+            <Edit2 className="h-3.5 w-3.5" />
+            <span>Fill / Edit Details</span>
+          </button>
+
+          <button
+            onClick={() => setShowPasswordModal(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-xs cursor-pointer"
+          >
+            <Lock className="h-3.5 w-3.5 text-slate-500" />
+            Change Password
+          </button>
+        </div>
       </div>
 
       {/* ── Main Layout: Inner Sidebar + Content Area ── */}
@@ -401,12 +483,21 @@ const EmployeeProfile: React.FC = () => {
               >
                 <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/40">
                   <span className="text-xs font-bold text-slate-600 tracking-wider uppercase">PERSONAL</span>
-                  <button
-                    onClick={() => toggleCard('personal')}
-                    className="h-6 w-6 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-colors"
-                  >
-                    {openCards.personal ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleOpenEditModal('personal')}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <Edit2 className="h-3 w-3" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => toggleCard('personal')}
+                      className="h-6 w-6 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-colors"
+                    >
+                      {openCards.personal ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
                 </div>
 
                 {openCards.personal && (
@@ -516,12 +607,21 @@ const EmployeeProfile: React.FC = () => {
               >
                 <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/40">
                   <span className="text-xs font-bold text-slate-600 tracking-wider uppercase">ADDRESS</span>
-                  <button
-                    onClick={() => toggleCard('address')}
-                    className="h-6 w-6 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-colors"
-                  >
-                    {openCards.address ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleOpenEditModal('address')}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <Edit2 className="h-3 w-3" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => toggleCard('address')}
+                      className="h-6 w-6 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-colors"
+                    >
+                      {openCards.address ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
                 </div>
 
                 {openCards.address && (
@@ -556,12 +656,21 @@ const EmployeeProfile: React.FC = () => {
               >
                 <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/40">
                   <span className="text-xs font-bold text-slate-600 tracking-wider uppercase">EDUCATION</span>
-                  <button
-                    onClick={() => toggleCard('education')}
-                    className="h-6 w-6 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-colors"
-                  >
-                    {openCards.education ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleOpenEditModal('address')}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <Edit2 className="h-3 w-3" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => toggleCard('education')}
+                      className="h-6 w-6 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-colors"
+                    >
+                      {openCards.education ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
                 </div>
 
                 {openCards.education && (
@@ -598,12 +707,21 @@ const EmployeeProfile: React.FC = () => {
               <div className="bg-white rounded-xl border border-slate-200/80 shadow-xs overflow-hidden">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/40">
                   <span className="text-xs font-bold text-slate-600 tracking-wider uppercase">BANK DETAILS</span>
-                  <button
-                    onClick={() => toggleCard('bankDetails')}
-                    className="h-6 w-6 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-colors"
-                  >
-                    {openCards.bankDetails ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleOpenEditModal('accounts')}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <Edit2 className="h-3 w-3" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => toggleCard('bankDetails')}
+                      className="h-6 w-6 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-colors"
+                    >
+                      {openCards.bankDetails ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
                 </div>
 
                 {openCards.bankDetails && (
@@ -650,12 +768,21 @@ const EmployeeProfile: React.FC = () => {
               <div className="bg-white rounded-xl border border-slate-200/80 shadow-xs overflow-hidden">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/40">
                   <span className="text-xs font-bold text-slate-600 tracking-wider uppercase">STATUTORY DETAILS</span>
-                  <button
-                    onClick={() => toggleCard('pfDetails')}
-                    className="h-6 w-6 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-colors"
-                  >
-                    {openCards.pfDetails ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleOpenEditModal('accounts')}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <Edit2 className="h-3 w-3" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => toggleCard('pfDetails')}
+                      className="h-6 w-6 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-colors"
+                    >
+                      {openCards.pfDetails ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
                 </div>
 
                 {openCards.pfDetails && (
@@ -717,12 +844,21 @@ const EmployeeProfile: React.FC = () => {
               >
                 <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/40">
                   <span className="text-xs font-bold text-slate-600 tracking-wider uppercase">FATHER</span>
-                  <button
-                    onClick={() => toggleCard('father')}
-                    className="h-6 w-6 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-colors"
-                  >
-                    {openCards.father ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleOpenEditModal('family')}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <Edit2 className="h-3 w-3" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => toggleCard('father')}
+                      className="h-6 w-6 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-colors"
+                    >
+                      {openCards.father ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
                 </div>
 
                 {openCards.father && (
@@ -1157,6 +1293,686 @@ const EmployeeProfile: React.FC = () => {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: Fill / Edit Employee Details ── */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-4 animate-fade-in overflow-y-auto">
+          <div className="w-full max-w-3xl rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh] my-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/70">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
+                  <Edit2 className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-800">Fill / Edit Employee Details</h3>
+                  <p className="text-xs text-slate-500">Update your personal, address, education, statutory and family records</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Tabs Navigation */}
+            <div className="flex items-center border-b border-slate-200 bg-slate-50/40 px-6 gap-2 overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => setEditModalTab('personal')}
+                className={`py-3 px-3.5 text-xs font-bold border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  editModalTab === 'personal'
+                    ? 'border-blue-600 text-blue-600 bg-white/70'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <UserIcon className="h-3.5 w-3.5" />
+                <span>Personal & Contact</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditModalTab('address')}
+                className={`py-3 px-3.5 text-xs font-bold border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  editModalTab === 'address'
+                    ? 'border-blue-600 text-blue-600 bg-white/70'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <MapPin className="h-3.5 w-3.5" />
+                <span>Address & Education</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditModalTab('accounts')}
+                className={`py-3 px-3.5 text-xs font-bold border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  editModalTab === 'accounts'
+                    ? 'border-blue-600 text-blue-600 bg-white/70'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <CreditCard className="h-3.5 w-3.5" />
+                <span>Bank & Statutory</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditModalTab('family')}
+                className={`py-3 px-3.5 text-xs font-bold border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  editModalTab === 'family'
+                    ? 'border-blue-600 text-blue-600 bg-white/70'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <Users2 className="h-3.5 w-3.5" />
+                <span>Family & Nominee</span>
+              </button>
+            </div>
+
+            {/* Modal Body Form */}
+            <form onSubmit={handleSaveProfile} className="flex flex-col flex-1 overflow-hidden">
+              <div className="p-6 overflow-y-auto space-y-4 text-xs flex-1">
+                {editSuccessMsg && (
+                  <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-semibold text-emerald-800">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <span>{editSuccessMsg}</span>
+                  </div>
+                )}
+                {editErrorMsg && (
+                  <div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-800">
+                    <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
+                    <span>{editErrorMsg}</span>
+                  </div>
+                )}
+
+                {/* TAB 1: PERSONAL & CONTACT */}
+                {editModalTab === 'personal' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                        Primary Contact Phone
+                      </label>
+                      <input
+                        type="text"
+                        value={editPhone}
+                        onChange={(e) => setEditPhone(e.target.value)}
+                        placeholder="e.g. 9876543210"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                        Blood Group
+                      </label>
+                      <select
+                        value={editForm.bloodGroup || ''}
+                        onChange={(e) => handleFormChange('bloodGroup', e.target.value)}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      >
+                        <option value="">Select Blood Group</option>
+                        <option value="A +ve">A +ve</option>
+                        <option value="A -ve">A -ve</option>
+                        <option value="B +ve">B +ve</option>
+                        <option value="B -ve">B -ve</option>
+                        <option value="O +ve">O +ve</option>
+                        <option value="O -ve">O -ve</option>
+                        <option value="AB +ve">AB +ve</option>
+                        <option value="AB -ve">AB -ve</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                        Date of Birth
+                      </label>
+                      <input
+                        type="date"
+                        value={editForm.dob || ''}
+                        onChange={(e) => handleFormChange('dob', e.target.value)}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                        Nationality
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.nationality || ''}
+                        onChange={(e) => handleFormChange('nationality', e.target.value)}
+                        placeholder="e.g. Indian"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                        Marital Status
+                      </label>
+                      <select
+                        value={editForm.maritalStatus || ''}
+                        onChange={(e) => handleFormChange('maritalStatus', e.target.value)}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      >
+                        <option value="">Select Status</option>
+                        <option value="Single">Single</option>
+                        <option value="Married">Married</option>
+                        <option value="Divorced">Divorced</option>
+                        <option value="Widowed">Widowed</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                        Marriage Date
+                      </label>
+                      <input
+                        type="date"
+                        value={editForm.marriageDate || ''}
+                        onChange={(e) => handleFormChange('marriageDate', e.target.value)}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                        Spouse Name
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.spouse || ''}
+                        onChange={(e) => handleFormChange('spouse', e.target.value)}
+                        placeholder="Spouse Name"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                        Place of Birth
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.placeOfBirth || ''}
+                        onChange={(e) => handleFormChange('placeOfBirth', e.target.value)}
+                        placeholder="e.g. Coimbatore, Tamil Nadu"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                        Residential Status
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.residentialStatus || ''}
+                        onChange={(e) => handleFormChange('residentialStatus', e.target.value)}
+                        placeholder="e.g. Resident / Citizen"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                        Religion
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.religion || ''}
+                        onChange={(e) => handleFormChange('religion', e.target.value)}
+                        placeholder="e.g. Hindu / Christian / Muslim"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                        Location / Work City
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.location || ''}
+                        onChange={(e) => handleFormChange('location', e.target.value)}
+                        placeholder="e.g. Coimbatore"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                        Extension / Alternate Contact
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.extension || ''}
+                        onChange={(e) => handleFormChange('extension', e.target.value)}
+                        placeholder="e.g. Ext 104"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                        Height
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.height || ''}
+                        onChange={(e) => handleFormChange('height', e.target.value)}
+                        placeholder="e.g. 175 cm / 5'9''"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                        Weight
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.weight || ''}
+                        onChange={(e) => handleFormChange('weight', e.target.value)}
+                        placeholder="e.g. 68 kg"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                        Identification Mark
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.identificationMark || ''}
+                        onChange={(e) => handleFormChange('identificationMark', e.target.value)}
+                        placeholder="e.g. Mole on right wrist"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                        Physically Challenged
+                      </label>
+                      <select
+                        value={editForm.physicallyChallenged || 'No'}
+                        onChange={(e) => handleFormChange('physicallyChallenged', e.target.value)}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      >
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                        International Employee
+                      </label>
+                      <select
+                        value={editForm.internationalEmployee || 'No'}
+                        onChange={(e) => handleFormChange('internationalEmployee', e.target.value)}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      >
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 2: ADDRESS & EDUCATION */}
+                {editModalTab === 'address' && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                          Present / Current Address
+                        </label>
+                        <textarea
+                          rows={3}
+                          value={editForm.presentAddress || ''}
+                          onChange={(e) => handleFormChange('presentAddress', e.target.value)}
+                          placeholder="e.g. 12/4, Gandhi Street, Peelamedu, Coimbatore, Tamil Nadu, 641004"
+                          className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                          Permanent Address
+                        </label>
+                        <textarea
+                          rows={3}
+                          value={editForm.permanentAddress || ''}
+                          onChange={(e) => handleFormChange('permanentAddress', e.target.value)}
+                          placeholder="e.g. 12/4, Gandhi Street, Peelamedu, Coimbatore, Tamil Nadu, 641004"
+                          className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-slate-100">
+                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Education Qualifications</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                            Degree / Specialization
+                          </label>
+                          <input
+                            type="text"
+                            value={editForm.educationDegree || ''}
+                            onChange={(e) => handleFormChange('educationDegree', e.target.value)}
+                            placeholder="e.g. B.E. Computer Science"
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                            Institution / College
+                          </label>
+                          <input
+                            type="text"
+                            value={editForm.educationInstitution || ''}
+                            onChange={(e) => handleFormChange('educationInstitution', e.target.value)}
+                            placeholder="e.g. Anna University Affiliated"
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                            Passing Year
+                          </label>
+                          <input
+                            type="text"
+                            value={editForm.educationYear || ''}
+                            onChange={(e) => handleFormChange('educationYear', e.target.value)}
+                            placeholder="e.g. 2024"
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                            Verification Status
+                          </label>
+                          <select
+                            value={editForm.educationStatus || 'Completed'}
+                            onChange={(e) => handleFormChange('educationStatus', e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                          >
+                            <option value="Completed">Completed</option>
+                            <option value="Verified">Verified</option>
+                            <option value="Pursuing">Pursuing</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 3: BANK & STATUTORY */}
+                {editModalTab === 'accounts' && (
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Bank Account Details</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                            Bank Name
+                          </label>
+                          <input
+                            type="text"
+                            value={editForm.bankName || ''}
+                            onChange={(e) => handleFormChange('bankName', e.target.value)}
+                            placeholder="e.g. State Bank of India"
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                            Account Number
+                          </label>
+                          <input
+                            type="text"
+                            value={editForm.accountNumber || ''}
+                            onChange={(e) => handleFormChange('accountNumber', e.target.value)}
+                            placeholder="e.g. 987654321098"
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                            IFSC Code
+                          </label>
+                          <input
+                            type="text"
+                            value={editForm.ifscCode || ''}
+                            onChange={(e) => handleFormChange('ifscCode', e.target.value)}
+                            placeholder="e.g. SBIN0001234"
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                            Account Type
+                          </label>
+                          <select
+                            value={editForm.accountType || 'Savings'}
+                            onChange={(e) => handleFormChange('accountType', e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                          >
+                            <option value="Savings">Savings</option>
+                            <option value="Salary">Salary</option>
+                            <option value="Current">Current</option>
+                          </select>
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                            Branch Name
+                          </label>
+                          <input
+                            type="text"
+                            value={editForm.branch || ''}
+                            onChange={(e) => handleFormChange('branch', e.target.value)}
+                            placeholder="e.g. Peelamedu, Coimbatore"
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-slate-100">
+                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Statutory & ID Numbers</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                            PAN Number
+                          </label>
+                          <input
+                            type="text"
+                            value={editForm.panNumber || ''}
+                            onChange={(e) => handleFormChange('panNumber', e.target.value.toUpperCase())}
+                            placeholder="e.g. ABCDE1234F"
+                            maxLength={10}
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none uppercase focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                            PF Number
+                          </label>
+                          <input
+                            type="text"
+                            value={editForm.pfNumber || ''}
+                            onChange={(e) => handleFormChange('pfNumber', e.target.value)}
+                            placeholder="e.g. TN/CBE/1029384/000"
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                            UAN Number
+                          </label>
+                          <input
+                            type="text"
+                            value={editForm.uanNumber || ''}
+                            onChange={(e) => handleFormChange('uanNumber', e.target.value)}
+                            placeholder="e.g. 101293847561"
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                            ESI Number
+                          </label>
+                          <input
+                            type="text"
+                            value={editForm.esiNumber || ''}
+                            onChange={(e) => handleFormChange('esiNumber', e.target.value)}
+                            placeholder="e.g. 3100012345"
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 4: FAMILY & NOMINEE */}
+                {editModalTab === 'family' && (
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Father's Details</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                            Father's Name
+                          </label>
+                          <input
+                            type="text"
+                            value={editForm.fatherName || ''}
+                            onChange={(e) => handleFormChange('fatherName', e.target.value)}
+                            placeholder="e.g. Vanarajan R"
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                            Father's Date of Birth
+                          </label>
+                          <input
+                            type="date"
+                            value={editForm.fatherDob || ''}
+                            onChange={(e) => handleFormChange('fatherDob', e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                            Father's Blood Group
+                          </label>
+                          <select
+                            value={editForm.fatherBloodGroup || ''}
+                            onChange={(e) => handleFormChange('fatherBloodGroup', e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                          >
+                            <option value="">Select Blood Group</option>
+                            <option value="A +ve">A +ve</option>
+                            <option value="A -ve">A -ve</option>
+                            <option value="B +ve">B +ve</option>
+                            <option value="B -ve">B -ve</option>
+                            <option value="O +ve">O +ve</option>
+                            <option value="O -ve">O -ve</option>
+                            <option value="AB +ve">AB +ve</option>
+                            <option value="AB -ve">AB -ve</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                            Father's Gender
+                          </label>
+                          <select
+                            value={editForm.fatherGender || 'Male'}
+                            onChange={(e) => handleFormChange('fatherGender', e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                          >
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                            Father's Nationality
+                          </label>
+                          <input
+                            type="text"
+                            value={editForm.fatherNationality || ''}
+                            onChange={(e) => handleFormChange('fatherNationality', e.target.value)}
+                            placeholder="e.g. Indian"
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-slate-100">
+                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Nomination & Family Details</h4>
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                          Nominee Details (Name, Relationship, Contact)
+                        </label>
+                        <textarea
+                          rows={3}
+                          value={editForm.nominationDetails || ''}
+                          onChange={(e) => handleFormChange('nominationDetails', e.target.value)}
+                          placeholder="e.g. Vanarajan R (Father) - 100% Share - 9876543210"
+                          className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-800 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/70">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-200/70 font-semibold text-xs transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editSaving}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <Save className="h-4 w-4" />
+                  <span>{editSaving ? 'Saving Profile...' : 'Save & Update Details'}</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

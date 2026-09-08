@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { employeeService } from '../../services/employeeService';
 import { attendanceService } from '../../services/attendanceService';
 import { Employee, EmployeeProfileInfo, AssetItem } from '../../types/employee';
@@ -41,7 +41,139 @@ import {
   Monitor,
   Package,
   Sparkles,
+  ChevronDown,
 } from 'lucide-react';
+
+const INITIAL_ROLES = [
+  { id: 'EMPLOYEE', label: 'EMPLOYEE (General Employee)' },
+  { id: 'ADMIN', label: 'ADMIN (Administrator)' },
+  { id: 'MANAGER', label: 'MANAGER (Operations / Team Lead)' },
+  { id: 'DEVELOPER', label: 'DEVELOPER (Software Engineer)' },
+  { id: 'MARKETER', label: 'MARKETER (Digital Marketing)' },
+  { id: 'CONTENT', label: 'CONTENT (Content Specialist)' },
+  { id: 'TELECALLER', label: 'TELECALLER (Sales / Telecalling)' },
+  { id: 'TRAINER', label: 'TRAINER (EdTech Trainer)' },
+  { id: 'TRAINEE', label: 'TRAINEE' },
+  { id: 'INTERN', label: 'INTERN' },
+  { id: 'OJT', label: 'OJT' },
+];
+
+const INITIAL_STAFF_TYPES = [
+  { id: 'OJT', label: 'OJT (On-the-Job Trainee)' },
+  { id: 'FULL_TIME', label: 'Permanent / Full-Time' },
+  { id: 'INTERN', label: 'Internship' },
+  { id: 'TRAINEE', label: 'Graduate Trainee' },
+  { id: 'PROBATION', label: 'Probation Period' },
+  { id: 'CONTRACT', label: 'Contract Basis' },
+  { id: 'PART_TIME', label: 'Part Time' },
+];
+
+const INITIAL_TEAMS = [
+  { id: 'IT', name: 'IT Team (09:00 AM - 06:30 PM)' },
+  { id: 'EDTECH', name: 'EdTech Team (08:45 AM - 05:45 PM)' },
+  { id: 'BUSINESS_SOLUTION', name: 'Business Solution (08:45 AM - 05:45 PM)' },
+  { id: 'OG', name: 'Business Solution 2 (08:45 AM - 06:15 PM)' },
+];
+
+interface DropdownOptionItem {
+  id: string;
+  label: string;
+}
+
+const DeletableDropdown: React.FC<{
+  value: string;
+  onChange: (val: string) => void;
+  options: DropdownOptionItem[];
+  onDelete: (id: string) => void;
+  onAddNew?: () => void;
+  addNewLabel?: string;
+  placeholder?: string;
+}> = ({ value, onChange, options, onDelete, onAddNew, addNewLabel, placeholder = 'Select option...' }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find((o) => o.id === value);
+
+  return (
+    <div className="relative w-full" ref={dropdownRef}>
+      {/* Trigger Box */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2 text-slate-800 bg-white text-xs font-semibold hover:border-slate-300 focus:border-blue-600 focus:outline-none transition-colors cursor-pointer shadow-2xs"
+      >
+        <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
+        <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {/* Dropdown Menu with interactive delete buttons */}
+      {isOpen && (
+        <div className="absolute left-0 right-0 top-full mt-1 z-50 rounded-xl bg-white border border-slate-200 shadow-xl overflow-hidden py-1 max-h-56 overflow-y-auto">
+          {options.length === 0 ? (
+            <div className="px-3 py-2 text-xs text-slate-400 italic">No options available</div>
+          ) : (
+            options.map((opt) => {
+              const isSelected = opt.id === value;
+              return (
+                <div
+                  key={opt.id}
+                  onClick={() => {
+                    onChange(opt.id);
+                    setIsOpen(false);
+                  }}
+                  className={`group flex items-center justify-between px-3 py-2 text-xs font-medium cursor-pointer transition-colors ${
+                    isSelected ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="truncate pr-2">{opt.label}</span>
+
+                  {/* Delete button inside dropdown row */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(opt.id);
+                    }}
+                    title={`Delete ${opt.label}`}
+                    className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer shrink-0"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              );
+            })
+          )}
+
+          {onAddNew && (
+            <div className="border-t border-slate-100 mt-1 pt-1 px-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  onAddNew();
+                }}
+                className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>{addNewLabel || 'Add New'}</span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const defaultProfileData: EmployeeProfileInfo = {
   bloodGroup: '',
@@ -161,6 +293,58 @@ const Employees: React.FC = () => {
     }
   });
 
+  const [deletedRoleIds, setDeletedRoleIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('deleted_attendance_role_ids');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [deletedStaffTypeIds, setDeletedStaffTypeIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('deleted_attendance_staff_type_ids');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [deletedTeamIds, setDeletedTeamIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('deleted_attendance_team_ids');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Active items computed lists
+  const activeRoles: DropdownOptionItem[] = useMemo(() => {
+    const combined = [
+      ...INITIAL_ROLES,
+      ...customRoles.map((cr) => ({ id: cr.id, label: cr.label })),
+    ];
+    return combined.filter((r) => !deletedRoleIds.includes(r.id));
+  }, [customRoles, deletedRoleIds]);
+
+  const activeStaffTypes: DropdownOptionItem[] = useMemo(() => {
+    const combined = [
+      ...INITIAL_STAFF_TYPES,
+      ...customStaffTypes.map((st) => ({ id: st.id, label: st.label })),
+    ];
+    return combined.filter((t) => !deletedStaffTypeIds.includes(t.id));
+  }, [customStaffTypes, deletedStaffTypeIds]);
+
+  const activeTeams: DropdownOptionItem[] = useMemo(() => {
+    const combined = [
+      ...INITIAL_TEAMS.map((t) => ({ id: t.id, label: t.name })),
+      ...customTeams.map((ct) => ({ id: ct.id, label: ct.name })),
+    ];
+    return combined.filter((t) => !deletedTeamIds.includes(t.id));
+  }, [customTeams, deletedTeamIds]);
+
   const [showAddTeamModal, setShowAddTeamModal] = useState<boolean>(false);
   const [newTeamName, setNewTeamName] = useState<string>('');
   const [newTeamLoginTime, setNewTeamLoginTime] = useState<string>('09:00');
@@ -196,6 +380,11 @@ const Employees: React.FC = () => {
     const updated = [...customTeams.filter((t) => t.id !== teamId), { ...newShiftObj, name: formatted }];
     setCustomTeams(updated);
     localStorage.setItem('custom_attendance_teams', JSON.stringify(updated));
+    setDeletedTeamIds((prev) => {
+      const next = prev.filter((id) => id !== teamId);
+      localStorage.setItem('deleted_attendance_team_ids', JSON.stringify(next));
+      return next;
+    });
     setFormDepartment(teamId);
     setNewTeamName('');
     setNewTeamLoginTime('09:00');
@@ -204,15 +393,50 @@ const Employees: React.FC = () => {
     setShowAddTeamModal(false);
   };
 
+  const handleDeleteTeam = (teamId: string) => {
+    const updatedCustom = customTeams.filter((t) => t.id !== teamId);
+    setCustomTeams(updatedCustom);
+    localStorage.setItem('custom_attendance_teams', JSON.stringify(updatedCustom));
+
+    const updatedDeleted = [...new Set([...deletedTeamIds, teamId])];
+    setDeletedTeamIds(updatedDeleted);
+    localStorage.setItem('deleted_attendance_team_ids', JSON.stringify(updatedDeleted));
+
+    const remaining = activeTeams.filter((t) => t.id !== teamId);
+    if (formDepartment === teamId) {
+      setFormDepartment(remaining[0]?.id || 'IT');
+    }
+  };
+
   const handleCreateCustomRole = () => {
     if (!newRoleName.trim()) return;
     const roleId = newRoleName.trim().toUpperCase().replace(/[^A-Z0-9]/g, '_');
     const updated = [...customRoles.filter((r) => r.id !== roleId), { id: roleId, label: newRoleName.trim() }];
     setCustomRoles(updated);
     localStorage.setItem('custom_attendance_roles', JSON.stringify(updated));
+    setDeletedRoleIds((prev) => {
+      const next = prev.filter((id) => id !== roleId);
+      localStorage.setItem('deleted_attendance_role_ids', JSON.stringify(next));
+      return next;
+    });
     setFormRole(roleId);
     setNewRoleName('');
     setShowAddRoleModal(false);
+  };
+
+  const handleDeleteRole = (roleId: string) => {
+    const updatedCustom = customRoles.filter((r) => r.id !== roleId);
+    setCustomRoles(updatedCustom);
+    localStorage.setItem('custom_attendance_roles', JSON.stringify(updatedCustom));
+
+    const updatedDeleted = [...new Set([...deletedRoleIds, roleId])];
+    setDeletedRoleIds(updatedDeleted);
+    localStorage.setItem('deleted_attendance_role_ids', JSON.stringify(updatedDeleted));
+
+    const remaining = activeRoles.filter((r) => r.id !== roleId);
+    if (formRole === roleId) {
+      setFormRole(remaining[0]?.id || 'EMPLOYEE');
+    }
   };
 
   const handleCreateCustomStaffType = () => {
@@ -221,9 +445,29 @@ const Employees: React.FC = () => {
     const updated = [...customStaffTypes.filter((r) => r.id !== typeId), { id: typeId, label: newStaffTypeName.trim() }];
     setCustomStaffTypes(updated);
     localStorage.setItem('custom_attendance_staff_types', JSON.stringify(updated));
+    setDeletedStaffTypeIds((prev) => {
+      const next = prev.filter((id) => id !== typeId);
+      localStorage.setItem('deleted_attendance_staff_type_ids', JSON.stringify(next));
+      return next;
+    });
     setFormStaffType(typeId);
     setNewStaffTypeName('');
     setShowAddStaffTypeModal(false);
+  };
+
+  const handleDeleteStaffType = (typeId: string) => {
+    const updatedCustom = customStaffTypes.filter((r) => r.id !== typeId);
+    setCustomStaffTypes(updatedCustom);
+    localStorage.setItem('custom_attendance_staff_types', JSON.stringify(updatedCustom));
+
+    const updatedDeleted = [...new Set([...deletedStaffTypeIds, typeId])];
+    setDeletedStaffTypeIds(updatedDeleted);
+    localStorage.setItem('deleted_attendance_staff_type_ids', JSON.stringify(updatedDeleted));
+
+    const remaining = activeStaffTypes.filter((t) => t.id !== typeId);
+    if (formStaffType === typeId) {
+      setFormStaffType(remaining[0]?.id || 'OJT');
+    }
   };
 
   // Form State for basic add/edit
@@ -546,13 +790,56 @@ const Employees: React.FC = () => {
       },
     },
     {
-      header: 'Role / Type',
+      header: 'Role',
       render: (row: Employee) => {
         const r = (row.role || 'EMPLOYEE').toUpperCase();
         if (r === 'ADMIN') {
           return (
-            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-              ADMIN
+            <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+              <ShieldAlert className="h-3 w-3" />
+              <span>ADMIN</span>
+            </span>
+          );
+        }
+        if (r === 'MANAGER') {
+          return (
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-violet-50 text-violet-700 border border-violet-200">
+              MANAGER
+            </span>
+          );
+        }
+        if (r === 'DEVELOPER') {
+          return (
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200">
+              DEVELOPER
+            </span>
+          );
+        }
+        if (r === 'MARKETER') {
+          return (
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+              MARKETER
+            </span>
+          );
+        }
+        if (r === 'CONTENT') {
+          return (
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-pink-50 text-pink-700 border border-pink-200">
+              CONTENT
+            </span>
+          );
+        }
+        if (r === 'TELECALLER') {
+          return (
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-orange-50 text-orange-700 border border-orange-200">
+              TELECALLER
+            </span>
+          );
+        }
+        if (r === 'TRAINER') {
+          return (
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-teal-50 text-teal-700 border border-teal-200">
+              TRAINER
             </span>
           );
         }
@@ -577,9 +864,76 @@ const Employees: React.FC = () => {
             </span>
           );
         }
+        const customR = customRoles.find((cr) => cr.id === r);
         return (
           <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-            {r}
+            {customR ? customR.label : r}
+          </span>
+        );
+      },
+    },
+    {
+      header: 'Employment Type',
+      render: (row: Employee) => {
+        const rawType = (
+          row.employment_type ||
+          row.staffType ||
+          (['OJT', 'TRAINEE', 'INTERN'].includes((row.role || '').toUpperCase()) ? row.role : 'FULL_TIME')
+        ).toUpperCase();
+
+        if (rawType === 'OJT' || rawType.includes('ON-THE-JOB')) {
+          return (
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+              OJT
+            </span>
+          );
+        }
+        if (rawType === 'TRAINEE' || rawType.includes('TRAINEE')) {
+          return (
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
+              TRAINEE
+            </span>
+          );
+        }
+        if (rawType === 'INTERN' || rawType.includes('INTERN')) {
+          return (
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-teal-50 text-teal-700 border border-teal-200">
+              INTERN
+            </span>
+          );
+        }
+        if (rawType === 'FULL_TIME' || rawType === 'PERMANENT' || rawType === 'EMPLOYEE') {
+          return (
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              Full-Time
+            </span>
+          );
+        }
+        if (rawType === 'PROBATION') {
+          return (
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-orange-50 text-orange-700 border border-orange-200">
+              Probation
+            </span>
+          );
+        }
+        if (rawType === 'CONTRACT') {
+          return (
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+              Contract
+            </span>
+          );
+        }
+        if (rawType === 'PART_TIME') {
+          return (
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200">
+              Part-Time
+            </span>
+          );
+        }
+        const customSt = customStaffTypes.find((st) => st.id === rawType);
+        return (
+          <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-slate-50 text-slate-700 border border-slate-200">
+            {customSt ? customSt.label : rawType}
           </span>
         );
       },
@@ -1829,21 +2183,15 @@ const Employees: React.FC = () => {
                       <Plus className="h-3 w-3" /> Add Team
                     </button>
                   </div>
-                  <select
+                  <DeletableDropdown
                     value={formDepartment}
-                    onChange={(e) => setFormDepartment(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white text-xs font-semibold"
-                  >
-                    <option value="IT">IT Team (09:00 AM - 06:30 PM)</option>
-                    <option value="EDTECH">EdTech Team (08:45 AM - 05:45 PM)</option>
-                    <option value="BUSINESS_SOLUTION">Business Solution (08:45 AM - 05:45 PM)</option>
-                    <option value="OG">Business Solution 2 (08:45 AM - 06:15 PM)</option>
-                    {customTeams.map((ct) => (
-                      <option key={ct.id} value={ct.id}>
-                        {ct.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setFormDepartment}
+                    options={activeTeams}
+                    onDelete={handleDeleteTeam}
+                    onAddNew={() => setShowAddTeamModal(true)}
+                    addNewLabel="Add New Team & Shift"
+                    placeholder="Select Team / Shift"
+                  />
                 </div>
 
                 <div>
@@ -1857,35 +2205,22 @@ const Employees: React.FC = () => {
                       <Plus className="h-3 w-3" /> Add Role
                     </button>
                   </div>
-                  <select
+                  <DeletableDropdown
                     value={formRole}
-                    onChange={(e) => setFormRole(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white text-xs font-semibold"
-                  >
-                    <option value="EMPLOYEE">EMPLOYEE (General Employee)</option>
-                    <option value="ADMIN">ADMIN (Administrator)</option>
-                    <option value="MANAGER">MANAGER (Operations / Team Lead)</option>
-                    <option value="DEVELOPER">DEVELOPER (Software Engineer)</option>
-                    <option value="MARKETER">MARKETER (Digital Marketing)</option>
-                    <option value="CONTENT">CONTENT (Content Specialist)</option>
-                    <option value="TELECALLER">TELECALLER (Sales / Telecalling)</option>
-                    <option value="TRAINER">TRAINER (EdTech Trainer)</option>
-                    <option value="TRAINEE">TRAINEE</option>
-                    <option value="INTERN">INTERN</option>
-                    <option value="OJT">OJT</option>
-                    {customRoles.map((cr) => (
-                      <option key={cr.id} value={cr.id}>
-                        {cr.label}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setFormRole}
+                    options={activeRoles}
+                    onDelete={handleDeleteRole}
+                    onAddNew={() => setShowAddRoleModal(true)}
+                    addNewLabel="Add New Role"
+                    placeholder="Select Role"
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="font-semibold text-slate-700 block text-xs">Staff / Employment Type</label>
+                    <label className="font-semibold text-slate-700 block text-xs">Employment Type</label>
                     <button
                       type="button"
                       onClick={() => setShowAddStaffTypeModal(true)}
@@ -1894,24 +2229,15 @@ const Employees: React.FC = () => {
                       <Plus className="h-3 w-3" /> Add Type
                     </button>
                   </div>
-                  <select
+                  <DeletableDropdown
                     value={formStaffType}
-                    onChange={(e) => setFormStaffType(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white text-xs font-semibold"
-                  >
-                    <option value="OJT">OJT (On-the-Job Trainee)</option>
-                    <option value="FULL_TIME">Permanent / Full-Time</option>
-                    <option value="INTERN">Internship</option>
-                    <option value="TRAINEE">Graduate Trainee</option>
-                    <option value="PROBATION">Probation Period</option>
-                    <option value="CONTRACT">Contract Basis</option>
-                    <option value="PART_TIME">Part Time</option>
-                    {customStaffTypes.map((st) => (
-                      <option key={st.id} value={st.id}>
-                        {st.label}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setFormStaffType}
+                    options={activeStaffTypes}
+                    onDelete={handleDeleteStaffType}
+                    onAddNew={() => setShowAddStaffTypeModal(true)}
+                    addNewLabel="Add New Employment Type"
+                    placeholder="Select Employment Type"
+                  />
                 </div>
 
                 <div>
@@ -1941,34 +2267,75 @@ const Employees: React.FC = () => {
       )}
 
       {/* ───────────────────────────────────────────────────────────── */}
-      {/* ADD CUSTOM ROLE MODAL                                          */}
+      {/* ADD / MANAGE CUSTOM ROLE MODAL                                 */}
       {/* ───────────────────────────────────────────────────────────── */}
       {showAddRoleModal && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-          <Card title="Add Custom Role" className="w-full max-w-sm shadow-2xl bg-white animate-in fade-in">
+          <Card title="Add & Manage Custom Roles" className="w-full max-w-md shadow-2xl bg-white animate-in fade-in">
             <div className="space-y-4 text-xs">
               <p className="text-slate-500 text-[11px]">
-                Create a new job role or administrative title to assign to employees.
+                Create a new job role or administrative title, or delete existing custom roles.
               </p>
               <div>
                 <label className="font-bold text-slate-700 block mb-1">Role Title / Name</label>
-                <input
-                  type="text"
-                  required
-                  value={newRoleName}
-                  onChange={(e) => setNewRoleName(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-indigo-600 font-semibold"
-                  placeholder="e.g. Frontend Developer, Quality Analyst"
-                  autoFocus
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    required
+                    value={newRoleName}
+                    onChange={(e) => setNewRoleName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleCreateCustomRole();
+                      }
+                    }}
+                    className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-indigo-600 font-semibold"
+                    placeholder="e.g. Frontend Developer, QA Lead"
+                    autoFocus
+                  />
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    type="button"
+                    onClick={handleCreateCustomRole}
+                    disabled={!newRoleName.trim()}
+                  >
+                    Add
+                  </Button>
+                </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+              {/* Custom Roles List with Delete Action */}
+              {customRoles.length > 0 && (
+                <div className="pt-3 border-t border-slate-100">
+                  <label className="font-bold text-slate-700 block mb-2 text-[11px]">
+                    Custom Roles ({customRoles.length})
+                  </label>
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                    {customRoles.map((cr) => (
+                      <div
+                        key={cr.id}
+                        className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition-colors"
+                      >
+                        <span className="font-semibold text-slate-800">{cr.label}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteRole(cr.id)}
+                          className="p-1 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          title="Delete role"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end pt-3 border-t border-slate-100">
                 <Button variant="outline" size="sm" type="button" onClick={() => setShowAddRoleModal(false)}>
-                  Cancel
-                </Button>
-                <Button variant="primary" size="sm" type="button" onClick={handleCreateCustomRole} disabled={!newRoleName.trim()}>
-                  Add Role
+                  Close
                 </Button>
               </div>
             </div>
@@ -1977,34 +2344,75 @@ const Employees: React.FC = () => {
       )}
 
       {/* ───────────────────────────────────────────────────────────── */}
-      {/* ADD CUSTOM STAFF TYPE MODAL                                    */}
+      {/* ADD / MANAGE CUSTOM STAFF TYPE MODAL                           */}
       {/* ───────────────────────────────────────────────────────────── */}
       {showAddStaffTypeModal && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-          <Card title="Add Custom Staff / Employment Type" className="w-full max-w-sm shadow-2xl bg-white animate-in fade-in">
+          <Card title="Add & Manage Employment Types" className="w-full max-w-md shadow-2xl bg-white animate-in fade-in">
             <div className="space-y-4 text-xs">
               <p className="text-slate-500 text-[11px]">
-                Define a new staff classification or employment term.
+                Define a new staff classification or employment term, or delete existing custom types.
               </p>
               <div>
-                <label className="font-bold text-slate-700 block mb-1">Staff Type Name</label>
-                <input
-                  type="text"
-                  required
-                  value={newStaffTypeName}
-                  onChange={(e) => setNewStaffTypeName(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-indigo-600 font-semibold"
-                  placeholder="e.g. Consultant, Apprentice, Free Lancer"
-                  autoFocus
-                />
+                <label className="font-bold text-slate-700 block mb-1">Employment Type Name</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    required
+                    value={newStaffTypeName}
+                    onChange={(e) => setNewStaffTypeName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleCreateCustomStaffType();
+                      }
+                    }}
+                    className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-indigo-600 font-semibold"
+                    placeholder="e.g. Consultant, Apprentice, Free Lancer"
+                    autoFocus
+                  />
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    type="button"
+                    onClick={handleCreateCustomStaffType}
+                    disabled={!newStaffTypeName.trim()}
+                  >
+                    Add
+                  </Button>
+                </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+              {/* Custom Employment Types List with Delete Action */}
+              {customStaffTypes.length > 0 && (
+                <div className="pt-3 border-t border-slate-100">
+                  <label className="font-bold text-slate-700 block mb-2 text-[11px]">
+                    Custom Employment Types ({customStaffTypes.length})
+                  </label>
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                    {customStaffTypes.map((st) => (
+                      <div
+                        key={st.id}
+                        className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition-colors"
+                      >
+                        <span className="font-semibold text-slate-800">{st.label}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteStaffType(st.id)}
+                          className="p-1 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          title="Delete employment type"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end pt-3 border-t border-slate-100">
                 <Button variant="outline" size="sm" type="button" onClick={() => setShowAddStaffTypeModal(false)}>
-                  Cancel
-                </Button>
-                <Button variant="primary" size="sm" type="button" onClick={handleCreateCustomStaffType} disabled={!newStaffTypeName.trim()}>
-                  Add Staff Type
+                  Close
                 </Button>
               </div>
             </div>
@@ -2013,11 +2421,11 @@ const Employees: React.FC = () => {
       )}
 
       {/* ───────────────────────────────────────────────────────────── */}
-      {/* ADD CUSTOM TEAM / SHIFT MODAL                                  */}
+      {/* ADD / MANAGE CUSTOM TEAM / SHIFT MODAL                         */}
       {/* ───────────────────────────────────────────────────────────── */}
       {showAddTeamModal && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-          <Card title="Add Custom Team & Office Shift Timing" className="w-full max-w-sm shadow-2xl bg-white animate-in fade-in">
+          <Card title="Add & Manage Teams & Shift Timings" className="w-full max-w-md shadow-2xl bg-white animate-in fade-in">
             <div className="space-y-4 text-xs">
               <p className="text-slate-500 text-[11px]">
                 Create a new assigned department with its office work shift hours and late login grace.
@@ -2076,12 +2484,45 @@ const Employees: React.FC = () => {
                 />
               </div>
 
+              {/* Custom Teams List with Delete Action */}
+              {customTeams.length > 0 && (
+                <div className="pt-3 border-t border-slate-100">
+                  <label className="font-bold text-slate-700 block mb-2 text-[11px]">
+                    Custom Teams ({customTeams.length})
+                  </label>
+                  <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                    {customTeams.map((ct) => (
+                      <div
+                        key={ct.id}
+                        className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition-colors"
+                      >
+                        <span className="font-semibold text-slate-800">{ct.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteTeam(ct.id)}
+                          className="p-1 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          title="Delete team"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
                 <Button variant="outline" size="sm" type="button" onClick={() => setShowAddTeamModal(false)}>
                   Cancel
                 </Button>
-                <Button variant="primary" size="sm" type="button" onClick={handleCreateCustomTeam} disabled={!newTeamName.trim()}>
-                  Add Team & Shift
+                <Button
+                  variant="primary"
+                  size="sm"
+                  type="button"
+                  onClick={handleCreateCustomTeam}
+                  disabled={!newTeamName.trim()}
+                >
+                  Save Team
                 </Button>
               </div>
             </div>
@@ -2089,39 +2530,6 @@ const Employees: React.FC = () => {
         </div>
       )}
 
-      {/* ───────────────────────────────────────────────────────────── */}
-      {/* ADD CUSTOM ROLE MODAL                                          */}
-      {/* ───────────────────────────────────────────────────────────── */}
-      {showAddRoleModal && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-          <Card title="Add Custom Staff Role" className="w-full max-w-sm shadow-2xl bg-white animate-in fade-in">
-            <div className="space-y-4 text-xs">
-              <p className="text-slate-500 text-[11px]">
-                Create a new role/designation type for employee accounts.
-              </p>
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">Role Name</label>
-                <input
-                  type="text"
-                  required
-                  value={newRoleName}
-                  onChange={(e) => setNewRoleName(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-indigo-600 font-semibold uppercase"
-                  placeholder="e.g. OJT, CONSULTANT, CONTRACTOR"
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
-                <Button variant="outline" size="sm" type="button" onClick={() => setShowAddRoleModal(false)}>
-                  Cancel
-                </Button>
-                <Button variant="primary" size="sm" type="button" onClick={handleCreateCustomRole} disabled={!newRoleName.trim()}>
-                  Add Role
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
 
       {/* ───────────────────────────────────────────────────────────── */}
       {/* RESET PASSWORD MODAL                                          */}

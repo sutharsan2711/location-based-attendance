@@ -55,8 +55,13 @@ const AttendanceHistory: React.FC = () => {
       const end = new Date(logoutTime).getTime();
       const diffMs = end - start;
       if (diffMs <= 0) return '--';
-      const hours = Math.floor(diffMs / (1000 * 60 * 60));
-      const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      const totalSecs = Math.floor(diffMs / 1000);
+      const hours = Math.floor(totalSecs / 3600);
+      const mins = Math.floor((totalSecs % 3600) / 60);
+      const secs = totalSecs % 60;
+      if (hours === 0 && mins === 0) {
+        return `${secs}s`;
+      }
       return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
     } catch {
       return '--';
@@ -65,13 +70,14 @@ const AttendanceHistory: React.FC = () => {
 
   const handleExportCSV = () => {
     const rows = [
-      ['Date', 'Login Time', 'Logout Time', 'Working Hours', 'Distance (m)', 'Punch Status', 'Timing Status'],
+      ['Date', 'Login Time', 'Logout Time', 'Working Hours', 'Distance In (m)', 'Distance Out (m)', 'Punch Status', 'Timing Status'],
       ...history.map((r) => [
         r.attendanceDate,
         r.loginTime ? formatTime(r.loginTime) : '--',
         r.logoutTime ? formatTime(r.logoutTime) : '--',
         calculateWorkingHours(r.loginTime, r.logoutTime),
         r.loginDistance !== null && r.loginDistance !== undefined ? r.loginDistance.toFixed(1) : '--',
+        r.logoutDistance !== null && r.logoutDistance !== undefined ? r.logoutDistance.toFixed(1) : '--',
         r.status,
         r.timingStatus || 'PRESENT',
       ]),
@@ -173,11 +179,15 @@ const AttendanceHistory: React.FC = () => {
       ),
     },
     {
-      header: 'GPS Distance',
+      header: 'Distance (In / Out)',
       render: (row: Attendance) => (
-        <span className="text-xs text-slate-500 font-medium">
+        <span className="text-xs text-slate-600 font-mono font-medium">
           {row.loginDistance !== null && row.loginDistance !== undefined
             ? `${row.loginDistance.toFixed(1)}m`
+            : '--'}{' '}
+          /{' '}
+          {row.logoutDistance !== null && row.logoutDistance !== undefined
+            ? `${row.logoutDistance.toFixed(1)}m`
             : '--'}
         </span>
       ),
@@ -333,7 +343,9 @@ const AttendanceHistory: React.FC = () => {
                     const loginT = row.loginTime ? formatTime(row.loginTime) : '--';
                     const logoutT = row.logoutTime ? formatTime(row.logoutTime) : '--';
                     const hrs = calculateWorkingHours(row.loginTime, row.logoutTime);
-                    const dist = row.loginDistance ? `${row.loginDistance.toFixed(1)}m` : '--';
+                    const distIn = row.loginDistance !== null && row.loginDistance !== undefined ? `${row.loginDistance.toFixed(1)}m` : '--';
+                    const distOut = row.logoutDistance !== null && row.logoutDistance !== undefined ? `${row.logoutDistance.toFixed(1)}m` : '--';
+                    const dist = `${distIn} / ${distOut}`;
 
                     return (
                       <tr key={row.id || idx} className="hover:bg-blue-50/40 transition-colors cursor-cell group">

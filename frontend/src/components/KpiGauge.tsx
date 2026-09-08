@@ -19,44 +19,46 @@ const KpiGauge: React.FC<KpiGaugeProps> = ({ score = 75, label, size = 220 }) =>
   const tier = getKpiTier(clampedScore);
   const displayLabel = label || tier.label;
 
-  const radius = 80;
-  const strokeWidth = 14;
-  const center = size / 2;
-  const startAngle = Math.PI;
-  const currentAngle = startAngle + (clampedScore / 100) * Math.PI;
+  const radius = 72;
+  const strokeWidth = 12;
+  const cx = size / 2;
+  const cy = 105;
 
-  const needleLength = radius - 12;
-  const needleAngle = currentAngle;
-  const needleX = center + needleLength * Math.cos(needleAngle);
-  const needleY = center + needleLength * Math.sin(needleAngle);
+  const currentAngle = Math.PI + (clampedScore / 100) * Math.PI;
+  const needleLength = radius - 10;
+  const needleX = cx + needleLength * Math.cos(currentAngle);
+  const needleY = cy + needleLength * Math.sin(currentAngle);
 
+  // Generates SVG arc path on the upper semicircle (180deg to 360deg).
+  // For any sub-arc on a 180-degree semicircle, the angular span is <= 180deg,
+  // so largeArcFlag MUST always be 0.
   const createArc = (startNorm: number, endNorm: number) => {
+    if (startNorm >= endNorm) return '';
     const a1 = Math.PI + startNorm * Math.PI;
     const a2 = Math.PI + endNorm * Math.PI;
-    const x1 = center + radius * Math.cos(a1);
-    const y1 = center + radius * Math.sin(a1);
-    const x2 = center + radius * Math.cos(a2);
-    const y2 = center + radius * Math.sin(a2);
-    const largeArc = endNorm - startNorm > 0.5 ? 1 : 0;
-    return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`;
+    const x1 = cx + radius * Math.cos(a1);
+    const y1 = cy + radius * Math.sin(a1);
+    const x2 = cx + radius * Math.cos(a2);
+    const y2 = cy + radius * Math.sin(a2);
+    return `M ${x1} ${y1} A ${radius} ${radius} 0 0 1 ${x2} ${y2}`;
   };
 
   return (
-    <div className="flex flex-col items-center justify-center">
-      <div className="relative" style={{ width: size, height: size * 0.58 }}>
+    <div className="flex flex-col items-center justify-center w-full">
+      <div className="relative flex items-center justify-center" style={{ width: size, height: 130 }}>
         <svg
-          viewBox={`0 0 ${size} ${size * 0.65}`}
+          viewBox={`0 0 ${size} 130`}
           className="w-full h-full overflow-visible"
         >
           <defs>
-            <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <linearGradient id="gaugeActiveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#ef4444" />
               <stop offset="35%" stopColor="#f59e0b" />
               <stop offset="65%" stopColor="#10b981" />
               <stop offset="100%" stopColor="#059669" />
             </linearGradient>
-            <filter id="needleGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.3" />
+            <filter id="gaugeShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.25" />
             </filter>
           </defs>
 
@@ -71,39 +73,40 @@ const KpiGauge: React.FC<KpiGaugeProps> = ({ score = 75, label, size = 220 }) =>
             <path
               d={createArc(0, clampedScore / 100)}
               fill="none"
-              stroke="url(#gaugeGrad)"
+              stroke="url(#gaugeActiveGrad)"
               strokeWidth={strokeWidth}
               strokeLinecap="round"
             />
           )}
 
-          {/* Pivot */}
-          <circle cx={center} cy={center} r="7" fill="#1e293b" />
-          <circle cx={center} cy={center} r="3.5" fill="#ffffff" />
+          {/* Needle Base Ring */}
+          <circle cx={cx} cy={cy} r="8" fill="#1e293b" />
+          <circle cx={cx} cy={cy} r="4" fill="#f8fafc" />
 
-          {/* Needle */}
+          {/* Needle Indicator */}
           <line
-            x1={center}
-            y1={center}
+            x1={cx}
+            y1={cy}
             x2={needleX}
             y2={needleY}
             stroke="#0f172a"
             strokeWidth="3.5"
             strokeLinecap="round"
-            filter="url(#needleGlow)"
+            filter="url(#gaugeShadow)"
           />
 
-          <text x={center - radius - 2} y={center + 16} fontSize="10" fill="#94a3b8" fontWeight="600" textAnchor="middle">0%</text>
-          <text x={center + radius + 2} y={center + 16} fontSize="10" fill="#94a3b8" fontWeight="600" textAnchor="middle">100%</text>
+          {/* Scale Labels */}
+          <text x={cx - radius - 2} y={cy + 16} fontSize="10" fill="#94a3b8" fontWeight="600" textAnchor="middle">0%</text>
+          <text x={cx + radius + 2} y={cy + 16} fontSize="10" fill="#94a3b8" fontWeight="600" textAnchor="middle">100%</text>
         </svg>
 
-        {/* Center Score Overlay */}
-        <div className="absolute inset-x-0 bottom-0 flex flex-col items-center justify-center">
-          <span className="text-3xl font-black text-slate-800 tracking-tight leading-none">
+        {/* Center Score & Badge Overlay */}
+        <div className="absolute inset-x-0 bottom-0 flex flex-col items-center justify-center pointer-events-none">
+          <span className="text-3xl font-black text-slate-800 tracking-tight leading-none drop-shadow-xs">
             {clampedScore}%
           </span>
           <span
-            className={`mt-1 text-xs font-bold px-2.5 py-0.5 rounded-full border ${tier.bg} ${tier.text} ${tier.border}`}
+            className={`mt-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full border shadow-2xs ${tier.bg} ${tier.text} ${tier.border}`}
           >
             {displayLabel}
           </span>
@@ -111,7 +114,7 @@ const KpiGauge: React.FC<KpiGaugeProps> = ({ score = 75, label, size = 220 }) =>
       </div>
 
       {/* 5-Tier Color Scale Legend */}
-      <div className="w-full mt-4 pt-3 border-t border-slate-100 grid grid-cols-5 gap-1 text-[10px] text-center font-medium">
+      <div className="w-full mt-3 pt-3 border-t border-slate-100 grid grid-cols-5 gap-1 text-[10px] text-center font-medium">
         <div className="p-1 rounded bg-rose-50 border border-rose-100 text-rose-700">
           <span className="block font-bold">&lt;60%</span>
           <span className="text-[9px] text-rose-600/80">At Risk</span>

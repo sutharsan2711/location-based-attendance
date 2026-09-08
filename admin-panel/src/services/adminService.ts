@@ -16,16 +16,26 @@ export interface DashboardStats {
 }
 
 export const adminService = {
-  getStats: async (date?: string): Promise<DashboardStats> => {
+  getStats: async (startDate?: string, endDate?: string): Promise<DashboardStats> => {
     const params = new URLSearchParams();
-    if (date) params.append('date', date);
+    if (startDate && endDate) {
+      params.append('startDate', startDate);
+      params.append('endDate', endDate);
+    } else if (startDate) {
+      params.append('date', startDate);
+    }
     const response = await api.get('/admin/dashboard', { params });
     return response.data;
   },
 
-  getSummaryCharts: async (date?: string): Promise<any[]> => {
+  getSummaryCharts: async (startDate?: string, endDate?: string): Promise<any[]> => {
     const params = new URLSearchParams();
-    if (date) params.append('date', date);
+    if (startDate && endDate) {
+      params.append('startDate', startDate);
+      params.append('endDate', endDate);
+    } else if (startDate) {
+      params.append('date', startDate);
+    }
     const response = await api.get<any[]>('/admin/attendance-summary', { params });
     return response.data;
   },

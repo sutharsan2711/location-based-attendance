@@ -371,24 +371,40 @@ const AdminLeaveRequests: React.FC = () => {
     if (!actionModal) return;
     setActionLoading(true);
 
+    const targetReq = actionModal.request;
+    const nextStatus = actionModal.action === 'CANCELLED' ? 'CANCELLED' : actionModal.action;
+    const remarks = adminRemarks.trim() || undefined;
+
     try {
       if (actionModal.action === 'CANCELLED') {
-        await requestService.adminCancelLeave(actionModal.request.id, adminRemarks.trim() || undefined);
-      } else if (actionModal.request.requestType === 'LEAVE') {
-        await requestService.updateLeaveStatus(actionModal.request.id, {
-          status: actionModal.action,
-          adminRemarks: adminRemarks.trim() || undefined,
+        await requestService.adminCancelLeave(targetReq.id, remarks);
+      } else if (targetReq.requestType === 'LEAVE') {
+        await requestService.updateLeaveStatus(targetReq.id, {
+          status: nextStatus,
+          adminRemarks: remarks,
         });
       } else {
-        await requestService.updatePermissionStatus(actionModal.request.id, {
-          status: actionModal.action,
-          adminRemarks: adminRemarks.trim() || undefined,
+        await requestService.updatePermissionStatus(targetReq.id, {
+          status: nextStatus,
+          adminRemarks: remarks,
         });
       }
+
+      // Optimistic state update for instant UI feedback
+      if (targetReq.requestType === 'LEAVE') {
+        setLeaves((prev) =>
+          prev.map((l) => (l.id === targetReq.id ? { ...l, status: nextStatus, adminRemarks: remarks } : l))
+        );
+      } else {
+        setPermissions((prev) =>
+          prev.map((p) => (p.id === targetReq.id ? { ...p, status: nextStatus, adminRemarks: remarks } : p))
+        );
+      }
+
       setActionModal(null);
       setAdminRemarks('');
-      showToast('success', `Request marked as ${actionModal.action}`);
-      fetchAllRequests();
+      showToast('success', `Request marked as ${nextStatus}`);
+      await Promise.all([fetchAllRequests(), fetchBalances(selectedYear)]);
     } catch (err: any) {
       console.error(err);
       showToast('error', err.response?.data?.message || 'Failed to update request status.');
@@ -890,17 +906,41 @@ const AdminLeaveRequests: React.FC = () => {
                             </span>
                           </td>
 
-                          {/* Reason */}
-                          <td className="py-4 px-6 max-w-xs">
-                            <p className="font-semibold text-slate-800 line-clamp-1">{req.reason}</p>
+                          {/* Reason & Remarks / Withdrawal details */}
+                          <td className="py-4 px-6 min-w-[220px] max-w-sm">
+                            <p className="font-semibold text-slate-800 text-xs">{req.reason}</p>
                             {req.remarks && (
-                              <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1 italic">
-                                Note: {req.remarks}
-                              </p>
+                              <div
+                                className={`mt-1.5 text-xs p-2 rounded-xl border flex items-start gap-1.5 ${
+                                  req.status === 'CANCELLED' || req.status === 'WITHDRAWN'
+                                    ? 'bg-rose-50/90 border-rose-200 text-rose-800'
+                                    : 'bg-slate-50 border-slate-200 text-slate-700'
+                                }`}
+                              >
+                                {req.status === 'CANCELLED' || req.status === 'WITHDRAWN' ? (
+                                  <Undo2 className="h-3.5 w-3.5 text-rose-500 shrink-0 mt-0.5" />
+                                ) : (
+                                  <Info className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5" />
+                                )}
+                                <div className="leading-snug break-words">
+                                  <span className="font-bold">
+                                    {req.status === 'CANCELLED' || req.status === 'WITHDRAWN'
+                                      ? 'Withdrawal Note: '
+                                      : 'Note: '}
+                                  </span>
+                                  <span>
+                                    {req.remarks.replace(/^Withdrawn:\s*/i, '').replace(/^\|\s*Withdrawn:\s*/i, '')}
+                                  </span>
+                                </div>
+                              </div>
                             )}
                             {req.adminRemarks && (
-                              <div className="mt-1 text-[10px] bg-slate-50 border border-slate-200 px-2 py-0.5 rounded text-slate-600">
-                                <span className="font-bold">Admin:</span> {req.adminRemarks}
+                              <div className="mt-1.5 text-xs p-2 rounded-xl bg-indigo-50/70 border border-indigo-200 text-indigo-900 flex items-start gap-1.5">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-indigo-500 shrink-0 mt-0.5" />
+                                <div className="leading-snug break-words">
+                                  <span className="font-bold">Admin Remarks: </span>
+                                  <span>{req.adminRemarks}</span>
+                                </div>
                               </div>
                             )}
                           </td>
@@ -1150,77 +1190,79 @@ const AdminLeaveRequests: React.FC = () => {
       {/* ── MODAL: RECORD DIRECT / UNAPPLIED LEAVE BY ADMIN ── */}
       {showUnappliedModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-lg rounded-3xl bg-white p-7 shadow-2xl border border-slate-100 animate-scale-up">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center font-bold">
-                  <UserX className="h-5 w-5" />
+          <div className="relative w-full max-w-xl max-h-[92vh] flex flex-col rounded-3xl bg-white shadow-2xl border border-slate-100 animate-scale-up overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/50 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center font-bold shrink-0">
+                  <UserX className="h-4.5 w-4.5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">Record Unapplied / Direct Leave</h3>
-                  <p className="text-xs text-slate-400">Note an employee absence or unapplied leave</p>
+                  <h3 className="text-base font-bold text-slate-900 leading-tight">Record Unapplied Leave</h3>
+                  <p className="text-[11px] text-slate-400">Log unannounced absence or direct leave for employee</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowUnappliedModal(false)}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl"
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
 
             {unappliedError && (
-              <div className="mt-4 flex items-center gap-2 px-4 py-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
+              <div className="mx-6 mt-3 flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 {unappliedError}
               </div>
             )}
 
-            <form onSubmit={handleRecordUnappliedLeave} className="mt-5 space-y-4">
-              {/* Employee Selector */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Select Employee *
-                </label>
-                <select
-                  required
-                  value={unappliedEmployeeId}
-                  onChange={(e) => setUnappliedEmployeeId(Number(e.target.value))}
-                  className="w-full px-4 py-2.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-                >
-                  <option value="">-- Choose Employee --</option>
-                  {employees.map((emp) => (
-                    <option key={emp.id} value={emp.id}>
-                      {emp.name} ({emp.employeeCode}) - {emp.email}
-                    </option>
-                  ))}
-                </select>
+            <form onSubmit={handleRecordUnappliedLeave} className="p-6 pt-4 space-y-3 overflow-y-auto flex-1">
+              {/* Row 1: Employee & Leave Category */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Select Employee *
+                  </label>
+                  <select
+                    required
+                    value={unappliedEmployeeId}
+                    onChange={(e) => setUnappliedEmployeeId(Number(e.target.value))}
+                    className="w-full px-3 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                  >
+                    <option value="">-- Choose Employee --</option>
+                    {employees.map((emp) => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.name} ({emp.employeeCode})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Leave Category *
+                  </label>
+                  <select
+                    value={unappliedLeaveType}
+                    onChange={(e) => setUnappliedLeaveType(e.target.value as LeaveType)}
+                    className="w-full px-3 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                  >
+                    <option value="CASUAL_LEAVE">Casual Leave (CL)</option>
+                    <option value="SICK_LEAVE">Sick Leave (SL)</option>
+                    <option value="LOSS_OF_PAY">Loss Of Pay (LOP)</option>
+                    <option value="PERSONAL_LEAVE">Personal Leave</option>
+                    <option value="WORK_FROM_HOME">Work From Home (WFH)</option>
+                    <option value="COMP_OFF">Compensatory Off</option>
+                    <option value="OTHER">Other Absence</option>
+                  </select>
+                </div>
               </div>
 
-              {/* Leave Type */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Leave Category *
-                </label>
-                <select
-                  value={unappliedLeaveType}
-                  onChange={(e) => setUnappliedLeaveType(e.target.value as LeaveType)}
-                  className="w-full px-4 py-2.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-                >
-                  <option value="CASUAL_LEAVE">Casual Leave (CL)</option>
-                  <option value="SICK_LEAVE">Sick Leave (SL)</option>
-                  <option value="LOSS_OF_PAY">Loss Of Pay (Unannounced / Unapproved)</option>
-                  <option value="PERSONAL_LEAVE">Personal Leave</option>
-                  <option value="WORK_FROM_HOME">Work From Home (WFH)</option>
-                  <option value="COMP_OFF">Compensatory Off</option>
-                  <option value="OTHER">Other Absence</option>
-                </select>
-              </div>
-
-              {/* Day Duration Toggle (Full Day vs Half Day) */}
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-700">Duration Type:</span>
+              {/* Row 2: Duration Type & Dates */}
+              <div className="p-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Duration:</span>
                   <div className="flex items-center gap-3">
                     <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700">
                       <input
@@ -1230,7 +1272,7 @@ const AdminLeaveRequests: React.FC = () => {
                         onChange={() => setUnappliedIsHalfDay(false)}
                         className="text-orange-600 focus:ring-orange-500"
                       />
-                      Full / Multi Day (1.0+)
+                      Full / Multi Day
                     </label>
                     <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-orange-700">
                       <input
@@ -1248,71 +1290,71 @@ const AdminLeaveRequests: React.FC = () => {
                   </div>
                 </div>
 
-                {unappliedIsHalfDay && (
-                  <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between gap-3 animate-fade-in">
-                    <label className="text-xs font-bold text-slate-700">Select Shift Half *</label>
-                    <select
-                      value={unappliedHalfDaySession}
-                      onChange={(e) => setUnappliedHalfDaySession(e.target.value as 'FIRST_HALF' | 'SECOND_HALF')}
-                      className="px-3 py-1.5 text-xs font-bold bg-white border border-orange-200 text-orange-800 rounded-xl focus:outline-none"
-                    >
-                      <option value="FIRST_HALF">First Half (Morning Shift)</option>
-                      <option value="SECOND_HALF">Second Half (Afternoon Shift)</option>
-                    </select>
-                  </div>
-                )}
-              </div>
-
-              {/* Date Range */}
-              <div className={`grid ${unappliedIsHalfDay ? 'grid-cols-1' : 'grid-cols-2'} gap-3`}>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    {unappliedIsHalfDay ? 'Leave Date *' : 'From Date *'}
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={unappliedFromDate}
-                    onChange={(e) => {
-                      setUnappliedFromDate(e.target.value);
-                      if (unappliedIsHalfDay) setUnappliedToDate(e.target.value);
-                    }}
-                    className="w-full px-4 py-2.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-                  />
-                </div>
-                {!unappliedIsHalfDay && (
+                <div className="grid grid-cols-2 gap-2.5 pt-2 border-t border-slate-200/60">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                      To Date *
+                    <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">
+                      {unappliedIsHalfDay ? 'Leave Date *' : 'From Date *'}
                     </label>
                     <input
                       type="date"
                       required
-                      value={unappliedToDate}
-                      onChange={(e) => setUnappliedToDate(e.target.value)}
-                      className="w-full px-4 py-2.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                      value={unappliedFromDate}
+                      onChange={(e) => {
+                        setUnappliedFromDate(e.target.value);
+                        if (unappliedIsHalfDay) setUnappliedToDate(e.target.value);
+                      }}
+                      className="w-full px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                     />
                   </div>
-                )}
+
+                  {unappliedIsHalfDay ? (
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">
+                        Shift Half *
+                      </label>
+                      <select
+                        value={unappliedHalfDaySession}
+                        onChange={(e) => setUnappliedHalfDaySession(e.target.value as 'FIRST_HALF' | 'SECOND_HALF')}
+                        className="w-full px-3 py-1.5 text-xs font-bold bg-white border border-orange-200 text-orange-800 rounded-xl focus:outline-none"
+                      >
+                        <option value="FIRST_HALF">1st Half (Morning)</option>
+                        <option value="SECOND_HALF">2nd Half (Afternoon)</option>
+                      </select>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">
+                        To Date *
+                      </label>
+                      <input
+                        type="date"
+                        required
+                        value={unappliedToDate}
+                        onChange={(e) => setUnappliedToDate(e.target.value)}
+                        className="w-full px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Quick Preset Reasons */}
+              {/* Row 3: Quick Presets & Reason */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Reason / Absence Note *
                 </label>
-                <div className="grid grid-cols-1 gap-1.5 mb-2">
+                <div className="grid grid-cols-2 gap-1.5 mb-1.5">
                   {[
-                    '🚨 Unannounced Absence (Employee did not apply)',
-                    '📞 Informed verbally / via Phone Call (Assisted Log)',
-                    '🏥 Medical Emergency / Sick (Did not submit request)',
-                    '🚗 Travel / Transit Delay (Emergency leave)',
+                    '🚨 Unannounced Absence',
+                    '📞 Verbal / Phone Notice',
+                    '🏥 Medical / Sick Absence',
+                    '🚗 Transit / Travel Delay',
                   ].map((preset) => (
                     <button
                       type="button"
                       key={preset}
                       onClick={() => setUnappliedReason(preset)}
-                      className={`text-left px-3 py-1.5 text-[11px] rounded-xl border transition-all ${
+                      className={`text-left px-2.5 py-1 text-[10.5px] rounded-lg border transition-all truncate ${
                         unappliedReason === preset
                           ? 'bg-orange-50 border-orange-300 text-orange-900 font-bold'
                           : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 font-medium'
@@ -1328,13 +1370,13 @@ const AdminLeaveRequests: React.FC = () => {
                   value={unappliedReason}
                   onChange={(e) => setUnappliedReason(e.target.value)}
                   placeholder="Describe reason for unapplied leave..."
-                  className="w-full px-4 py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 resize-none"
+                  className="w-full px-3 py-1.5 text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 resize-none"
                 />
               </div>
 
-              {/* Admin Note / Remarks */}
+              {/* Row 4: Admin Internal Note */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Admin Internal Note / Action
                 </label>
                 <input
@@ -1342,33 +1384,33 @@ const AdminLeaveRequests: React.FC = () => {
                   value={unappliedAdminRemarks}
                   onChange={(e) => setUnappliedAdminRemarks(e.target.value)}
                   placeholder="e.g. Noted by HR on morning check-in / Adjusted against CL"
-                  className="w-full px-4 py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                  className="w-full px-3 py-1.5 text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                 />
               </div>
 
               {/* Info Notice */}
-              <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-[11px] text-amber-800 flex items-start gap-2">
-                <Info className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
+              <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-[10.5px] text-amber-800 flex items-start gap-2">
+                <Info className="h-3.5 w-3.5 shrink-0 text-amber-600 mt-0.5" />
                 <span>
-                  This will immediately record the leave as <strong>Approved (Admin Noted)</strong>, update the employee's attendance status to <strong>LEAVE</strong>, and reflect on the dashboard & reports.
+                  Records leave as <strong>Approved (Admin Noted)</strong> and updates attendance status to <strong>LEAVE</strong>.
                 </span>
               </div>
 
-              {/* Actions */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+              {/* Actions Footer */}
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowUnappliedModal(false)}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl"
+                  className="px-3.5 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={unappliedSubmitting}
-                  className="px-6 py-2.5 rounded-2xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs shadow-lg shadow-orange-600/30 transition-all cursor-pointer flex items-center gap-1.5"
+                  className="px-5 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs shadow-md shadow-orange-600/20 transition-all cursor-pointer flex items-center gap-1.5"
                 >
-                  {unappliedSubmitting && <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-r-transparent" />}
+                  {unappliedSubmitting && <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-r-transparent" />}
                   Record & Approve Leave
                 </button>
               </div>
@@ -1501,13 +1543,14 @@ const AdminLeaveRequests: React.FC = () => {
                   <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Casual Leave (CL)</label>
                   <input
                     type="number"
+                    step="any"
                     min="0"
                     max="100"
                     value={quotaForm.casualLeaveGranted}
                     onChange={(e) =>
-                      setQuotaForm({ ...quotaForm, casualLeaveGranted: Number(e.target.value) })
+                      setQuotaForm({ ...quotaForm, casualLeaveGranted: e.target.value === '' ? ('' as any) : Number(e.target.value) })
                     }
-                    className="w-full px-3 py-2 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl"
+                    className="w-full px-3 py-2 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
 
@@ -1515,13 +1558,14 @@ const AdminLeaveRequests: React.FC = () => {
                   <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Sick Leave (SL)</label>
                   <input
                     type="number"
+                    step="any"
                     min="0"
                     max="100"
                     value={quotaForm.sickLeaveGranted}
                     onChange={(e) =>
-                      setQuotaForm({ ...quotaForm, sickLeaveGranted: Number(e.target.value) })
+                      setQuotaForm({ ...quotaForm, sickLeaveGranted: e.target.value === '' ? ('' as any) : Number(e.target.value) })
                     }
-                    className="w-full px-3 py-2 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl"
+                    className="w-full px-3 py-2 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
 
@@ -1529,13 +1573,14 @@ const AdminLeaveRequests: React.FC = () => {
                   <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Comp Off</label>
                   <input
                     type="number"
+                    step="any"
                     min="0"
                     max="100"
                     value={quotaForm.compOffGranted}
                     onChange={(e) =>
-                      setQuotaForm({ ...quotaForm, compOffGranted: Number(e.target.value) })
+                      setQuotaForm({ ...quotaForm, compOffGranted: e.target.value === '' ? ('' as any) : Number(e.target.value) })
                     }
-                    className="w-full px-3 py-2 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl"
+                    className="w-full px-3 py-2 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
 
@@ -1543,13 +1588,14 @@ const AdminLeaveRequests: React.FC = () => {
                   <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Work From Home</label>
                   <input
                     type="number"
+                    step="any"
                     min="0"
                     max="100"
                     value={quotaForm.workFromHomeGranted}
                     onChange={(e) =>
-                      setQuotaForm({ ...quotaForm, workFromHomeGranted: Number(e.target.value) })
+                      setQuotaForm({ ...quotaForm, workFromHomeGranted: e.target.value === '' ? ('' as any) : Number(e.target.value) })
                     }
-                    className="w-full px-3 py-2 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl"
+                    className="w-full px-3 py-2 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
               </div>

@@ -1,9 +1,12 @@
-# Node / Frontend / Admin Panel
+# Node / Frontend / Admin Panel / Next.js
 **/node_modules/
 **/dist/
 **/dist-ssr/
+**/.next/
+*.tsbuildinfo
 *.local
 .env
+.env.development
 .env.local
 .env.*.local
 npm-debug.log*

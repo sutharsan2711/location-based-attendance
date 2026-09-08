@@ -17,6 +17,7 @@ import {
   DollarSign,
   CheckSquare,
   StickyNote,
+  BarChart3,
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
@@ -27,6 +28,7 @@ const Sidebar: React.FC = () => {
 
   const adminMenu = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+    { name: 'KPI Dashboard', path: '/kpi', icon: BarChart3 },
     { name: 'Task Management', path: '/tasks', icon: CheckSquare },
     { name: 'Sticky Notes', path: '/notes', icon: StickyNote },
     { name: 'Employees', path: '/employees', icon: Users },

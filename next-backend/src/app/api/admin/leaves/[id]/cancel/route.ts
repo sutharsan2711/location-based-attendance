@@ -20,12 +20,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     const { id } = await params;
     const leaveId = BigInt(id);
     const body = await req.json().catch(() => ({}));
-    const status = body.status;
-    const adminRemarks = body.adminRemarks || body.remarks || body.withdrawalReason || null;
-
-    if (!status || !["APPROVED", "REJECTED", "PENDING", "CANCELLED", "WITHDRAWN"].includes(status.toUpperCase())) {
-      return errorResponse("Invalid leave status", 400);
-    }
+    const adminRemarks = body.withdrawalReason || body.adminRemarks || body.remarks || "Cancelled by Admin";
 
     const existing = await prisma.leaveRequest.findUnique({ where: { id: leaveId } });
     if (!existing) {
@@ -35,7 +30,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     const updated = await prisma.leaveRequest.update({
       where: { id: leaveId },
       data: {
-        status: status.toUpperCase() === "WITHDRAWN" ? "CANCELLED" : status.toUpperCase(),
+        status: "CANCELLED",
         adminRemarks,
       },
       include: { employee: true },
@@ -43,7 +38,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
     return jsonResponse(formatLeave(updated));
   } catch (error: any) {
-    console.error("PATCH /api/admin/leaves/[id]/status error:", error);
-    return errorResponse(error.message || "Failed to update leave status", 500);
+    console.error("PATCH /api/admin/leaves/[id]/cancel error:", error);
+    return errorResponse(error.message || "Failed to cancel leave", 500);
   }
 }

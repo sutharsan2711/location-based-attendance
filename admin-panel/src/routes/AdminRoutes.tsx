@@ -22,6 +22,7 @@ import AdminSalaryManagement from '../pages/admin/AdminSalaryManagement';
 import AdminPayslipView from '../pages/admin/AdminPayslipView';
 import AdminTasks from '../pages/admin/AdminTasks';
 import AdminStickyNotes from '../pages/admin/AdminStickyNotes';
+import AdminKpiDashboard from '../pages/admin/AdminKpiDashboard';
 
 const HomeRedirect: React.FC = () => {
   const { user, loading } = useAuth();
@@ -48,6 +49,8 @@ const AdminRoutes: React.FC = () => {
         <Route element={<AdminLayout />}>
           <Route path="/" element={<HomeRedirect />} />
           <Route path="/dashboard" element={<AdminDashboard />} />
+          <Route path="/kpi" element={<AdminKpiDashboard />} />
+          <Route path="/kpi-dashboard" element={<AdminKpiDashboard />} />
           <Route path="/tasks" element={<AdminTasks />} />
           <Route path="/notes" element={<AdminStickyNotes />} />
           <Route path="/employees" element={<Employees />} />

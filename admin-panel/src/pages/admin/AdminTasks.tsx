@@ -123,13 +123,34 @@ const AdminTasks: React.FC = () => {
     assignedByName: 'System Admin',
   });
 
-  const [assignerOptions, setAssignerOptions] = useState<string[]>([
+  const DEFAULT_ASSIGNER_OPTIONS = [
     'System Admin',
     'Operations Lead',
     'HR Team Lead',
     'Project Manager',
     'Technical Lead',
-  ]);
+  ];
+
+  const [assignerOptions, setAssignerOptions] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('admin_task_assigners');
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // fallback
+    }
+    return DEFAULT_ASSIGNER_OPTIONS;
+  });
+
+  const [deletedAssigners, setDeletedAssigners] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('admin_task_deleted_assigners');
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // fallback
+    }
+    return [];
+  });
+
   const [showAddAssignerInput, setShowAddAssignerInput] = useState<boolean>(false);
   const [newAssignerName, setNewAssignerName] = useState<string>('');
 
@@ -295,15 +316,52 @@ const AdminTasks: React.FC = () => {
     setIsCreateModalOpen(true);
   };
 
+  const availableAssigners = useMemo(() => {
+    const all = Array.from(new Set([...assignerOptions, ...employees.map((e) => e.name)]));
+    return all.filter((name) => !deletedAssigners.includes(name));
+  }, [assignerOptions, employees, deletedAssigners]);
+
   const handleAddCustomAssigner = () => {
     if (!newAssignerName.trim()) return;
     const name = newAssignerName.trim();
-    if (!assignerOptions.includes(name)) {
-      setAssignerOptions((prev) => [name, ...prev]);
+    const updated = assignerOptions.includes(name) ? assignerOptions : [name, ...assignerOptions];
+    setAssignerOptions(updated);
+    const updatedDeleted = deletedAssigners.filter((d) => d !== name);
+    setDeletedAssigners(updatedDeleted);
+    try {
+      localStorage.setItem('admin_task_assigners', JSON.stringify(updated));
+      localStorage.setItem('admin_task_deleted_assigners', JSON.stringify(updatedDeleted));
+    } catch {
+      // ignore
     }
     setFormData((prev) => ({ ...prev, assignedByName: name, whoAssigned: name }));
     setNewAssignerName('');
     setShowAddAssignerInput(false);
+  };
+
+  const handleDeleteCurrentAssigner = () => {
+    const current = formData.assignedByName || (availableAssigners[0] || 'System Admin');
+    if (!current) return;
+
+    if (window.confirm(`Are you sure you want to delete "${current}" from the assigner options?`)) {
+      const updatedOptions = assignerOptions.filter((opt) => opt !== current);
+      const updatedDeleted = Array.from(new Set([...deletedAssigners, current]));
+      setAssignerOptions(updatedOptions);
+      setDeletedAssigners(updatedDeleted);
+      try {
+        localStorage.setItem('admin_task_assigners', JSON.stringify(updatedOptions));
+        localStorage.setItem('admin_task_deleted_assigners', JSON.stringify(updatedDeleted));
+      } catch {
+        // ignore
+      }
+
+      const nextAvailable = Array.from(
+        new Set([...updatedOptions, ...employees.map((e) => e.name)])
+      ).filter((name) => !updatedDeleted.includes(name));
+
+      const nextVal = nextAvailable.length > 0 ? nextAvailable[0] : 'System Admin';
+      setFormData((prev) => ({ ...prev, assignedByName: nextVal, whoAssigned: nextVal }));
+    }
   };
 
   const handleSaveTask = async (e: React.FormEvent) => {
@@ -1310,11 +1368,11 @@ const AdminTasks: React.FC = () => {
                   ) : (
                     <div className="flex items-center gap-2">
                       <select
-                        value={formData.assignedByName || 'System Admin'}
+                        value={formData.assignedByName || (availableAssigners[0] || 'System Admin')}
                         onChange={(e) => setFormData({ ...formData, assignedByName: e.target.value, whoAssigned: e.target.value })}
                         className="flex-1 px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 font-medium bg-white"
                       >
-                        {Array.from(new Set([...assignerOptions, ...employees.map((e) => e.name)])).map((name) => (
+                        {availableAssigners.map((name) => (
                           <option key={name} value={name}>
                             {name}
                           </option>
@@ -1323,10 +1381,18 @@ const AdminTasks: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setShowAddAssignerInput(true)}
-                        className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-primary-600 transition shrink-0 cursor-pointer"
+                        className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-primary-600 transition shrink-0 cursor-pointer shadow-2xs"
                         title="Add custom assigner name"
                       >
                         <Plus className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDeleteCurrentAssigner}
+                        className="p-2.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 transition shrink-0 cursor-pointer shadow-2xs"
+                        title="Delete selected assigner option"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   )}

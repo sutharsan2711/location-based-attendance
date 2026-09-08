@@ -84,8 +84,16 @@ export const requestService = {
   },
 
   adminCancelLeave: async (id: number, withdrawalReason?: string): Promise<LeaveRequest> => {
-    const response = await api.patch<LeaveRequest>(`/admin/leaves/${id}/cancel`, { withdrawalReason });
-    return response.data;
+    try {
+      const response = await api.patch<LeaveRequest>(`/admin/leaves/${id}/status`, {
+        status: 'CANCELLED',
+        adminRemarks: withdrawalReason,
+      });
+      return response.data;
+    } catch (e) {
+      const response = await api.patch<LeaveRequest>(`/admin/leaves/${id}/cancel`, { withdrawalReason });
+      return response.data;
+    }
   },
 
   previewCarryForward: async (

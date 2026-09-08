@@ -151,8 +151,13 @@ const Attendance: React.FC = () => {
       const end = new Date(logoutTime).getTime();
       const diffMs = end - start;
       if (diffMs <= 0) return '--';
-      const hours = Math.floor(diffMs / (1000 * 60 * 60));
-      const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      const totalSecs = Math.floor(diffMs / 1000);
+      const hours = Math.floor(totalSecs / 3600);
+      const mins = Math.floor((totalSecs % 3600) / 60);
+      const secs = totalSecs % 60;
+      if (hours === 0 && mins === 0) {
+        return `${secs}s`;
+      }
       return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
     } catch {
       return '--';

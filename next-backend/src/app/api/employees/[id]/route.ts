@@ -36,13 +36,20 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 export async function PUT(req: NextRequest, { params }: RouteParams) {
   try {
     const authUser = await getAuthUser(req);
-    if (!authUser || !isUserAdmin(authUser)) {
-      return errorResponse("Forbidden: Admin access required", 403);
+    if (!authUser) {
+      return errorResponse("Unauthorized", 401);
     }
 
     const { id } = await params;
     const userId = BigInt(id);
     const body = await req.json();
+
+    const isAdmin = isUserAdmin(authUser);
+    const isSelf = String(authUser.id) === String(userId);
+
+    if (!isAdmin && !isSelf) {
+      return errorResponse("Forbidden: You do not have permission to edit this profile", 403);
+    }
 
     const existing = await prisma.user.findUnique({ where: { id: userId } });
     if (!existing) {
@@ -50,22 +57,27 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     }
 
     const updateData: any = {};
-    if (body.name !== undefined) updateData.name = body.name.trim();
-    if (body.email !== undefined) updateData.email = body.email.trim();
-    if (body.employeeCode !== undefined) updateData.employeeCode = body.employeeCode.trim();
-    if (body.phone !== undefined) updateData.phone = body.phone?.trim() || null;
-    if (body.role !== undefined) updateData.role = body.role;
-    if (body.employment_type !== undefined || body.staffType !== undefined) {
-      updateData.employment_type = body.employment_type || body.staffType;
-    }
-    if (body.status !== undefined) updateData.status = body.status;
-    if (body.department !== undefined) updateData.department = body.department?.trim() || "IT";
-    if (body.profileData !== undefined) {
-      updateData.profileData = typeof body.profileData === "string" ? body.profileData : JSON.stringify(body.profileData);
+    if (isAdmin) {
+      if (body.name !== undefined) updateData.name = body.name.trim();
+      if (body.email !== undefined) updateData.email = body.email.trim();
+      if (body.employeeCode !== undefined) updateData.employeeCode = body.employeeCode.trim();
+      if (body.role !== undefined) updateData.role = body.role;
+      if (body.employment_type !== undefined || body.staffType !== undefined) {
+        updateData.employment_type = body.employment_type || body.staffType;
+      }
+      if (body.status !== undefined) updateData.status = body.status;
+      if (body.department !== undefined) updateData.department = body.department?.trim() || "IT";
+      if (body.password && body.password.trim() !== "") {
+        updateData.password = await bcrypt.hash(body.password.trim(), 10);
+      }
+    } else {
+      // Employee self-update
+      if (body.name !== undefined && body.name.trim() !== "") updateData.name = body.name.trim();
     }
 
-    if (body.password && body.password.trim() !== "") {
-      updateData.password = await bcrypt.hash(body.password.trim(), 10);
+    if (body.phone !== undefined) updateData.phone = body.phone?.trim() || null;
+    if (body.profileData !== undefined) {
+      updateData.profileData = typeof body.profileData === "string" ? body.profileData : JSON.stringify(body.profileData);
     }
 
     const updated = await prisma.user.update({

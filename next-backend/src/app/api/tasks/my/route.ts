@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 
     return jsonResponse(tasks.map(formatTask));
   } catch (error: any) {
-    console.error("GET /api/tasks/my-tasks error:", error);
+    console.error("GET /api/tasks/my error:", error);
     return errorResponse(error.message || "Failed to fetch my tasks", 500);
   }
 }

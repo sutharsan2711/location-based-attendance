@@ -506,12 +506,41 @@ const EmployeeLeaves: React.FC = () => {
                         </span>
                       </td>
 
-                      <td className="py-4 px-6 max-w-xs">
-                        <p className="font-semibold text-slate-800 line-clamp-1">{r.reason}</p>
-                        {r.remarks && <p className="text-[10px] text-slate-400 italic">Note: {r.remarks}</p>}
+                      {/* Reason & Remarks / Withdrawal details */}
+                      <td className="py-4 px-6 min-w-[220px] max-w-sm">
+                        <p className="font-semibold text-slate-800 text-xs">{r.reason}</p>
+                        {r.remarks && (
+                          <div
+                            className={`mt-1.5 text-xs p-2 rounded-xl border flex items-start gap-1.5 ${
+                              r.status === 'CANCELLED' || r.status === 'WITHDRAWN'
+                                ? 'bg-rose-50/90 border-rose-200 text-rose-800'
+                                : 'bg-slate-50 border-slate-200 text-slate-700'
+                            }`}
+                          >
+                            {r.status === 'CANCELLED' || r.status === 'WITHDRAWN' ? (
+                              <Undo2 className="h-3.5 w-3.5 text-rose-500 shrink-0 mt-0.5" />
+                            ) : (
+                              <Info className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5" />
+                            )}
+                            <div className="leading-snug break-words">
+                              <span className="font-bold">
+                                {r.status === 'CANCELLED' || r.status === 'WITHDRAWN'
+                                  ? 'Withdrawal Note: '
+                                  : 'Note: '}
+                              </span>
+                              <span>
+                                {r.remarks.replace(/^Withdrawn:\s*/i, '').replace(/^\|\s*Withdrawn:\s*/i, '')}
+                              </span>
+                            </div>
+                          </div>
+                        )}
                         {r.adminRemarks && (
-                          <div className="mt-1 text-[10px] bg-slate-50 border border-slate-200 px-2 py-0.5 rounded text-slate-600">
-                            <span className="font-bold">Remarks:</span> {r.adminRemarks}
+                          <div className="mt-1.5 text-xs p-2 rounded-xl bg-indigo-50/70 border border-indigo-200 text-indigo-900 flex items-start gap-1.5">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-indigo-500 shrink-0 mt-0.5" />
+                            <div className="leading-snug break-words">
+                              <span className="font-bold">Admin Remarks: </span>
+                              <span>{r.adminRemarks}</span>
+                            </div>
                           </div>
                         )}
                       </td>

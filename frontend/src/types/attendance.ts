@@ -14,10 +14,17 @@ export interface Attendance {
   logoutLongitude?: number;
   logoutAccuracy?: number;
   logoutDistance?: number;
-  status: 'NOT_LOGGED_IN' | 'LOGGED_IN' | 'COMPLETED';
+  status: 'NOT_LOGGED_IN' | 'LOGGED_IN' | 'COMPLETED' | 'WORK_FROM_HOME';
   timingStatus?: 'PRESENT' | 'LATE' | 'PERMISSION' | 'LEAVE' | 'ABSENT' | 'WORKING';
   displayStatus?: string;
   workingHours?: string;
+  isWfhApproved?: boolean;
+  wfhRequest?: {
+    id: number;
+    fromDate: string;
+    toDate: string;
+    reason: string;
+  } | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -34,7 +41,9 @@ export interface AttendanceResponse {
   distance?: number;
   allowedRadius?: number;
   time?: string;
-  status?: 'NOT_LOGGED_IN' | 'LOGGED_IN' | 'COMPLETED';
+  status?: 'NOT_LOGGED_IN' | 'LOGGED_IN' | 'COMPLETED' | 'WORK_FROM_HOME';
   timingStatus?: string;
+  isWfh?: boolean;
 }
+
 

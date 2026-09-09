@@ -20,6 +20,7 @@ import MyPayroll from '../pages/employee/MyPayroll';
 import MyPayslip from '../pages/employee/MyPayslip';
 import EmployeeTasks from '../pages/employee/EmployeeTasks';
 import EmployeeKpi from '../pages/employee/EmployeeKpi';
+import EmployeeAssets from '../pages/employee/EmployeeAssets';
 
 const ADMIN_PANEL_URL = 'http://localhost:5200';
 
@@ -69,6 +70,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/employee/leaves/balances" element={<LeaveBalances />} />
           <Route path="/employee/leaves/calendar" element={<LeaveCalendar />} />
           <Route path="/employee/leaves/holidays" element={<HolidayCalendar />} />
+          <Route path="/employee/assets" element={<EmployeeAssets />} />
           <Route path="/employee/payroll" element={<MyPayroll />} />
           <Route path="/employee/payroll/:id" element={<MyPayslip />} />
           <Route path="/employee/kpi" element={<EmployeeKpi />} />

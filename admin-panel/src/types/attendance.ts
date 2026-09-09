@@ -14,7 +14,7 @@ export interface Attendance {
   logoutLongitude?: number;
   logoutAccuracy?: number;
   logoutDistance?: number;
-  status: 'NOT_LOGGED_IN' | 'LOGGED_IN' | 'COMPLETED';
+  status: 'NOT_LOGGED_IN' | 'LOGGED_IN' | 'COMPLETED' | 'WORK_FROM_HOME';
   timingStatus?: 'PRESENT' | 'LATE' | 'PERMISSION' | 'LEAVE' | 'ABSENT' | 'WORKING' | 'ON_TIME';
   displayStatus?: string;
   workingHours?: string;
@@ -34,8 +34,9 @@ export interface AttendanceResponse {
   distance?: number;
   allowedRadius?: number;
   time?: string;
-  status?: 'NOT_LOGGED_IN' | 'LOGGED_IN' | 'COMPLETED';
+  status?: 'NOT_LOGGED_IN' | 'LOGGED_IN' | 'COMPLETED' | 'WORK_FROM_HOME';
   timingStatus?: string;
+  isWfh?: boolean;
 }
 
 export interface MonthlyDayDetail {

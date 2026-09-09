@@ -444,3 +444,66 @@ export function formatWorkNote(note: any) {
   };
 }
 
+export function formatAsset(asset: any) {
+  const emp = asset.assignedEmployee;
+  return {
+    id: Number(asset.id),
+    assetCode: asset.assetCode,
+    name: asset.name,
+    category: asset.category,
+    model: asset.model || null,
+    serialNumber: asset.serialNumber || null,
+    status: asset.status,
+    condition: asset.condition,
+    purchaseDate: asset.purchaseDate ? asset.purchaseDate.toISOString().split("T")[0] : null,
+    purchaseCost: asset.purchaseCost !== null && asset.purchaseCost !== undefined ? Number(asset.purchaseCost) : null,
+    assignedToEmployeeId: asset.assignedToEmployeeId ? Number(asset.assignedToEmployeeId) : null,
+    assignedDate: asset.assignedDate ? asset.assignedDate.toISOString().split("T")[0] : null,
+    handoverNotes: asset.handoverNotes || null,
+    notes: asset.notes || null,
+    assignedEmployee: emp
+      ? {
+          id: Number(emp.id),
+          name: emp.name,
+          employeeCode: emp.employeeCode,
+          email: emp.email,
+          department: emp.department,
+          role: emp.role,
+        }
+      : null,
+    createdAt: asset.createdAt?.toISOString(),
+    updatedAt: asset.updatedAt?.toISOString(),
+  };
+}
+
+export function formatAssetRequest(req: any) {
+  const emp = req.employee;
+  const ast = req.asset;
+  return {
+    id: Number(req.id),
+    employeeId: Number(req.employeeId),
+    assetId: req.assetId ? Number(req.assetId) : null,
+    requestType: req.requestType,
+    category: req.category,
+    title: req.title,
+    description: req.description,
+    priority: req.priority,
+    status: req.status,
+    adminRemarks: req.adminRemarks || null,
+    employee: emp
+      ? {
+          id: Number(emp.id),
+          name: emp.name,
+          employeeCode: emp.employeeCode,
+          email: emp.email,
+          department: emp.department,
+          role: emp.role,
+        }
+      : null,
+    asset: ast ? formatAsset(ast) : null,
+    createdAt: req.createdAt?.toISOString(),
+    updatedAt: req.updatedAt?.toISOString(),
+  };
+}
+
+

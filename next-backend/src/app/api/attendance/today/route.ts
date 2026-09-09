@@ -42,11 +42,44 @@ export async function GET(req: NextRequest) {
       orderBy: { id: "desc" },
     });
 
+    // Check if approved Work From Home (WFH) is active for today
+    const approvedWfh = await prisma.leaveRequest.findFirst({
+      where: {
+        employeeId: BigInt(authUser.id),
+        leaveType: "WORK_FROM_HOME",
+        status: "APPROVED",
+        fromDate: { lte: endOfDay },
+        toDate: { gte: startOfDay },
+      },
+    });
+
     if (!attendance) {
-      return jsonResponse(null);
+      return jsonResponse({
+        attendance: null,
+        isWfhApproved: Boolean(approvedWfh),
+        wfhRequest: approvedWfh
+          ? {
+              id: Number(approvedWfh.id),
+              fromDate: approvedWfh.fromDate.toISOString().split("T")[0],
+              toDate: approvedWfh.toDate.toISOString().split("T")[0],
+              reason: approvedWfh.reason,
+            }
+          : null,
+      });
     }
 
-    return jsonResponse(attendance);
+    return jsonResponse({
+      ...attendance,
+      isWfhApproved: Boolean(approvedWfh),
+      wfhRequest: approvedWfh
+        ? {
+            id: Number(approvedWfh.id),
+            fromDate: approvedWfh.fromDate.toISOString().split("T")[0],
+            toDate: approvedWfh.toDate.toISOString().split("T")[0],
+            reason: approvedWfh.reason,
+          }
+        : null,
+    });
   } catch (error: any) {
     console.error("GET /api/attendance/today error:", error);
     return errorResponse(error.message || "Failed to fetch today's attendance", 500);

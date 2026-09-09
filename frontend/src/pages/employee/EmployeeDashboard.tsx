@@ -251,7 +251,12 @@ const EmployeeDashboard: React.FC = () => {
       }
 
       if (attRes) {
-        setAttendance(attRes);
+        const parsed = (attRes && typeof attRes === 'object' && 'attendance' in attRes)
+          ? ((attRes as any).attendance
+              ? { ...(attRes as any).attendance, isWfhApproved: (attRes as any).isWfhApproved, wfhRequest: (attRes as any).wfhRequest }
+              : ({ isWfhApproved: (attRes as any).isWfhApproved, wfhRequest: (attRes as any).wfhRequest } as any))
+          : attRes;
+        setAttendance(parsed);
       }
 
       if (tasksRes) {
@@ -259,7 +264,10 @@ const EmployeeDashboard: React.FC = () => {
       }
 
       const activePlans = res?.plans || [];
-      updateLocalSummary(activePlans, attRes);
+      const parsedForSummary = (attRes && typeof attRes === 'object' && 'attendance' in attRes)
+        ? (attRes as any).attendance
+        : attRes;
+      updateLocalSummary(activePlans, parsedForSummary);
     } catch (err) {
       console.error('Failed to load dashboard:', err);
     } finally {
@@ -416,24 +424,25 @@ const EmployeeDashboard: React.FC = () => {
 
       const hasCheckedIn =
         attendance?.status === 'LOGGED_IN' ||
+        attendance?.status === 'WORK_FROM_HOME' ||
         attendance?.status === 'COMPLETED' ||
         Boolean(attendance?.loginTime);
       const hasCheckedOut = attendance?.status === 'COMPLETED' || Boolean(attendance?.logoutTime);
 
       if (!hasCheckedIn) {
-        await attendanceService.loginAttendance({
+        const res = await attendanceService.loginAttendance({
           latitude: lat || 13.0827,
           longitude: lng || 80.2707,
           accuracy: acc,
         });
-        setSwipeSuccess('Checked in successfully! Have a great productive day.');
+        setSwipeSuccess(res?.message || 'Checked in successfully! Have a great productive day.');
       } else if (!hasCheckedOut) {
-        await attendanceService.logoutAttendance({
+        const res = await attendanceService.logoutAttendance({
           latitude: lat || 13.0827,
           longitude: lng || 80.2707,
           accuracy: acc,
         });
-        setSwipeSuccess('Checked out successfully! Have a wonderful evening.');
+        setSwipeSuccess(res?.message || 'Checked out successfully! Have a wonderful evening.');
       } else {
         setSwipeError('You have already completed attendance for today.');
         setActionLoading(false);
@@ -531,6 +540,22 @@ const EmployeeDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Work From Home Banner */}
+      {Boolean(attendance?.isWfhApproved || attendance?.status === 'WORK_FROM_HOME') && (
+        <div className="flex items-center justify-between p-3.5 bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 border border-purple-200/90 text-purple-900 rounded-2xl text-xs font-semibold shadow-xs animate-slide">
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl">🏡</span>
+            <div>
+              <span className="font-bold text-purple-950 block text-xs">Work From Home Mode Active (Admin Approved)</span>
+              <span className="text-[11px] text-purple-700 font-medium">Physical geofence boundary is relaxed. You can punch in and out directly from home today.</span>
+            </div>
+          </div>
+          <span className="px-2.5 py-1 rounded-full bg-purple-200/80 text-purple-900 text-[10px] font-bold border border-purple-300 shrink-0">
+            WFH Active
+          </span>
+        </div>
+      )}
 
       {/* Swipe status notification alerts */}
       {swipeSuccess && (
@@ -666,14 +691,21 @@ const EmployeeDashboard: React.FC = () => {
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between relative group">
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 gap-2">
-              <button
-                onClick={handleOpenSwipesModal}
-                className="text-[11px] font-bold text-slate-700 uppercase tracking-wider hover:text-indigo-600 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
-                title="Click to view full Swipes & History"
-              >
-                <span>Attendance</span>
-                <ExternalLink className="h-3 w-3 text-slate-400 group-hover:text-indigo-500 transition-colors shrink-0" />
-              </button>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  onClick={handleOpenSwipesModal}
+                  className="text-[11px] font-bold text-slate-700 uppercase tracking-wider hover:text-indigo-600 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                  title="Click to view full Swipes & History"
+                >
+                  <span>Attendance</span>
+                  <ExternalLink className="h-3 w-3 text-slate-400 group-hover:text-indigo-500 transition-colors shrink-0" />
+                </button>
+                {Boolean(attendance?.isWfhApproved || attendance?.status === 'WORK_FROM_HOME') && (
+                  <span className="px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 text-[10px] font-bold border border-purple-200">
+                    WFH
+                  </span>
+                )}
+              </div>
               <button
                 onClick={handleSwipe}
                 disabled={actionLoading || (hasCheckedIn && hasCheckedOut)}
@@ -721,13 +753,13 @@ const EmployeeDashboard: React.FC = () => {
               <div className="flex items-center justify-between text-slate-500">
                 <span className="font-medium text-[11px]">Distance (In / Out):</span>
                 <span className="font-mono text-xs font-semibold text-slate-700 whitespace-nowrap">
-                  {attendance?.loginDistance !== null && attendance?.loginDistance !== undefined
-                    ? `${attendance.loginDistance.toFixed(1)}m`
-                    : '--'}{' '}
-                  /{' '}
-                  {attendance?.logoutDistance !== null && attendance?.logoutDistance !== undefined
-                    ? `${attendance.logoutDistance.toFixed(1)}m`
-                    : '--'}
+                  {Boolean(attendance?.isWfhApproved || attendance?.status === 'WORK_FROM_HOME') ? (
+                    <span className="text-purple-600 font-sans font-bold text-[11px]">🏡 Work From Home</span>
+                  ) : attendance?.loginDistance !== null && attendance?.loginDistance !== undefined ? (
+                    `${attendance.loginDistance.toFixed(1)}m / ${attendance?.logoutDistance !== null && attendance?.logoutDistance !== undefined ? `${attendance.logoutDistance.toFixed(1)}m` : '--'}`
+                  ) : (
+                    '--'
+                  )}
                 </span>
               </div>
               <div className="flex items-center justify-between text-slate-500 pt-1.5 border-t border-slate-200/60">

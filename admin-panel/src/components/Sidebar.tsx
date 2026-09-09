@@ -18,6 +18,7 @@ import {
   CheckSquare,
   StickyNote,
   BarChart3,
+  Laptop,
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
@@ -33,6 +34,7 @@ const Sidebar: React.FC = () => {
     { name: 'Sticky Notes', path: '/notes', icon: StickyNote },
     { name: 'Employees', path: '/employees', icon: Users },
     { name: 'Attendance & Grid', path: '/attendance', icon: CalendarDays },
+    { name: 'Asset Management', path: '/assets', icon: Laptop },
     { name: 'Payroll & Salary', path: '/payroll', icon: DollarSign },
     { name: 'Leave & Permissions', path: '/requests', icon: FileCheck },
     { name: 'Holiday Calendar', path: '/settings/holidays', icon: CalendarRange },

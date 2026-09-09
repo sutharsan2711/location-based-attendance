@@ -187,6 +187,14 @@ const Attendance: React.FC = () => {
         </span>
       );
     }
+    if (row.status === 'WORK_FROM_HOME') {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2.5 py-1 text-xs font-bold text-purple-700 border border-purple-200">
+          <span>🏡</span>
+          <span>WFH (Working)</span>
+        </span>
+      );
+    }
     if (row.status === 'LOGGED_IN') {
       return (
         <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-600 border border-blue-200/60">

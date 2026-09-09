@@ -50,6 +50,7 @@ const EmployeeLeaves: React.FC = () => {
 
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
   const [permissions, setPermissions] = useState<PermissionRequest[]>([]);
+  const [balanceSummary, setBalanceSummary] = useState<import('../../types/request').LeaveBalanceSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [submitLoading, setSubmitLoading] = useState<boolean>(false);
 
@@ -86,12 +87,16 @@ const EmployeeLeaves: React.FC = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [leavesData, permsData] = await Promise.all([
+      const [leavesData, permsData, balancesData] = await Promise.all([
         requestService.getMyLeaves(),
         requestService.getMyPermissions(),
+        requestService.getMyLeaveBalances().catch(() => null),
       ]);
       setLeaves(leavesData);
       setPermissions(permsData);
+      if (balancesData) {
+        setBalanceSummary(balancesData);
+      }
     } catch (err) {
       console.error('Failed to fetch requests', err);
     } finally {
@@ -736,6 +741,39 @@ const EmployeeLeaves: React.FC = () => {
                       <option value="WORK_FROM_HOME">Work From Home (WFH)</option>
                       <option value="LOSS_OF_PAY">Loss Of Pay (LOP)</option>
                     </select>
+
+                    {/* Comp Off Info & Available Balance Helper */}
+                    {leaveType === 'COMP_OFF' && (
+                      <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs space-y-1 animate-fade-in">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-emerald-900">Available Comp-Off Balance:</span>
+                          <span className="font-extrabold text-emerald-800 font-mono px-2 py-0.5 bg-emerald-100/90 rounded-md">
+                            {balanceSummary?.balances?.find((b) => b.type === 'COMP_OFF')?.balance ?? 0} Day(s)
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-emerald-700 leading-snug">
+                          Compensatory Off is credited when you attend work on official holidays/weekends or when granted by Admin.
+                        </p>
+                        {(balanceSummary?.balances?.find((b) => b.type === 'COMP_OFF')?.balance ?? 0) <= 0 && (
+                          <p className="text-[11px] font-bold text-rose-600 pt-0.5">
+                            ⚠️ You currently have 0 Comp Off days available.
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Work From Home Info Helper */}
+                    {leaveType === 'WORK_FROM_HOME' && (
+                      <div className="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-2xl text-xs space-y-1 animate-fade-in">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-base">🏡</span>
+                          <span className="font-bold text-purple-900">Admin-Controlled Work From Home</span>
+                        </div>
+                        <p className="text-[11px] text-purple-700 leading-snug">
+                          Once approved by Admin, the office physical geofence will be bypassed so you can punch in and punch out directly from home.
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Day Duration Toggle (Full Day vs Half Day) */}

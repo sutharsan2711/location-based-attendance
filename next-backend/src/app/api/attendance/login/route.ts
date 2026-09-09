@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       orderBy: { id: "desc" },
     });
 
-    if (existing && (existing.status === "LOGGED_IN" || existing.status === "COMPLETED")) {
+    if (existing && (existing.status === "LOGGED_IN" || existing.status === "COMPLETED" || existing.status === "WORK_FROM_HOME")) {
       return errorResponse("You have already logged in today.", 400);
     }
 
@@ -146,6 +146,18 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Check approved Work From Home (WFH) request for today
+    const approvedWfh = await prisma.leaveRequest.findFirst({
+      where: {
+        employeeId: BigInt(authUser.id),
+        leaveType: "WORK_FROM_HOME",
+        status: "APPROVED",
+        fromDate: { lte: endOfDay },
+        toDate: { gte: startOfDay },
+      },
+    });
+    const isWfh = Boolean(approvedWfh);
+
     const isLate = isTimeAfter(now, threshH, threshM);
     let timingStatus: "PRESENT" | "LATE" | "PERMISSION" = "PRESENT";
 
@@ -154,6 +166,8 @@ export async function POST(req: NextRequest) {
     } else if (isLate) {
       timingStatus = "LATE";
     }
+
+    const attendanceStatus = isWfh ? "WORK_FROM_HOME" : "LOGGED_IN";
 
     // Save attendance
     let attendanceRecord;
@@ -166,7 +180,7 @@ export async function POST(req: NextRequest) {
           loginLongitude: lng,
           loginAccuracy: accuracy,
           loginDistance: minDistance,
-          status: "LOGGED_IN",
+          status: attendanceStatus,
           timingStatus,
         },
       });
@@ -180,18 +194,22 @@ export async function POST(req: NextRequest) {
           loginLongitude: lng,
           loginAccuracy: accuracy,
           loginDistance: minDistance,
-          status: "LOGGED_IN",
+          status: attendanceStatus,
           timingStatus,
         },
       });
     }
 
-    const message =
+    let message =
       timingStatus === "LATE"
         ? "Login recorded (LATE)"
         : timingStatus === "PERMISSION"
         ? "Login recorded (PERMISSION)"
         : "Login recorded successfully (ON TIME)";
+
+    if (isWfh) {
+      message += " [Work From Home - Approved by Admin]";
+    }
 
     return jsonResponse({
       success: true,
@@ -199,8 +217,9 @@ export async function POST(req: NextRequest) {
       distance: minDistance,
       allowedRadius: location.allowedRadius,
       timestamp: now.toISOString(),
-      status: "LOGGED_IN",
+      status: attendanceStatus,
       timingStatus,
+      isWfh,
       attendance: attendanceRecord,
     });
   } catch (error: any) {

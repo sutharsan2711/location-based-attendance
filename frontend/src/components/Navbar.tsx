@@ -15,6 +15,7 @@ import {
   FileText,
   DollarSign,
   Award,
+  Laptop,
 } from 'lucide-react';
 
 const Navbar: React.FC = () => {
@@ -44,6 +45,9 @@ const Navbar: React.FC = () => {
   } else if (location.pathname.includes('/kpi')) {
     pageTitle = 'My KPI & Ratings';
     pageIcon = <Award className="h-4 w-4 text-amber-500" />;
+  } else if (location.pathname.includes('/assets')) {
+    pageTitle = 'My Assigned Assets & Requests';
+    pageIcon = <Laptop className="h-4 w-4 text-indigo-600" />;
   } else if (location.pathname.includes('/profile')) {
     pageTitle = 'My Profile & Account';
     pageIcon = <User className="h-4 w-4 text-slate-700" />;
@@ -118,6 +122,12 @@ const Navbar: React.FC = () => {
                 className="w-full text-left flex items-center gap-2.5 px-3.5 py-2 text-xs text-slate-700 hover:bg-indigo-50/50 hover:text-indigo-700 transition-colors font-medium"
               >
                 <Calendar className="h-4 w-4 text-emerald-600" /> Apply Leaves / Permission
+              </button>
+              <button
+                onClick={() => { navigate('/employee/assets'); setShowQuickLinks(false); }}
+                className="w-full text-left flex items-center gap-2.5 px-3.5 py-2 text-xs text-slate-700 hover:bg-indigo-50/50 hover:text-indigo-700 transition-colors font-medium"
+              >
+                <Laptop className="h-4 w-4 text-indigo-600" /> My Assets & Requests
               </button>
               <button
                 onClick={() => { navigate('/employee/payroll'); setShowQuickLinks(false); }}

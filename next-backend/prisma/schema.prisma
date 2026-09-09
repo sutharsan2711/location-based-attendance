@@ -34,6 +34,8 @@ model User {
   createdTasks       Task[]              @relation("TaskAssignedBy")
   dailyPlans         DailyWorkPlan[]     @relation("UserDailyPlans")
   dailyNotes         DailyWorkNote[]     @relation("UserDailyNotes")
+  assignedAssets     Asset[]             @relation("EmployeeAssignedAssets")
+  assetRequests      AssetRequest[]      @relation("EmployeeAssetRequests")
 
   @@index([email], map: "idx_users_email")
   @@index([employeeCode], map: "idx_users_employee_code")
@@ -375,4 +377,51 @@ model DailyWorkNote {
 
   @@unique([employeeId, noteDate], map: "uk_work_note_emp_date")
   @@map("daily_work_notes")
+}
+
+model Asset {
+  id                   BigInt         @id @default(autoincrement())
+  assetCode            String         @unique(map: "idx_asset_code") @map("asset_code") @db.VarChar(50)
+  name                 String         @db.VarChar(150)
+  category             String         @db.VarChar(50) // LAPTOP, MONITOR, ACCESS_CARD, PERIPHERAL, MOBILE, FURNITURE, OTHER
+  model                String?        @db.VarChar(100)
+  serialNumber         String?        @unique(map: "idx_asset_serial") @map("serial_number") @db.VarChar(100)
+  status               String         @default("AVAILABLE") @db.VarChar(30) // AVAILABLE, ASSIGNED, UNDER_MAINTENANCE, RETIRED, DAMAGED
+  condition            String         @default("GOOD") @db.VarChar(30) // EXCELLENT, GOOD, FAIR, DAMAGED
+  purchaseDate         DateTime?      @map("purchase_date") @db.Date
+  purchaseCost         Decimal?       @map("purchase_cost") @db.Decimal(12, 2)
+  assignedToEmployeeId BigInt?        @map("assigned_to_employee_id")
+  assignedDate         DateTime?      @map("assigned_date") @db.Date
+  handoverNotes        String?        @map("handover_notes") @db.Text
+  notes                String?        @db.Text
+  createdAt            DateTime?      @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt            DateTime?      @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  assignedEmployee     User?          @relation("EmployeeAssignedAssets", fields: [assignedToEmployeeId], references: [id], onDelete: SetNull)
+  assetRequests        AssetRequest[]
+
+  @@index([assignedToEmployeeId], map: "idx_assets_assigned_emp")
+  @@index([status], map: "idx_assets_status")
+  @@index([category], map: "idx_assets_category")
+  @@map("assets")
+}
+
+model AssetRequest {
+  id           BigInt    @id @default(autoincrement())
+  employeeId   BigInt    @map("employee_id")
+  assetId      BigInt?   @map("asset_id")
+  requestType  String    @map("request_type") @db.VarChar(40) // NEW_ASSET, REPAIR_REPLACEMENT, RETURN_ASSET, HARDWARE_ISSUE
+  category     String    @db.VarChar(50)
+  title        String    @db.VarChar(200)
+  description  String    @db.Text
+  priority     String    @default("MEDIUM") @db.VarChar(20) // LOW, MEDIUM, HIGH, URGENT
+  status       String    @default("PENDING") @db.VarChar(30) // PENDING, APPROVED, REJECTED, IN_PROGRESS, RESOLVED, CANCELLED
+  adminRemarks String?   @map("admin_remarks") @db.Text
+  createdAt    DateTime? @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt    DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  employee     User      @relation("EmployeeAssetRequests", fields: [employeeId], references: [id], onDelete: Cascade)
+  asset        Asset?    @relation(fields: [assetId], references: [id], onDelete: SetNull)
+
+  @@index([employeeId], map: "idx_asset_requests_emp")
+  @@index([status], map: "idx_asset_requests_status")
+  @@map("asset_requests")
 }

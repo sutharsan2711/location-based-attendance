@@ -74,8 +74,8 @@ const EmployeeKpi: React.FC = () => {
   };
 
   const summary = kpiData?.summary || {
-    averageKpiScore: 80,
-    monthlyLabel: 'Good',
+    averageKpiScore: 0,
+    monthlyLabel: 'No Tasks',
     totalMonthlyTasks: 0,
     totalCompletedTasks: 0,
     totalInProgressTasks: 0,

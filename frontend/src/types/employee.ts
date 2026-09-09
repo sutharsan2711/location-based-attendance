@@ -77,6 +77,8 @@ export interface Employee {
   name: string;
   email: string;
   phone?: string;
+  department?: string;
+  designation?: string;
   role: 'ADMIN' | 'EMPLOYEE';
   status: 'ACTIVE' | 'INACTIVE';
   profileData?: string;

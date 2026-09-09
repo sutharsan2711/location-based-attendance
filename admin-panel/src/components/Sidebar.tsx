@@ -19,6 +19,7 @@ import {
   StickyNote,
   BarChart3,
   Laptop,
+  Megaphone,
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
@@ -29,6 +30,7 @@ const Sidebar: React.FC = () => {
 
   const adminMenu = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+    { name: 'Announcements', path: '/announcements', icon: Megaphone },
     { name: 'KPI Dashboard', path: '/kpi', icon: BarChart3 },
     { name: 'Task Management', path: '/tasks', icon: CheckSquare },
     { name: 'Sticky Notes', path: '/notes', icon: StickyNote },

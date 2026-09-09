@@ -33,6 +33,7 @@ const Attendance: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'daily' | 'monthly'>('daily');
 
   // ── Daily Tab State ──
+  const todayStr = new Date().toISOString().split('T')[0];
   const [logs, setLogs] = useState<Attendance[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -40,9 +41,10 @@ const Attendance: React.FC = () => {
 
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
+  const [startDate, setStartDate] = useState<string>(todayStr);
+  const [endDate, setEndDate] = useState<string>(todayStr);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [reportExporting, setReportExporting] = useState<boolean>(false);
 
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 10;
@@ -303,9 +305,89 @@ const Attendance: React.FC = () => {
   const clearFilters = () => {
     setSelectedEmployeeId('');
     setSelectedStatus('');
-    setStartDate('');
-    setEndDate('');
+    setStartDate(todayStr);
+    setEndDate(todayStr);
     setSearchQuery('');
+  };
+
+  const applyPreset = (preset: 'today' | 'yesterday' | 'this_week' | 'all') => {
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    if (preset === 'today') {
+      setStartDate(today);
+      setEndDate(today);
+    } else if (preset === 'yesterday') {
+      const y = new Date(now);
+      y.setDate(y.getDate() - 1);
+      const yStr = y.toISOString().split('T')[0];
+      setStartDate(yStr);
+      setEndDate(yStr);
+    } else if (preset === 'this_week') {
+      const w = new Date(now);
+      w.setDate(w.getDate() - 6);
+      setStartDate(w.toISOString().split('T')[0]);
+      setEndDate(today);
+    } else if (preset === 'all') {
+      setStartDate('');
+      setEndDate('');
+    }
+  };
+
+  const handleDownloadMonthlyAttendanceReport = async () => {
+    try {
+      setReportExporting(true);
+      const res = await adminService.getMonthlyAttendanceReport(selectedYear, selectedMonth);
+      if (res && res.report && res.report.length > 0) {
+        const headers = [
+          'Employee Code',
+          'Name',
+          'Email',
+          'Department',
+          'Role',
+          'Calendar Days',
+          'Present Days',
+          'On-Time Days',
+          'Late Days',
+          'Leave Days',
+          'WFH Days',
+          'Permission Count',
+          'Total Work Hours',
+          'Avg Daily Hours',
+        ];
+        const rows = res.report.map((r: any) => [
+          r.employeeCode,
+          r.name,
+          r.email,
+          r.department,
+          r.role,
+          r.calendarDays,
+          r.presentDays,
+          r.onTimeDays,
+          r.lateDays,
+          r.leaveDays,
+          r.wfhDays,
+          r.permissionCount,
+          r.totalWorkHours,
+          r.avgDailyHours,
+        ]);
+        const csvContent =
+          '\ufeff' + [headers, ...rows].map((e) => e.map((cell: any) => `"${cell}"`).join(',')).join('\n');
+        const encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', `Monthly_Attendance_Report_${selectedMonth}_${selectedYear}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        alert('No attendance data available for the selected month to export.');
+      }
+    } catch (err) {
+      console.error('Failed to export monthly attendance report', err);
+      alert('Failed to download monthly attendance report.');
+    } finally {
+      setReportExporting(false);
+    }
   };
 
   const getCellColor = (code: string) => {
@@ -688,9 +770,62 @@ const Attendance: React.FC = () => {
                   onClick={clearFilters}
                   className="w-full p-2.5 font-bold"
                 >
-                  Reset Filters
+                  Reset
                 </Button>
               </div>
+            </div>
+
+            {/* Quick Presets & Monthly Export */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-bold text-slate-400 mr-1">Quick View:</span>
+                <button
+                  type="button"
+                  onClick={() => applyPreset('today')}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                    startDate === todayStr && endDate === todayStr
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Today's Logs
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPreset('yesterday')}
+                  className="px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer"
+                >
+                  Yesterday
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPreset('this_week')}
+                  className="px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer"
+                >
+                  Last 7 Days
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPreset('all')}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                    !startDate && !endDate
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  All Records
+                </button>
+              </div>
+
+              <button
+                type="button"
+                disabled={reportExporting}
+                onClick={handleDownloadMonthlyAttendanceReport}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span>{reportExporting ? 'Generating Report...' : `Download ${months.find(m => m.value === selectedMonth)?.name} Report`}</span>
+              </button>
             </div>
           </Card>
 

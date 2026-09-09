@@ -1,33 +1,36 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { requestService } from '../../services/requestService';
+import { employeeService } from '../../services/employeeService';
+import { useAuth } from '../../hooks/useAuth';
 import {
   LeaveRequest,
   PermissionRequest,
   LeaveCreatePayload,
   PermissionCreatePayload,
   LeaveType,
+  TeamLeaveItem,
 } from '../../types/request';
+import { Employee } from '../../types/employee';
 import { formatDate } from '../../utils/dateUtils';
 import {
-  Calendar,
   PlusCircle,
   CheckCircle2,
   AlertTriangle,
   X,
-  Check,
   Clock,
   Clock3,
   CalendarDays,
   RefreshCw,
-  FileCheck,
   Layers,
   Sparkles,
   Info,
-  CalendarRange,
-  Building,
-  Filter,
   Undo2,
-  Ban,
+  Users,
+  UserCheck,
+  Search,
+  Building,
+  User,
+  ShieldAlert,
 } from 'lucide-react';
 
 interface UnifiedEmployeeRequest {
@@ -41,18 +44,31 @@ interface UnifiedEmployeeRequest {
   remarks?: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'WITHDRAWN';
   adminRemarks?: string;
+  handoverEmployee?: {
+    id: number;
+    name: string;
+    employeeCode: string;
+  } | null;
+  handoverNotes?: string | null;
   createdAt?: string;
 }
 
 const EmployeeLeaves: React.FC = () => {
-  // Tabs: 'all' | 'leaves' | 'permissions'
-  const [activeTab, setActiveTab] = useState<'all' | 'leaves' | 'permissions'>('all');
+  const { user } = useAuth();
+
+  // Tabs: 'all' | 'leaves' | 'permissions' | 'team'
+  const [activeTab, setActiveTab] = useState<'all' | 'leaves' | 'permissions' | 'team'>('all');
 
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
   const [permissions, setPermissions] = useState<PermissionRequest[]>([]);
+  const [teamLeaves, setTeamLeaves] = useState<TeamLeaveItem[]>([]);
+  const [colleagues, setColleagues] = useState<Employee[]>([]);
   const [balanceSummary, setBalanceSummary] = useState<import('../../types/request').LeaveBalanceSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [submitLoading, setSubmitLoading] = useState<boolean>(false);
+
+  // Team Leave Search / Filter
+  const [teamSearch, setTeamSearch] = useState<string>('');
 
   // Apply Modal State
   const [showApplyModal, setShowApplyModal] = useState<boolean>(false);
@@ -64,6 +80,8 @@ const EmployeeLeaves: React.FC = () => {
   const [halfDaySession, setHalfDaySession] = useState<'FIRST_HALF' | 'SECOND_HALF'>('FIRST_HALF');
   const [fromDate, setFromDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [toDate, setToDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [handoverEmployeeId, setHandoverEmployeeId] = useState<number | ''>('');
+  const [handoverNotes, setHandoverNotes] = useState<string>('');
 
   // Permission Form Fields
   const [permDate, setPermDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -83,17 +101,21 @@ const EmployeeLeaves: React.FC = () => {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Fetch all employee requests
+  // Fetch all employee requests and team leaves
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [leavesData, permsData, balancesData] = await Promise.all([
+      const [leavesData, permsData, teamData, empList, balancesData] = await Promise.all([
         requestService.getMyLeaves(),
         requestService.getMyPermissions(),
+        requestService.getTeamLeaves().catch(() => []),
+        employeeService.getAll().catch(() => []),
         requestService.getMyLeaveBalances().catch(() => null),
       ]);
-      setLeaves(leavesData);
-      setPermissions(permsData);
+      setLeaves(leavesData || []);
+      setPermissions(permsData || []);
+      setTeamLeaves(teamData || []);
+      setColleagues(empList || []);
       if (balancesData) {
         setBalanceSummary(balancesData);
       }
@@ -147,6 +169,11 @@ const EmployeeLeaves: React.FC = () => {
     }
   };
 
+  // Filter available colleagues for handover (exclude self)
+  const handoverCandidates = useMemo(() => {
+    return colleagues.filter((c) => c.id !== user?.id && c.status !== 'INACTIVE');
+  }, [colleagues, user?.id]);
+
   // Unified Request Items
   const unifiedRequests = useMemo<UnifiedEmployeeRequest[]>(() => {
     const list: UnifiedEmployeeRequest[] = [];
@@ -179,6 +206,8 @@ const EmployeeLeaves: React.FC = () => {
         remarks: l.remarks,
         status: l.status,
         adminRemarks: l.adminRemarks,
+        handoverEmployee: l.handoverEmployee,
+        handoverNotes: l.handoverNotes,
         createdAt: l.createdAt,
       });
     });
@@ -201,21 +230,17 @@ const EmployeeLeaves: React.FC = () => {
 
     // Sort: Pending requests at TOP, then newest createdAt / ID / date
     return list.sort((a, b) => {
-      // 1. PENDING requests prioritized at the top
       if (a.status === 'PENDING' && b.status !== 'PENDING') return -1;
       if (b.status === 'PENDING' && a.status !== 'PENDING') return 1;
 
-      // 2. Newest createdAt at top
       if (a.createdAt && b.createdAt) {
         const timeDiff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         if (timeDiff !== 0) return timeDiff;
       }
 
-      // 3. Date descending
       const dateDiff = b.rawDate.localeCompare(a.rawDate);
       if (dateDiff !== 0) return dateDiff;
 
-      // 4. ID descending
       return b.id - a.id;
     });
   }, [leaves, permissions]);
@@ -225,6 +250,20 @@ const EmployeeLeaves: React.FC = () => {
     if (activeTab === 'permissions') return unifiedRequests.filter((r) => r.type === 'PERMISSION');
     return unifiedRequests;
   }, [unifiedRequests, activeTab]);
+
+  // Filtered Team Leaves
+  const filteredTeamLeaves = useMemo(() => {
+    if (!teamSearch.trim()) return teamLeaves;
+    const query = teamSearch.toLowerCase().trim();
+    return teamLeaves.filter(
+      (item) =>
+        item.employee?.name?.toLowerCase().includes(query) ||
+        item.employee?.employeeCode?.toLowerCase().includes(query) ||
+        item.employee?.department?.toLowerCase().includes(query) ||
+        item.leaveType?.toLowerCase().includes(query) ||
+        item.reason?.toLowerCase().includes(query)
+    );
+  }, [teamLeaves, teamSearch]);
 
   // Handle Application Submit
   const handleApply = async (e: React.FormEvent) => {
@@ -243,6 +282,8 @@ const EmployeeLeaves: React.FC = () => {
           halfDaySession: isHalfDay ? halfDaySession : undefined,
           reason: reason.trim(),
           remarks: remarks.trim() || undefined,
+          handoverEmployeeId: handoverEmployeeId ? Number(handoverEmployeeId) : undefined,
+          handoverNotes: handoverNotes.trim() || undefined,
         };
         await requestService.applyLeave(payload);
         setSuccessMsg(
@@ -265,6 +306,8 @@ const EmployeeLeaves: React.FC = () => {
       setShowApplyModal(false);
       setReason('');
       setRemarks('');
+      setHandoverEmployeeId('');
+      setHandoverNotes('');
       fetchData();
     } catch (err: any) {
       console.error(err);
@@ -331,7 +374,7 @@ const EmployeeLeaves: React.FC = () => {
               Leave & Permission Requests
             </h1>
             <p className="text-sm text-blue-100 max-w-2xl font-normal">
-              Submit applications for full-day leaves, work from home, or short hourly permissions. Track supervisor approvals in real time.
+              Submit applications for full-day leaves, work from home, or short hourly permissions with task handover delegation.
             </p>
           </div>
 
@@ -350,7 +393,7 @@ const EmployeeLeaves: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pending Action</span>
@@ -395,14 +438,29 @@ const EmployeeLeaves: React.FC = () => {
             <span className="text-xs font-semibold text-teal-600 font-medium">approved</span>
           </div>
         </div>
+
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Team On Leave</span>
+            <div className="h-9 w-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+              <Users className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-2xl font-extrabold text-purple-700">
+              {teamLeaves.length}
+            </span>
+            <span className="text-xs font-semibold text-purple-600 font-medium">colleagues</span>
+          </div>
+        </div>
       </div>
 
       {/* Tabs */}
       <div className="flex items-center justify-between border-b border-slate-200 gap-4">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto">
           <button
             onClick={() => setActiveTab('all')}
-            className={`px-5 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
+            className={`px-4 py-3 text-xs md:text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ${
               activeTab === 'all'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -414,7 +472,7 @@ const EmployeeLeaves: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('leaves')}
-            className={`px-5 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
+            className={`px-4 py-3 text-xs md:text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ${
               activeTab === 'leaves'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -426,7 +484,7 @@ const EmployeeLeaves: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('permissions')}
-            className={`px-5 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
+            className={`px-4 py-3 text-xs md:text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ${
               activeTab === 'permissions'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -434,6 +492,18 @@ const EmployeeLeaves: React.FC = () => {
           >
             <Clock3 className="h-4 w-4" />
             Permissions ({permissions.length})
+          </button>
+
+          <button
+            onClick={() => setActiveTab('team')}
+            className={`px-4 py-3 text-xs md:text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+              activeTab === 'team'
+                ? 'border-purple-600 text-purple-600'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Users className="h-4 w-4" />
+            Team Availability ({teamLeaves.length})
           </button>
         </div>
 
@@ -446,162 +516,274 @@ const EmployeeLeaves: React.FC = () => {
         </button>
       </div>
 
-      {/* Requests History List */}
-      {loading ? (
-        <div className="bg-white rounded-3xl border border-slate-200/80 p-12 text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-r-transparent mb-3" />
-          <p className="text-sm font-semibold text-slate-600">Loading your requests...</p>
+      {/* ── TAB CONTENT: TEAM AVAILABILITY ── */}
+      {activeTab === 'team' && (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+            <div className="relative w-full sm:w-80">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search colleague by name, code or department..."
+                value={teamSearch}
+                onChange={(e) => setTeamSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+              />
+            </div>
+            <div className="text-xs text-slate-500 font-medium">
+              Showing <span className="font-bold text-slate-800">{filteredTeamLeaves.length}</span> colleague schedule(s)
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="bg-white rounded-3xl border border-slate-200/80 p-12 text-center">
+              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-purple-600 border-r-transparent mb-3" />
+              <p className="text-sm font-semibold text-slate-600">Loading team availability...</p>
+            </div>
+          ) : filteredTeamLeaves.length === 0 ? (
+            <div className="bg-white rounded-3xl border border-slate-200/80 p-12 text-center space-y-2">
+              <Users className="h-10 w-10 text-slate-300 mx-auto" />
+              <p className="text-sm font-bold text-slate-700">No Colleagues On Leave</p>
+              <p className="text-xs text-slate-400">All team members are active and available.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredTeamLeaves.map((t) => (
+                <div
+                  key={t.id}
+                  className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-2xl bg-purple-50 border border-purple-100 text-purple-700 flex items-center justify-center font-black text-sm">
+                        {t.employee?.name?.charAt(0) || 'U'}
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900">{t.employee?.name}</h4>
+                        <span className="text-[10px] font-semibold text-slate-400 font-mono">
+                          {t.employee?.employeeCode} • {t.employee?.department || 'General'}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                      {formatLeaveType(t.leaveType)}
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-slate-50 rounded-xl text-xs space-y-1.5 border border-slate-100">
+                    <div className="flex items-center justify-between text-slate-600">
+                      <span className="font-medium">Schedule:</span>
+                      <span className="font-bold text-slate-800">
+                        {formatDate(t.fromDate)} {t.fromDate !== t.toDate ? `to ${formatDate(t.toDate)}` : ''}
+                      </span>
+                    </div>
+                    {t.isHalfDay && (
+                      <div className="flex items-center justify-between text-purple-700 font-medium">
+                        <span>Session:</span>
+                        <span className="font-bold">{t.halfDaySession === 'FIRST_HALF' ? '1st Half' : '2nd Half'}</span>
+                      </div>
+                    )}
+                    <div className="text-slate-500 line-clamp-2 pt-1 border-t border-slate-200/60">
+                      <span className="font-semibold text-slate-700">Reason: </span>
+                      {t.reason}
+                    </div>
+                  </div>
+
+                  {t.handoverEmployee && (
+                    <div className="p-2.5 bg-blue-50/70 border border-blue-200 rounded-xl text-[11px] space-y-1">
+                      <div className="flex items-center gap-1.5 text-blue-900 font-bold">
+                        <UserCheck className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                        <span>Work Handover To: {t.handoverEmployee.name} ({t.handoverEmployee.employeeCode})</span>
+                      </div>
+                      {t.handoverNotes && (
+                        <p className="text-blue-700 text-[10px] pl-5 italic line-clamp-2">
+                          "{t.handoverNotes}"
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="rounded-3xl border border-slate-200/80 bg-white shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
-                <tr>
-                  <th className="py-4 px-6">Request Type</th>
-                  <th className="py-4 px-6">Schedule / Dates</th>
-                  <th className="py-4 px-6">Duration</th>
-                  <th className="py-4 px-6">Reason & Notes</th>
-                  <th className="py-4 px-6">Status</th>
-                  <th className="py-4 px-6 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
-                {filteredRequests.length === 0 ? (
+      )}
+
+      {/* ── TAB CONTENT: MY REQUESTS (ALL / LEAVES / PERMISSIONS) ── */}
+      {activeTab !== 'team' && (
+        loading ? (
+          <div className="bg-white rounded-3xl border border-slate-200/80 p-12 text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-r-transparent mb-3" />
+            <p className="text-sm font-semibold text-slate-600">Loading your requests...</p>
+          </div>
+        ) : (
+          <div className="rounded-3xl border border-slate-200/80 bg-white shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-slate-400">
-                      No applications found in this category. Click "+ New Request" to apply.
-                    </td>
+                    <th className="py-4 px-6">Request Type</th>
+                    <th className="py-4 px-6">Schedule / Dates</th>
+                    <th className="py-4 px-6">Duration</th>
+                    <th className="py-4 px-6">Reason & Handover</th>
+                    <th className="py-4 px-6">Status</th>
+                    <th className="py-4 px-6 text-right">Actions</th>
                   </tr>
-                ) : (
-                  filteredRequests.map((r) => (
-                    <tr key={`${r.type}-${r.id}`} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-2.5">
-                          <div
-                            className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 font-bold ${
-                              r.type === 'LEAVE' ? 'bg-indigo-50 text-indigo-600' : 'bg-teal-50 text-teal-600'
-                            }`}
-                          >
-                            {r.type === 'LEAVE' ? <CalendarDays className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
-                          </div>
-                          <div>
-                            <span className="font-bold text-slate-900 block">{r.title}</span>
-                            <span
-                              className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full inline-block mt-0.5 ${
-                                r.type === 'LEAVE' ? 'bg-indigo-100 text-indigo-700' : 'bg-teal-100 text-teal-700'
-                              }`}
-                            >
-                              {r.type}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="py-4 px-6">
-                        <span className="font-bold text-slate-800 block">{r.schedule}</span>
-                        {r.createdAt && (
-                          <span className="text-[10px] text-slate-400">Applied: {formatDate(r.createdAt)}</span>
-                        )}
-                      </td>
-
-                      <td className="py-4 px-6">
-                        <span className="inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 font-mono">
-                          {r.duration}
-                        </span>
-                      </td>
-
-                      {/* Reason & Remarks / Withdrawal details */}
-                      <td className="py-4 px-6 min-w-[220px] max-w-sm">
-                        <p className="font-semibold text-slate-800 text-xs">{r.reason}</p>
-                        {r.remarks && (
-                          <div
-                            className={`mt-1.5 text-xs p-2 rounded-xl border flex items-start gap-1.5 ${
-                              r.status === 'CANCELLED' || r.status === 'WITHDRAWN'
-                                ? 'bg-rose-50/90 border-rose-200 text-rose-800'
-                                : 'bg-slate-50 border-slate-200 text-slate-700'
-                            }`}
-                          >
-                            {r.status === 'CANCELLED' || r.status === 'WITHDRAWN' ? (
-                              <Undo2 className="h-3.5 w-3.5 text-rose-500 shrink-0 mt-0.5" />
-                            ) : (
-                              <Info className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5" />
-                            )}
-                            <div className="leading-snug break-words">
-                              <span className="font-bold">
-                                {r.status === 'CANCELLED' || r.status === 'WITHDRAWN'
-                                  ? 'Withdrawal Note: '
-                                  : 'Note: '}
-                              </span>
-                              <span>
-                                {r.remarks.replace(/^Withdrawn:\s*/i, '').replace(/^\|\s*Withdrawn:\s*/i, '')}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                        {r.adminRemarks && (
-                          <div className="mt-1.5 text-xs p-2 rounded-xl bg-indigo-50/70 border border-indigo-200 text-indigo-900 flex items-start gap-1.5">
-                            <CheckCircle2 className="h-3.5 w-3.5 text-indigo-500 shrink-0 mt-0.5" />
-                            <div className="leading-snug break-words">
-                              <span className="font-bold">Admin Remarks: </span>
-                              <span>{r.adminRemarks}</span>
-                            </div>
-                          </div>
-                        )}
-                      </td>
-
-                      <td className="py-4 px-6">
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border ${
-                            r.status === 'APPROVED'
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                              : r.status === 'REJECTED'
-                              ? 'bg-rose-50 text-rose-700 border-rose-200'
-                              : r.status === 'CANCELLED' || r.status === 'WITHDRAWN'
-                              ? 'bg-slate-100 text-slate-600 border-slate-200'
-                              : 'bg-amber-50 text-amber-700 border-amber-200'
-                          }`}
-                        >
-                          <span
-                            className={`h-1.5 w-1.5 rounded-full ${
-                              r.status === 'APPROVED'
-                                ? 'bg-emerald-500'
-                                : r.status === 'REJECTED'
-                                ? 'bg-rose-500'
-                                : r.status === 'CANCELLED' || r.status === 'WITHDRAWN'
-                                ? 'bg-slate-400'
-                                : 'bg-amber-500'
-                            }`}
-                          />
-                          {r.status === 'CANCELLED' ? 'WITHDRAWN / CANCELLED' : r.status}
-                        </span>
-                      </td>
-
-                      <td className="py-4 px-6 text-right">
-                        {r.type === 'LEAVE' && (r.status === 'PENDING' || r.status === 'APPROVED') ? (
-                          <button
-                            onClick={() => {
-                              setWithdrawTarget(r);
-                              setWithdrawReason('');
-                              setWithdrawModalOpen(true);
-                            }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl border border-rose-200 transition"
-                            title="Withdraw Leave Application"
-                          >
-                            <Undo2 className="w-3.5 h-3.5" />
-                            Withdraw
-                          </button>
-                        ) : (
-                          <span className="text-slate-300 text-xs">--</span>
-                        )}
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-700">
+                  {filteredRequests.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-slate-400">
+                        No applications found in this category. Click "+ New Request" to apply.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    filteredRequests.map((r) => (
+                      <tr key={`${r.type}-${r.id}`} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-2.5">
+                            <div
+                              className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 font-bold ${
+                                r.type === 'LEAVE' ? 'bg-indigo-50 text-indigo-600' : 'bg-teal-50 text-teal-600'
+                              }`}
+                            >
+                              {r.type === 'LEAVE' ? <CalendarDays className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
+                            </div>
+                            <div>
+                              <span className="font-bold text-slate-900 block">{r.title}</span>
+                              <span
+                                className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full inline-block mt-0.5 ${
+                                  r.type === 'LEAVE' ? 'bg-indigo-100 text-indigo-700' : 'bg-teal-100 text-teal-700'
+                                }`}
+                              >
+                                {r.type}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="py-4 px-6">
+                          <span className="font-bold text-slate-800 block">{r.schedule}</span>
+                          {r.createdAt && (
+                            <span className="text-[10px] text-slate-400">Applied: {formatDate(r.createdAt)}</span>
+                          )}
+                        </td>
+
+                        <td className="py-4 px-6">
+                          <span className="inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 font-mono">
+                            {r.duration}
+                          </span>
+                        </td>
+
+                        {/* Reason, Handover & Remarks */}
+                        <td className="py-4 px-6 min-w-[240px] max-w-sm space-y-1.5">
+                          <p className="font-semibold text-slate-800 text-xs">{r.reason}</p>
+
+                          {/* Handover delegation tag */}
+                          {r.handoverEmployee && (
+                            <div className="p-2 bg-blue-50/80 border border-blue-200 rounded-xl text-[11px] text-blue-900">
+                              <div className="flex items-center gap-1.5 font-bold">
+                                <UserCheck className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                                <span>Task Handover: {r.handoverEmployee.name} ({r.handoverEmployee.employeeCode})</span>
+                              </div>
+                              {r.handoverNotes && (
+                                <p className="text-[10px] text-blue-700 mt-0.5 pl-5 italic">
+                                  Notes: {r.handoverNotes}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {r.remarks && (
+                            <div
+                              className={`text-xs p-2 rounded-xl border flex items-start gap-1.5 ${
+                                r.status === 'CANCELLED' || r.status === 'WITHDRAWN'
+                                  ? 'bg-rose-50/90 border-rose-200 text-rose-800'
+                                  : 'bg-slate-50 border-slate-200 text-slate-700'
+                              }`}
+                            >
+                              {r.status === 'CANCELLED' || r.status === 'WITHDRAWN' ? (
+                                <Undo2 className="h-3.5 w-3.5 text-rose-500 shrink-0 mt-0.5" />
+                              ) : (
+                                <Info className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5" />
+                              )}
+                              <div className="leading-snug break-words">
+                                <span className="font-bold">
+                                  {r.status === 'CANCELLED' || r.status === 'WITHDRAWN'
+                                    ? 'Withdrawal Note: '
+                                    : 'Note: '}
+                                </span>
+                                <span>
+                                  {r.remarks.replace(/^Withdrawn:\s*/i, '').replace(/^\|\s*Withdrawn:\s*/i, '')}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
+                          {r.adminRemarks && (
+                            <div className="text-xs p-2 rounded-xl bg-indigo-50/70 border border-indigo-200 text-indigo-900 flex items-start gap-1.5">
+                              <CheckCircle2 className="h-3.5 w-3.5 text-indigo-500 shrink-0 mt-0.5" />
+                              <div className="leading-snug break-words">
+                                <span className="font-bold">Admin Remarks: </span>
+                                <span>{r.adminRemarks}</span>
+                              </div>
+                            </div>
+                          )}
+                        </td>
+
+                        <td className="py-4 px-6">
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border ${
+                              r.status === 'APPROVED'
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                : r.status === 'REJECTED'
+                                ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                : r.status === 'CANCELLED' || r.status === 'WITHDRAWN'
+                                ? 'bg-slate-100 text-slate-600 border-slate-200'
+                                : 'bg-amber-50 text-amber-700 border-amber-200'
+                            }`}
+                          >
+                            <span
+                              className={`h-1.5 w-1.5 rounded-full ${
+                                r.status === 'APPROVED'
+                                  ? 'bg-emerald-500'
+                                  : r.status === 'REJECTED'
+                                  ? 'bg-rose-500'
+                                  : r.status === 'CANCELLED' || r.status === 'WITHDRAWN'
+                                  ? 'bg-slate-400'
+                                  : 'bg-amber-500'
+                              }`}
+                            />
+                            {r.status === 'CANCELLED' ? 'WITHDRAWN / CANCELLED' : r.status}
+                          </span>
+                        </td>
+
+                        <td className="py-4 px-6 text-right">
+                          {r.type === 'LEAVE' && (r.status === 'PENDING' || r.status === 'APPROVED') ? (
+                            <button
+                              onClick={() => {
+                                setWithdrawTarget(r);
+                                setWithdrawReason('');
+                                setWithdrawModalOpen(true);
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl border border-rose-200 transition cursor-pointer"
+                              title="Withdraw Leave Application"
+                            >
+                              <Undo2 className="w-3.5 h-3.5" />
+                              Withdraw
+                            </button>
+                          ) : (
+                            <span className="text-slate-300 text-xs">--</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        )
       )}
 
       {/* ── WITHDRAW CONFIRMATION MODAL ── */}
@@ -654,14 +836,14 @@ const EmployeeLeaves: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setWithdrawModalOpen(false)}
-                  className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50"
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
                 >
                   Keep Request
                 </button>
                 <button
                   type="submit"
                   disabled={withdrawing}
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-xs font-bold text-white shadow-sm flex items-center gap-1.5 disabled:opacity-60"
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-xs font-bold text-white shadow-sm flex items-center gap-1.5 disabled:opacity-60 cursor-pointer"
                 >
                   {withdrawing ? 'Withdrawing...' : 'Confirm Withdrawal'}
                 </button>
@@ -673,8 +855,8 @@ const EmployeeLeaves: React.FC = () => {
 
       {/* ── UNIFIED APPLY MODAL ── */}
       {showApplyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-lg rounded-3xl bg-white p-7 shadow-2xl border border-slate-100 animate-scale-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="relative w-full max-w-lg rounded-3xl bg-white p-7 shadow-2xl border border-slate-100 animate-scale-up my-8">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
@@ -682,7 +864,7 @@ const EmployeeLeaves: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">Apply for Leave / Permission</h3>
-                  <p className="text-xs text-slate-400">Choose request type and fill in details</p>
+                  <p className="text-xs text-slate-400">Choose request type and assign task handover</p>
                 </div>
               </div>
               <button
@@ -742,7 +924,7 @@ const EmployeeLeaves: React.FC = () => {
                       <option value="LOSS_OF_PAY">Loss Of Pay (LOP)</option>
                     </select>
 
-                    {/* Comp Off Info & Available Balance Helper */}
+                    {/* Comp Off Info Helper */}
                     {leaveType === 'COMP_OFF' && (
                       <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs space-y-1 animate-fade-in">
                         <div className="flex items-center justify-between">
@@ -754,11 +936,6 @@ const EmployeeLeaves: React.FC = () => {
                         <p className="text-[11px] text-emerald-700 leading-snug">
                           Compensatory Off is credited when you attend work on official holidays/weekends or when granted by Admin.
                         </p>
-                        {(balanceSummary?.balances?.find((b) => b.type === 'COMP_OFF')?.balance ?? 0) <= 0 && (
-                          <p className="text-[11px] font-bold text-rose-600 pt-0.5">
-                            ⚠️ You currently have 0 Comp Off days available.
-                          </p>
-                        )}
                       </div>
                     )}
 
@@ -854,6 +1031,47 @@ const EmployeeLeaves: React.FC = () => {
                       </div>
                     )}
                   </div>
+
+                  {/* ── WORK HANDOVER DELEGATION SECTION ── */}
+                  <div className="p-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl space-y-3">
+                    <div className="flex items-center gap-2 text-indigo-900 font-bold text-xs">
+                      <UserCheck className="h-4 w-4 text-indigo-600" />
+                      <span>Task Delegation / Work Handover (Optional)</span>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                        Delegate Work To Colleague:
+                      </label>
+                      <select
+                        value={handoverEmployeeId}
+                        onChange={(e) => setHandoverEmployeeId(e.target.value ? Number(e.target.value) : '')}
+                        className="w-full px-3 py-2 text-xs font-medium bg-white border border-indigo-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                      >
+                        <option value="">-- No Handover Selected --</option>
+                        {handoverCandidates.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name} ({c.employeeCode}) {c.department ? `• ${c.department}` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {Boolean(handoverEmployeeId) && (
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                          Handover Instructions / Pending Tasks:
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={handoverNotes}
+                          onChange={(e) => setHandoverNotes(e.target.value)}
+                          placeholder="List client deliverables, meeting coverages, or critical instructions for this colleague..."
+                          className="w-full px-3 py-2 text-xs bg-white border border-indigo-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none font-medium"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </>
               ) : (
                 <>
@@ -935,7 +1153,7 @@ const EmployeeLeaves: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowApplyModal(false)}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl"
+                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
                 >
                   Cancel
                 </button>

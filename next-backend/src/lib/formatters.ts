@@ -174,6 +174,18 @@ export function formatLeave(l: any) {
     remarks: l.remarks,
     status: l.status,
     adminRemarks: l.adminRemarks,
+    handoverEmployeeId: l.handoverEmployeeId ? Number(l.handoverEmployeeId) : null,
+    handoverNotes: l.handoverNotes || null,
+    handoverEmployee: l.handoverEmployee
+      ? {
+          id: Number(l.handoverEmployee.id),
+          name: l.handoverEmployee.name,
+          employeeCode: l.handoverEmployee.employeeCode,
+          email: l.handoverEmployee.email,
+          department: l.handoverEmployee.department,
+          role: l.handoverEmployee.role,
+        }
+      : null,
     createdAt: l.createdAt?.toISOString(),
     updatedAt: l.updatedAt?.toISOString(),
   };
@@ -503,6 +515,35 @@ export function formatAssetRequest(req: any) {
     asset: ast ? formatAsset(ast) : null,
     createdAt: req.createdAt?.toISOString(),
     updatedAt: req.updatedAt?.toISOString(),
+  };
+}
+
+export function formatAnnouncement(a: any) {
+  return {
+    id: Number(a.id),
+    title: a.title,
+    content: a.content,
+    category: a.category || "GENERAL",
+    priority: a.priority || "NORMAL",
+    targetDepartment: a.targetDepartment || null,
+    targetRole: a.targetRole || null,
+    isPinned: a.isPinned ?? false,
+    isActive: a.isActive ?? true,
+    authorName: a.authorName || "Management",
+    expiresAt: a.expiresAt ? a.expiresAt.toISOString().split("T")[0] : null,
+    createdAt: a.createdAt?.toISOString(),
+    updatedAt: a.updatedAt?.toISOString(),
+  };
+}
+
+export function formatAssetCategory(c: any) {
+  return {
+    id: Number(c.id),
+    name: c.name,
+    description: c.description || null,
+    icon: c.icon || null,
+    createdAt: c.createdAt?.toISOString(),
+    updatedAt: c.updatedAt?.toISOString(),
   };
 }
 

@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     const leaves = await prisma.leaveRequest.findMany({
       where: { employeeId: BigInt(authUser.id) },
       orderBy: { createdAt: "desc" },
-      include: { employee: true },
+      include: { employee: true, handoverEmployee: true },
     });
 
     return jsonResponse(leaves.map(formatLeave));

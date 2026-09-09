@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { getAuthUser, isUserAdmin } from "@/lib/auth";
 import { errorResponse, jsonResponse } from "@/lib/serializers";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const authUser = await getAuthUser(req);
@@ -11,35 +13,24 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const yearParam = searchParams.get("year");
-    const monthParam = searchParams.get("month");
-
     const now = new Date();
-    const year = yearParam ? parseInt(yearParam, 10) : now.getFullYear();
-    const month = monthParam ? parseInt(monthParam, 10) : now.getMonth() + 1;
+    const year = parseInt(searchParams.get("year") || String(now.getFullYear()), 10);
+    const month = parseInt(searchParams.get("month") || String(now.getMonth() + 1), 10);
 
-    const startOfMonth = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
-    const endOfMonth = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+    const startOfMonth = new Date(year, month - 1, 1);
+    const endOfMonth = new Date(year, month, 0);
 
-    // Get all active employees
     const employees = await prisma.user.findMany({
       where: {
         status: "ACTIVE",
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        employeeCode: true,
-        department: true,
-        role: true,
+        role: { not: "ADMIN" },
       },
       orderBy: { name: "asc" },
     });
 
-    const results = await Promise.all(
+    const reportData = await Promise.all(
       employees.map(async (emp) => {
-        const empId = BigInt(emp.id);
+        const empId = emp.id;
 
         const plans = await prisma.dailyWorkPlan.findMany({
           where: {
@@ -64,7 +55,7 @@ export async function GET(req: NextRequest) {
         const totalTasks = plans.length;
         const completed = plans.filter((p) => p.status === "COMPLETED").length;
         const inProgress = plans.filter((p) => p.status === "IN_PROGRESS").length;
-        const notCompleted = plans.filter((p) => p.status === "NOT_COMPLETED").length;
+        const notCompleted = plans.filter((p) => p.status === "NOT_COMPLETED" || p.status === "NOT_STARTED").length;
 
         let kpiScore = 0;
         let kpiLabel = "No Tasks";
@@ -77,32 +68,40 @@ export async function GET(req: NextRequest) {
           else kpiLabel = "At Risk";
         }
 
+        const presentDays = attendances.filter((a) => a.status === "LOGGED_IN" || a.status === "COMPLETED").length;
+        const onTimeDays = attendances.filter((a) => a.timingStatus === "PRESENT").length;
+        const lateDays = attendances.filter((a) => a.timingStatus === "LATE").length;
+
         return {
-          id: Number(emp.id),
+          employeeCode: emp.employeeCode,
           name: emp.name,
           email: emp.email,
-          employeeCode: emp.employeeCode,
           department: emp.department || "General",
           role: emp.role,
           totalTasks,
-          completedCount: completed,
-          inProgressCount: inProgress,
-          notCompletedCount: notCompleted,
-          kpiScore,
-          kpiLabel,
-          presentDays: attendances.filter((a) => a.status === "LOGGED_IN" || a.status === "COMPLETED").length,
-          onTimeDays: attendances.filter((a) => a.timingStatus === "PRESENT").length,
+          completedTasks: completed,
+          inProgressTasks: inProgress,
+          notCompletedTasks: notCompleted,
+          kpiScore: `${kpiScore}%`,
+          kpiNumeric: kpiScore,
+          performanceRating: kpiLabel,
+          presentDays,
+          onTimeDays,
+          lateDays,
+          year,
+          month,
         };
       })
     );
 
     return jsonResponse({
-      year,
       month,
-      employees: results,
+      year,
+      generatedAt: new Date().toISOString(),
+      report: reportData,
     });
   } catch (error: any) {
-    console.error("GET /api/admin/kpi/employees error:", error);
-    return errorResponse(error.message || "Failed to load employee KPI reports", 500);
+    console.error("GET /api/admin/kpi/export error:", error);
+    return errorResponse(error.message || "Failed to export KPI report", 500);
   }
 }

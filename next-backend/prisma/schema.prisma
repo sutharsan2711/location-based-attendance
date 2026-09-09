@@ -36,6 +36,7 @@ model User {
   dailyNotes         DailyWorkNote[]     @relation("UserDailyNotes")
   assignedAssets     Asset[]             @relation("EmployeeAssignedAssets")
   assetRequests      AssetRequest[]      @relation("EmployeeAssetRequests")
+  handoverLeaves     LeaveRequest[]      @relation("LeaveHandoverEmployee")
 
   @@index([email], map: "idx_users_email")
   @@index([employeeCode], map: "idx_users_employee_code")
@@ -155,22 +156,26 @@ model Holiday {
 }
 
 model LeaveRequest {
-  id             BigInt                           @id @default(autoincrement())
-  adminRemarks   String?                          @map("admin_remarks") @db.VarChar(255)
-  createdAt      DateTime?                        @map("created_at") @db.DateTime(6)
-  fromDate       DateTime                         @map("from_date") @db.Date
-  leaveType      leave_requests_leave_type        @map("leave_type")
-  reason         String                           @db.VarChar(255)
-  remarks        String?                          @db.VarChar(255)
-  status         leave_requests_status
-  toDate         DateTime                         @map("to_date") @db.Date
-  updatedAt      DateTime?                        @updatedAt @map("updated_at") @db.DateTime(6)
-  employeeId     BigInt                           @map("employee_id")
-  halfDaySession leave_requests_half_day_session? @map("half_day_session")
-  isHalfDay      Boolean                          @map("is_half_day") @db.Bit(1)
-  employee       User                             @relation(fields: [employeeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKsqls5en3a5v8l9md81umuu87c")
+  id                 BigInt                           @id @default(autoincrement())
+  adminRemarks       String?                          @map("admin_remarks") @db.VarChar(255)
+  createdAt          DateTime?                        @map("created_at") @db.DateTime(6)
+  fromDate           DateTime                         @map("from_date") @db.Date
+  leaveType          leave_requests_leave_type        @map("leave_type")
+  reason             String                           @db.VarChar(255)
+  remarks            String?                          @db.VarChar(255)
+  status             leave_requests_status
+  toDate             DateTime                         @map("to_date") @db.Date
+  updatedAt          DateTime?                        @updatedAt @map("updated_at") @db.DateTime(6)
+  employeeId         BigInt                           @map("employee_id")
+  halfDaySession     leave_requests_half_day_session? @map("half_day_session")
+  isHalfDay          Boolean                          @map("is_half_day") @db.Bit(1)
+  handoverEmployeeId BigInt?                          @map("handover_employee_id")
+  handoverNotes      String?                          @map("handover_notes") @db.Text
+  employee           User                             @relation(fields: [employeeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKsqls5en3a5v8l9md81umuu87c")
+  handoverEmployee   User?                            @relation("LeaveHandoverEmployee", fields: [handoverEmployeeId], references: [id], onDelete: SetNull)
 
   @@index([employeeId], map: "FKsqls5en3a5v8l9md81umuu87c")
+  @@index([handoverEmployeeId], map: "idx_leave_handover_emp")
   @@map("leave_requests")
 }
 
@@ -424,4 +429,35 @@ model AssetRequest {
   @@index([employeeId], map: "idx_asset_requests_emp")
   @@index([status], map: "idx_asset_requests_status")
   @@map("asset_requests")
+}
+
+model Announcement {
+  id               BigInt    @id @default(autoincrement())
+  title            String    @db.VarChar(255)
+  content          String    @db.Text
+  category         String    @default("GENERAL") @db.VarChar(50) // GENERAL, URGENT, EVENT, POLICY, HOLIDAY
+  priority         String    @default("NORMAL") @db.VarChar(20)  // LOW, NORMAL, HIGH, URGENT
+  targetDepartment String?   @map("target_department") @db.VarChar(100)
+  targetRole       String?   @map("target_role") @db.VarChar(50)
+  isPinned         Boolean   @default(false) @map("is_pinned") @db.Bit(1)
+  isActive         Boolean   @default(true) @map("is_active") @db.Bit(1)
+  authorName       String?   @map("author_name") @db.VarChar(100)
+  createdAt        DateTime? @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt        DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  expiresAt        DateTime? @map("expires_at") @db.Date
+
+  @@index([isActive], map: "idx_announcements_active")
+  @@index([isPinned], map: "idx_announcements_pinned")
+  @@map("announcements")
+}
+
+model AssetCategory {
+  id          BigInt    @id @default(autoincrement())
+  name        String    @unique(map: "idx_category_name") @db.VarChar(100)
+  description String?   @db.VarChar(255)
+  icon        String?   @db.VarChar(50)
+  createdAt   DateTime? @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt   DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  @@map("asset_categories")
 }

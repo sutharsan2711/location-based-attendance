@@ -115,6 +115,38 @@ export const adminService = {
     const response = await api.get(`/admin/kpi/employee/${id}`, { params });
     return response.data;
   },
+
+  getMonthlyAttendanceReport: async (year?: number, month?: number): Promise<any> => {
+    const params = new URLSearchParams();
+    if (year) params.append('year', String(year));
+    if (month) params.append('month', String(month));
+    const response = await api.get('/admin/attendance/monthly-report', { params });
+    return response.data;
+  },
+
+  getCalendarSummary: async (year?: number, month?: number): Promise<CalendarSummaryDay[]> => {
+    const params = new URLSearchParams();
+    if (year) params.append('year', String(year));
+    if (month) params.append('month', String(month));
+    const response = await api.get('/admin/calendar/summary', { params });
+    return response.data;
+  },
 };
+
+export interface CalendarSummaryDay {
+  date: string;
+  presents: number;
+  leaves: number;
+  wfh: number;
+  permissions: number;
+  late: number;
+  details?: {
+    presentsList: { employeeId: number; name: string; employeeCode: string; department?: string }[];
+    leavesList: { employeeId: number; name: string; employeeCode: string; leaveType: string; handoverEmployee?: string }[];
+    wfhList: { employeeId: number; name: string; employeeCode: string }[];
+    permissionsList: { employeeId: number; name: string; employeeCode: string; time: string }[];
+    lateList: { employeeId: number; name: string; employeeCode: string; checkIn: string }[];
+  };
+}
 
 

@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     const list = await prisma.leaveRequest.findMany({
       where: whereClause,
       orderBy: { createdAt: "desc" },
-      include: { employee: true },
+      include: { employee: true, handoverEmployee: true },
     });
 
     return jsonResponse(list.map(formatLeave));

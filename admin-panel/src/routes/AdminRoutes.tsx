@@ -24,6 +24,7 @@ import AdminTasks from '../pages/admin/AdminTasks';
 import AdminStickyNotes from '../pages/admin/AdminStickyNotes';
 import AdminKpiDashboard from '../pages/admin/AdminKpiDashboard';
 import AdminAssets from '../pages/admin/AdminAssets';
+import AdminAnnouncements from '../pages/admin/AdminAnnouncements';
 
 const HomeRedirect: React.FC = () => {
   const { user, loading } = useAuth();
@@ -54,6 +55,7 @@ const AdminRoutes: React.FC = () => {
           <Route path="/kpi-dashboard" element={<AdminKpiDashboard />} />
           <Route path="/tasks" element={<AdminTasks />} />
           <Route path="/notes" element={<AdminStickyNotes />} />
+          <Route path="/announcements" element={<AdminAnnouncements />} />
           <Route path="/employees" element={<Employees />} />
           <Route path="/attendance" element={<Attendance />} />
           <Route path="/assets" element={<AdminAssets />} />

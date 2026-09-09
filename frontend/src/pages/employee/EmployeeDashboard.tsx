@@ -14,6 +14,9 @@ import {
   WorkPlanStatus,
 } from '../../types/workPlan';
 import { Attendance } from '../../types/attendance';
+import { announcementService, Announcement } from '../../services/announcementService';
+import { requestService } from '../../services/requestService';
+import { TeamLeaveItem } from '../../types/request';
 import Loading from '../../components/Loading';
 import KpiGauge, { getKpiTier } from '../../components/KpiGauge';
 import PriorityDonutChart from '../../components/PriorityDonutChart';
@@ -46,6 +49,9 @@ import {
   User,
   X,
   MapPin,
+  Megaphone,
+  Users,
+  Pin,
 } from 'lucide-react';
 
 const PRIORITY_BADGES: Record<WorkPlanPriority, { label: string; bg: string; text: string; dot: string }> = {
@@ -76,8 +82,8 @@ const EmployeeDashboard: React.FC = () => {
     inProgressCount: 0,
     notCompletedCount: 0,
     notStartedCount: 0,
-    kpiScore: 75,
-    kpiLabel: 'Good',
+    kpiScore: 0,
+    kpiLabel: 'No Tasks',
     highPriorityCount: 0,
     mediumPriorityCount: 0,
     lowPriorityCount: 0,
@@ -89,6 +95,7 @@ const EmployeeDashboard: React.FC = () => {
   const [notesText, setNotesText] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   // Admin Assigned Tasks State
   const [assignedTasks, setAssignedTasks] = useState<Task[]>([]);
@@ -108,6 +115,11 @@ const EmployeeDashboard: React.FC = () => {
   const [showSwipesModal, setShowSwipesModal] = useState(false);
   const [recentSwipes, setRecentSwipes] = useState<Attendance[]>([]);
   const [swipesLoading, setSwipesLoading] = useState(false);
+
+  // Announcements & Team Leaves State
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [teamLeaves, setTeamLeaves] = useState<TeamLeaveItem[]>([]);
+  const [unreadAnnouncement, setUnreadAnnouncement] = useState<Announcement | null>(null);
 
   // Attendance State
   const [attendance, setAttendance] = useState<Attendance | null>(null);
@@ -236,10 +248,12 @@ const EmployeeDashboard: React.FC = () => {
       if (!isSilent) setLoading(true);
       else setRefreshing(true);
 
-      const [res, attRes, tasksRes] = await Promise.all([
+      const [res, attRes, tasksRes, annRes, teamLeavesRes] = await Promise.all([
         workPlanService.getTodayDashboard().catch(() => null),
         attendanceService.getTodayAttendance().catch(() => null),
         taskService.getMyTasks().catch(() => []),
+        announcementService.getActive().catch(() => []),
+        requestService.getTeamLeaves().catch(() => []),
       ]);
 
       if (res) {
@@ -263,6 +277,21 @@ const EmployeeDashboard: React.FC = () => {
         setAssignedTasks(tasksRes || []);
       }
 
+      if (annRes && Array.isArray(annRes)) {
+        setAnnouncements(annRes);
+        if (annRes.length > 0) {
+          const top = annRes.find((a: Announcement) => a.priority === 'URGENT' || a.isPinned) || annRes[0];
+          const dismissedId = sessionStorage.getItem('dismissed_ann_id');
+          if (String(top.id) !== dismissedId) {
+            setUnreadAnnouncement(top);
+          }
+        }
+      }
+
+      if (teamLeavesRes && Array.isArray(teamLeavesRes)) {
+        setTeamLeaves(teamLeavesRes);
+      }
+
       const activePlans = res?.plans || [];
       const parsedForSummary = (attRes && typeof attRes === 'object' && 'attendance' in attRes)
         ? (attRes as any).attendance
@@ -273,6 +302,7 @@ const EmployeeDashboard: React.FC = () => {
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setLastUpdated(new Date());
     }
   }, []);
 
@@ -540,6 +570,90 @@ const EmployeeDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* ── Active Announcement Alert Banner ── */}
+      {announcements.length > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-amber-300/90 rounded-3xl text-xs shadow-xs animate-fade-in">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+              <Megaphone className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-black text-slate-900 text-xs sm:text-sm">{announcements[0].title}</span>
+                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-200 text-amber-950 uppercase tracking-wider">
+                  {announcements[0].priority}
+                </span>
+                {announcements[0].isPinned && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
+                    📌 Pinned
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-slate-600 line-clamp-1 font-medium mt-0.5 max-w-2xl">
+                {announcements[0].content}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/employee/announcements')}
+            className="self-start sm:self-auto px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-md shadow-amber-600/20 transition-all shrink-0 flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>View All Notices ({announcements.length})</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* ── Team Availability / Colleagues on Leave Widget ── */}
+      {teamLeaves.length > 0 && (
+        <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-xs space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="h-7 w-7 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                <Users className="h-4 w-4" />
+              </div>
+              <div>
+                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                  Team Availability • Colleagues on Leave
+                </h3>
+                <p className="text-[10.5px] text-slate-400 font-medium">Team members with scheduled or current absences</p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/employee/leaves')}
+              className="text-[11px] font-bold text-indigo-600 hover:underline flex items-center gap-1"
+            >
+              <span>Leave Hub</span>
+              <ArrowRight className="h-3 w-3" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-1">
+            {teamLeaves.slice(0, 6).map((tl) => (
+              <div
+                key={tl.id}
+                className="p-3 rounded-2xl bg-slate-50/80 border border-slate-100 hover:border-indigo-200 transition-colors text-xs flex items-center justify-between gap-2"
+              >
+                <div>
+                  <span className="font-bold text-slate-800 block text-xs">{tl.employee.name}</span>
+                  <span className="text-[10.5px] text-slate-400 font-medium block">
+                    {tl.fromDate === tl.toDate ? tl.fromDate : `${tl.fromDate} - ${tl.toDate}`}
+                  </span>
+                  {tl.handoverEmployee && (
+                    <span className="text-[10px] text-teal-700 font-medium block mt-0.5">
+                      Handover: {tl.handoverEmployee.name}
+                    </span>
+                  )}
+                </div>
+                <span className="px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold shrink-0">
+                  {tl.leaveType.replace(/_/g, ' ')}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Work From Home Banner */}
       {Boolean(attendance?.isWfhApproved || attendance?.status === 'WORK_FROM_HOME') && (
@@ -1587,6 +1701,73 @@ const EmployeeDashboard: React.FC = () => {
               >
                 {isTaskSubmitting && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
                 <span>Save Status Update</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── UNREAD / URGENT ANNOUNCEMENT POPUP DIALOG ── */}
+      {unreadAnnouncement && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-slate-100 p-6 animate-scale-up space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="h-10 w-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-bold shadow-md shadow-amber-500/20">
+                  <Megaphone className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900">Company Announcement</h3>
+                  <p className="text-xs text-slate-400">Important message from management</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  sessionStorage.setItem('dismissed_ann_id', String(unreadAnnouncement.id));
+                  setUnreadAnnouncement(null);
+                }}
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-extrabold uppercase">
+                  {unreadAnnouncement.priority} Priority
+                </span>
+                {unreadAnnouncement.isPinned && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-bold">
+                    📌 Pinned
+                  </span>
+                )}
+              </div>
+              <h4 className="text-base font-black text-slate-900 leading-snug">{unreadAnnouncement.title}</h4>
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-700 leading-relaxed font-medium whitespace-pre-line max-h-60 overflow-y-auto">
+                {unreadAnnouncement.content}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+              <button
+                onClick={() => {
+                  sessionStorage.setItem('dismissed_ann_id', String(unreadAnnouncement.id));
+                  setUnreadAnnouncement(null);
+                  navigate('/employee/announcements');
+                }}
+                className="text-xs font-bold text-indigo-600 hover:underline"
+              >
+                View all announcements →
+              </button>
+              <button
+                onClick={() => {
+                  sessionStorage.setItem('dismissed_ann_id', String(unreadAnnouncement.id));
+                  setUnreadAnnouncement(null);
+                }}
+                className="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors cursor-pointer"
+              >
+                Got It, Thanks
               </button>
             </div>
           </div>

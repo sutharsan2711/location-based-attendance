@@ -104,5 +104,10 @@ export const requestService = {
     const response = await api.put<import('../types/request').LeaveBalanceSummary>('/admin/leaves/balances', payload);
     return response.data;
   },
+
+  getTeamLeaves: async (params?: { month?: number; year?: number }): Promise<import('../types/request').TeamLeaveItem[]> => {
+    const response = await api.get<import('../types/request').TeamLeaveItem[]>('/leaves/team', { params });
+    return response.data;
+  },
 };
 

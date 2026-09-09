@@ -98,6 +98,20 @@ const AdminKpiDashboard: React.FC = () => {
     }
   };
 
+  const [exportingReport, setExportingReport] = useState<boolean>(false);
+
+  const handleDownloadMonthlyKpiReport = async () => {
+    try {
+      setExportingReport(true);
+      await kpiService.exportMonthlyKpiReport(selectedYear, selectedMonth, selectedDept === 'ALL' ? undefined : selectedDept);
+    } catch (err) {
+      console.error('Failed to export KPI report', err);
+      alert('Failed to export monthly KPI report');
+    } finally {
+      setExportingReport(false);
+    }
+  };
+
   const handleCloseReport = () => {
     setSelectedEmployeeId(null);
     setEmployeeReport(null);
@@ -213,6 +227,17 @@ const AdminKpiDashboard: React.FC = () => {
             </select>
             <Filter className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
           </div>
+
+          {/* Download Monthly KPI CSV Button */}
+          <button
+            onClick={handleDownloadMonthlyKpiReport}
+            disabled={exportingReport || loading}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/20 transition cursor-pointer disabled:opacity-50"
+            title="Download comprehensive monthly KPI report"
+          >
+            <Download className="h-3.5 w-3.5" />
+            {exportingReport ? 'Exporting...' : 'Export Monthly KPI'}
+          </button>
 
           {/* Refresh Button */}
           <button

@@ -81,4 +81,21 @@ export const assetService = {
     });
     return response.data;
   },
+
+  // Asset Categories
+  getCategories: async (): Promise<{ id: number; name: string; description: string | null; icon: string | null }[]> => {
+    const response = await api.get('/assets/categories');
+    return response.data;
+  },
+
+  createCategory: async (name: string, description?: string, icon?: string): Promise<any> => {
+    const response = await api.post('/assets/categories', { name, description, icon });
+    return response.data;
+  },
+
+  deleteCategory: async (idOrName: number | string): Promise<any> => {
+    const params: any = typeof idOrName === 'number' ? { id: idOrName } : { name: idOrName };
+    const response = await api.delete('/assets/categories', { params });
+    return response.data;
+  },
 };

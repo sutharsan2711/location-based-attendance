@@ -17,6 +17,7 @@ import {
   CalendarDays,
   Clock,
   Laptop,
+  Megaphone,
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
@@ -98,6 +99,21 @@ const Sidebar: React.FC = () => {
         >
           <Home className="h-4 w-4 shrink-0 text-indigo-600" />
           <span>Dashboard & Punch</span>
+        </NavLink>
+
+        {/* Company Announcements */}
+        <NavLink
+          to="/employee/announcements"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all ${
+              isActive
+                ? 'bg-indigo-50/80 text-indigo-700 font-bold shadow-xs border border-indigo-100'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+            }`
+          }
+        >
+          <Megaphone className="h-4 w-4 shrink-0 text-amber-500" />
+          <span>Announcements</span>
         </NavLink>
 
         {/* My Tasks */}

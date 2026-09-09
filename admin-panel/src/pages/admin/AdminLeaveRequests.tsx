@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { requestService } from '../../services/requestService';
 import { employeeService } from '../../services/employeeService';
+import { adminService, CalendarSummaryDay } from '../../services/adminService';
 import {
   LeaveRequest,
   PermissionRequest,
@@ -44,6 +45,10 @@ import {
   Info,
   ShieldAlert,
   Undo2,
+  ChevronLeft,
+  ChevronRight,
+  UserMinus,
+  Building,
 } from 'lucide-react';
 import AdminCarryForwardModal from '../../components/AdminCarryForwardModal';
 
@@ -70,14 +75,23 @@ export interface UnifiedRequest {
   isAdminNoted?: boolean;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'WITHDRAWN';
   adminRemarks?: string;
+  handoverEmployee?: {
+    id: number;
+    name: string;
+    employeeCode: string;
+    email: string;
+    department?: string;
+    role?: string;
+  } | null;
+  handoverNotes?: string | null;
   createdAt?: string;
   originalLeave?: LeaveRequest;
   originalPermission?: PermissionRequest;
 }
 
 const AdminLeaveRequests: React.FC = () => {
-  // Tabs: 'all' | 'leaves' | 'permissions' | 'balances'
-  const [activeTab, setActiveTab] = useState<'all' | 'leaves' | 'permissions' | 'balances'>('all');
+  // Tabs: 'all' | 'leaves' | 'permissions' | 'balances' | 'calendar'
+  const [activeTab, setActiveTab] = useState<'all' | 'leaves' | 'permissions' | 'balances' | 'calendar'>('all');
 
   // Requests State
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
@@ -100,6 +114,13 @@ const AdminLeaveRequests: React.FC = () => {
   const [balanceSummaries, setBalanceSummaries] = useState<LeaveBalanceSummary[]>([]);
   const [balancesLoading, setBalancesLoading] = useState<boolean>(false);
   const [balanceSearchQuery, setBalanceSearchQuery] = useState<string>('');
+
+  // Calendar State
+  const [calYear, setCalYear] = useState<number>(new Date().getFullYear());
+  const [calMonth, setCalMonth] = useState<number>(new Date().getMonth() + 1);
+  const [calendarDays, setCalendarDays] = useState<CalendarSummaryDay[]>([]);
+  const [calendarLoading, setCalendarLoading] = useState<boolean>(false);
+  const [selectedCalendarDay, setSelectedCalendarDay] = useState<CalendarSummaryDay | null>(null);
 
   // Action State (Approval / Rejection / Cancellation Modal)
   const [actionModal, setActionModal] = useState<{
@@ -174,6 +195,19 @@ const AdminLeaveRequests: React.FC = () => {
     }
   }, []);
 
+  // Fetch Calendar Summary
+  const fetchCalendarSummary = useCallback(async (year: number, month: number) => {
+    setCalendarLoading(true);
+    try {
+      const data = await adminService.getCalendarSummary(year, month);
+      setCalendarDays(data);
+    } catch (err) {
+      console.error('Failed to fetch calendar summary', err);
+    } finally {
+      setCalendarLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchAllRequests();
   }, [fetchAllRequests]);
@@ -181,8 +215,10 @@ const AdminLeaveRequests: React.FC = () => {
   useEffect(() => {
     if (activeTab === 'balances') {
       fetchBalances(selectedYear);
+    } else if (activeTab === 'calendar') {
+      fetchCalendarSummary(calYear, calMonth);
     }
-  }, [activeTab, selectedYear, fetchBalances]);
+  }, [activeTab, selectedYear, calYear, calMonth, fetchBalances, fetchCalendarSummary]);
 
   // Format Time Slot helper
   const formatTimeSlot = (timeStr: string) => {
@@ -267,6 +303,8 @@ const AdminLeaveRequests: React.FC = () => {
         isAdminNoted: !!isAdminNoted,
         status: l.status,
         adminRemarks: l.adminRemarks,
+        handoverEmployee: l.handoverEmployee,
+        handoverNotes: l.handoverNotes,
         createdAt: l.createdAt,
         originalLeave: l,
       });
@@ -745,11 +783,23 @@ const AdminLeaveRequests: React.FC = () => {
             <Sliders className="h-4 w-4" />
             Leave Balances & Grants
           </button>
+
+          <button
+            onClick={() => setActiveTab('calendar')}
+            className={`px-5 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === 'calendar'
+                ? 'border-indigo-600 text-indigo-600'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Calendar className="h-4 w-4" />
+            Leave & Attendance Calendar
+          </button>
         </div>
       </div>
 
       {/* ── TAB 1, 2, 3: REQUESTS LIST (Unified, Leaves, Permissions) ── */}
-      {activeTab !== 'balances' ? (
+      {activeTab === 'all' || activeTab === 'leaves' || activeTab === 'permissions' ? (
         <div className="space-y-4">
           {/* Controls Bar (Search, Status Filter, Origin Filter) */}
           <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -781,34 +831,50 @@ const AdminLeaveRequests: React.FC = () => {
                 <select
                   value={selectedOrigin}
                   onChange={(e) => setSelectedOrigin(e.target.value as any)}
-                  className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  className="text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                 >
                   <option value="ALL">All Origins</option>
-                  <option value="SELF">Employee Self-Applied</option>
-                  <option value="ADMIN_NOTED">Admin Noted / Unapplied</option>
+                  <option value="SELF">👤 Employee Applied</option>
+                  <option value="ADMIN_NOTED">⚡ Admin Noted (Unapplied)</option>
                 </select>
               </div>
 
               {/* Status Filter */}
               <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-slate-400" />
+                <span className="text-xs font-bold text-slate-400">Status:</span>
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  className="text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                 >
                   <option value="">All Statuses</option>
-                  <option value="PENDING">Pending Action</option>
-                  <option value="APPROVED">Approved</option>
-                  <option value="REJECTED">Rejected</option>
+                  <option value="PENDING">🟡 Pending</option>
+                  <option value="APPROVED">🟢 Approved</option>
+                  <option value="REJECTED">🔴 Rejected</option>
+                  <option value="CANCELLED">⚪ Withdrawn / Cancelled</option>
                 </select>
               </div>
+
+              {/* Reset Filters */}
+              {(selectedStatus || searchQuery || selectedOrigin !== 'ALL') && (
+                <button
+                  onClick={() => {
+                    setSelectedStatus('');
+                    setSelectedOrigin('ALL');
+                    setSearchQuery('');
+                  }}
+                  className="p-2 text-xs font-bold text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-xl transition-all"
+                  title="Reset Filters"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Requests Table */}
+          {/* Table View */}
           {loading ? (
-            <div className="bg-white rounded-3xl border border-slate-200/80 p-12 text-center">
+            <div className="bg-white rounded-3xl border border-slate-200/80 p-12 text-center shadow-sm">
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-r-transparent mb-3" />
               <p className="text-sm font-semibold text-slate-600">Loading requests...</p>
             </div>
@@ -820,9 +886,9 @@ const AdminLeaveRequests: React.FC = () => {
                     <tr>
                       <th className="py-4 px-6">Request Type</th>
                       <th className="py-4 px-6">Employee</th>
-                      <th className="py-4 px-6">Schedule / Dates</th>
+                      <th className="py-4 px-6">Schedule / Date</th>
                       <th className="py-4 px-6">Duration</th>
-                      <th className="py-4 px-6">Reason & Origin</th>
+                      <th className="py-4 px-6">Reason / Details</th>
                       <th className="py-4 px-6">Status</th>
                       <th className="py-4 px-6 text-right">Actions</th>
                     </tr>
@@ -830,14 +896,9 @@ const AdminLeaveRequests: React.FC = () => {
                   <tbody className="divide-y divide-slate-100 text-slate-700">
                     {filteredRequests.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="py-12 text-center">
-                          <FileCheck className="h-10 w-10 text-slate-300 mx-auto mb-2" />
-                          <p className="text-sm font-bold text-slate-700">No requests found</p>
-                          <p className="text-xs text-slate-400 mt-1">
-                            {searchQuery || selectedStatus || selectedOrigin !== 'ALL'
-                              ? 'Try adjusting your search or origin filter parameters'
-                              : 'No leave or permission requests currently recorded.'}
-                          </p>
+                        <td colSpan={7} className="py-12 text-center text-slate-400">
+                          <FileText className="h-8 w-8 mx-auto text-slate-300 mb-2" />
+                          <p className="font-semibold">No requests found matching your filters.</p>
                         </td>
                       </tr>
                     ) : (
@@ -887,6 +948,12 @@ const AdminLeaveRequests: React.FC = () => {
                             <span className="text-[11px] text-slate-400 font-mono font-medium">
                               {req.employee.employeeCode}
                             </span>
+                            {req.handoverEmployee && (
+                              <div className="mt-1 flex items-center gap-1 text-[10.5px] text-teal-700 bg-teal-50/90 px-2 py-0.5 rounded-md border border-teal-200 font-medium max-w-xs truncate" title={`Work assigned to ${req.handoverEmployee.name}`}>
+                                <Users className="h-3 w-3 text-teal-600 shrink-0" />
+                                <span className="truncate">Handover: <strong className="font-bold">{req.handoverEmployee.name}</strong></span>
+                              </div>
+                            )}
                           </td>
 
                           {/* Schedule / Date */}
@@ -894,7 +961,7 @@ const AdminLeaveRequests: React.FC = () => {
                             <span className="font-bold text-slate-800 block text-xs">{req.dateRange}</span>
                             {req.createdAt && (
                               <span className="text-[10px] text-slate-400 font-medium">
-                                Logged: {formatDate(req.createdAt)}
+                                Loged: {formatDate(req.createdAt)}
                               </span>
                             )}
                           </td>
@@ -909,6 +976,12 @@ const AdminLeaveRequests: React.FC = () => {
                           {/* Reason & Remarks / Withdrawal details */}
                           <td className="py-4 px-6 min-w-[220px] max-w-sm">
                             <p className="font-semibold text-slate-800 text-xs">{req.reason}</p>
+                            {req.handoverNotes && (
+                              <div className="mt-1 text-[11px] text-teal-800 bg-teal-50/70 p-1.5 rounded-lg border border-teal-200/70 flex items-start gap-1">
+                                <span className="font-bold shrink-0">Delegation Note:</span>
+                                <span className="italic">{req.handoverNotes}</span>
+                              </div>
+                            )}
                             {req.remarks && (
                               <div
                                 className={`mt-1.5 text-xs p-2 rounded-xl border flex items-start gap-1.5 ${
@@ -1018,7 +1091,7 @@ const AdminLeaveRequests: React.FC = () => {
             </div>
           )}
         </div>
-      ) : (
+      ) : activeTab === 'balances' ? (
         /* ── TAB 4: LEAVE BALANCES & QUOTAS MANAGEMENT ── */
         <div className="space-y-4">
           <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -1181,6 +1254,398 @@ const AdminLeaveRequests: React.FC = () => {
                     )}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* ── TAB 5: LEAVE & ATTENDANCE CALENDAR (DAILY STATS) ── */
+        <div className="space-y-4 animate-fade-in">
+          {/* Calendar Controls & Legend */}
+          <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-4">
+            {/* Month & Year Navigation */}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  if (calMonth === 1) {
+                    setCalMonth(12);
+                    setCalYear((y) => y - 1);
+                  } else {
+                    setCalMonth((m) => m - 1);
+                  }
+                }}
+                className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all cursor-pointer"
+                title="Previous Month"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+
+              <div className="flex items-center gap-2">
+                <span className="text-base font-extrabold text-slate-900">
+                  {new Date(calYear, calMonth - 1, 1).toLocaleString('default', { month: 'long' })} {calYear}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const now = new Date();
+                    setCalYear(now.getFullYear());
+                    setCalMonth(now.getMonth() + 1);
+                  }}
+                  className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-all cursor-pointer"
+                >
+                  Current Month
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (calMonth === 12) {
+                    setCalMonth(1);
+                    setCalYear((y) => y + 1);
+                  } else {
+                    setCalMonth((m) => m + 1);
+                  }
+                }}
+                className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all cursor-pointer"
+                title="Next Month"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Legend Pills */}
+            <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+              <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-emerald-500"></span> Presents
+              </span>
+              <span className="px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-rose-500"></span> Leaves
+              </span>
+              <span className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-blue-500"></span> WFH
+              </span>
+              <span className="px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-amber-500"></span> Permissions
+              </span>
+              <span className="px-2.5 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-200 flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-orange-500"></span> Late Check-ins
+              </span>
+            </div>
+          </div>
+
+          {/* Calendar Grid */}
+          {calendarLoading ? (
+            <div className="bg-white rounded-3xl border border-slate-200/80 p-16 text-center shadow-sm">
+              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-r-transparent mb-3" />
+              <p className="text-sm font-semibold text-slate-600">Loading daily attendance & leave breakdown...</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-4 overflow-x-auto">
+              {/* Day Name Headers */}
+              <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold uppercase tracking-wider text-slate-400 pb-3 border-b border-slate-100 min-w-[700px]">
+                <span>Sun</span>
+                <span>Mon</span>
+                <span>Tue</span>
+                <span>Wed</span>
+                <span>Thu</span>
+                <span>Fri</span>
+                <span>Sat</span>
+              </div>
+
+              {/* Day Cells Grid */}
+              <div className="grid grid-cols-7 gap-2 pt-3 min-w-[700px]">
+                {(() => {
+                  const firstDay = new Date(calYear, calMonth - 1, 1).getDay();
+                  const totalDays = new Date(calYear, calMonth, 0).getDate();
+                  const todayStr = new Date().toISOString().split('T')[0];
+
+                  const cells = [];
+                  // Empty padding days before 1st
+                  for (let i = 0; i < firstDay; i++) {
+                    cells.push(
+                      <div key={`empty-${i}`} className="min-h-[100px] p-2 bg-slate-50/40 rounded-2xl border border-transparent opacity-30" />
+                    );
+                  }
+
+                  // Actual month days
+                  for (let d = 1; d <= totalDays; d++) {
+                    const dateStr = `${calYear}-${String(calMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    const dayData = calendarDays.find((cd) => cd.date === dateStr) || {
+                      date: dateStr,
+                      presents: 0,
+                      leaves: 0,
+                      wfh: 0,
+                      permissions: 0,
+                      late: 0,
+                    };
+
+                    const isToday = dateStr === todayStr;
+                    const hasData =
+                      dayData.presents > 0 ||
+                      dayData.leaves > 0 ||
+                      dayData.wfh > 0 ||
+                      dayData.permissions > 0 ||
+                      dayData.late > 0;
+
+                    cells.push(
+                      <div
+                        key={dateStr}
+                        onClick={() => setSelectedCalendarDay(dayData)}
+                        className={`min-h-[105px] p-2.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between hover:shadow-md hover:border-indigo-300 hover:scale-[1.01] ${
+                          isToday
+                            ? 'bg-indigo-50/50 border-indigo-300 ring-2 ring-indigo-500/20 shadow-xs'
+                            : hasData
+                            ? 'bg-white border-slate-200'
+                            : 'bg-slate-50/60 border-slate-150 hover:bg-white'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span
+                            className={`text-xs font-black h-6 w-6 rounded-full flex items-center justify-center ${
+                              isToday
+                                ? 'bg-indigo-600 text-white'
+                                : 'text-slate-700 bg-slate-100'
+                            }`}
+                          >
+                            {d}
+                          </span>
+                          {isToday && (
+                            <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-indigo-600 text-white">
+                              Today
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Counts Badges */}
+                        <div className="mt-2 space-y-1">
+                          {dayData.presents > 0 && (
+                            <div className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100/80 text-emerald-800 flex items-center justify-between">
+                              <span>🟢 Presents</span>
+                              <span className="font-black">{dayData.presents}</span>
+                            </div>
+                          )}
+                          {dayData.leaves > 0 && (
+                            <div className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-rose-100/80 text-rose-800 flex items-center justify-between">
+                              <span>🔴 Leaves</span>
+                              <span className="font-black">{dayData.leaves}</span>
+                            </div>
+                          )}
+                          {dayData.wfh > 0 && (
+                            <div className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-blue-100/80 text-blue-800 flex items-center justify-between">
+                              <span>🔵 WFH</span>
+                              <span className="font-black">{dayData.wfh}</span>
+                            </div>
+                          )}
+                          {dayData.permissions > 0 && (
+                            <div className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100/80 text-amber-800 flex items-center justify-between">
+                              <span>🟡 Perms</span>
+                              <span className="font-black">{dayData.permissions}</span>
+                            </div>
+                          )}
+                          {dayData.late > 0 && (
+                            <div className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-orange-100/80 text-orange-800 flex items-center justify-between">
+                              <span>🟠 Late</span>
+                              <span className="font-black">{dayData.late}</span>
+                            </div>
+                          )}
+                          {!hasData && (
+                            <span className="text-[10px] text-slate-300 block text-center py-2 font-medium">
+                              No records
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return cells;
+                })()}
+              </div>
+            </div>
+          )}
+
+          {/* Day Click Breakdown Modal */}
+          {selectedCalendarDay && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+              <div className="relative w-full max-w-2xl max-h-[85vh] flex flex-col rounded-3xl bg-white shadow-2xl border border-slate-100 animate-scale-up overflow-hidden">
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/50 shrink-0">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-9 w-9 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                      <CalendarDays className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900">
+                        Attendance & Leave Roster • {formatDate(selectedCalendarDay.date)}
+                      </h3>
+                      <p className="text-xs text-slate-400">Complete employee status breakdown for this day</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedCalendarDay(null)}
+                    className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 rounded-xl"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                {/* Body Details */}
+                <div className="p-6 overflow-y-auto space-y-5">
+                  {/* Summary Metric Badges */}
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
+                      <span className="block text-[10px] font-bold text-emerald-700 uppercase">Presents</span>
+                      <span className="text-lg font-black text-emerald-900">{selectedCalendarDay.presents}</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-center">
+                      <span className="block text-[10px] font-bold text-rose-700 uppercase">Leaves</span>
+                      <span className="text-lg font-black text-rose-900">{selectedCalendarDay.leaves}</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-center">
+                      <span className="block text-[10px] font-bold text-blue-700 uppercase">WFH</span>
+                      <span className="text-lg font-black text-blue-900">{selectedCalendarDay.wfh}</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-center">
+                      <span className="block text-[10px] font-bold text-amber-700 uppercase">Permissions</span>
+                      <span className="text-lg font-black text-amber-900">{selectedCalendarDay.permissions}</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-orange-50 border border-orange-200 text-center">
+                      <span className="block text-[10px] font-bold text-orange-700 uppercase">Late Check-in</span>
+                      <span className="text-lg font-black text-orange-900">{selectedCalendarDay.late}</span>
+                    </div>
+                  </div>
+
+                  {/* On Leave Breakdown */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                      <UserMinus className="h-4 w-4 text-rose-600" />
+                      Employees on Leave ({selectedCalendarDay.details?.leavesList?.length || 0})
+                    </h4>
+                    {selectedCalendarDay.details?.leavesList && selectedCalendarDay.details.leavesList.length > 0 ? (
+                      <div className="space-y-2">
+                        {selectedCalendarDay.details.leavesList.map((emp: any, idx: number) => (
+                          <div
+                            key={idx}
+                            className="p-3 rounded-2xl bg-rose-50/50 border border-rose-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                          >
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-slate-900">{emp.name}</span>
+                                <span className="font-mono text-slate-500 font-medium">({emp.employeeCode})</span>
+                              </div>
+                              <span className="text-[11px] text-rose-700 font-bold mt-0.5 block">
+                                {formatLeaveType(emp.leaveType)}
+                              </span>
+                            </div>
+                            {emp.handoverEmployee && (
+                              <div className="text-[11px] bg-white px-2.5 py-1 rounded-xl border border-teal-200 text-teal-800 font-medium flex items-center gap-1">
+                                <Users className="h-3 w-3 text-teal-600 shrink-0" />
+                                <span>Delegated To: <strong>{emp.handoverEmployee}</strong></span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        No approved leaves recorded for this date.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Present Employees Breakdown */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                      <UserCheck className="h-4 w-4 text-emerald-600" />
+                      Present Employees ({selectedCalendarDay.details?.presentsList?.length || 0})
+                    </h4>
+                    {selectedCalendarDay.details?.presentsList && selectedCalendarDay.details.presentsList.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {selectedCalendarDay.details.presentsList.map((emp: any, idx: number) => (
+                          <div
+                            key={idx}
+                            className="p-2.5 rounded-xl bg-emerald-50/50 border border-emerald-200 text-xs flex items-center justify-between"
+                          >
+                            <div>
+                              <span className="font-bold text-slate-900 block">{emp.name}</span>
+                              <span className="font-mono text-[11px] text-slate-400 font-medium">
+                                {emp.employeeCode} {emp.department ? `• ${emp.department}` : ''}
+                              </span>
+                            </div>
+                            <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                              Present
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        No present records recorded for this date.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* WFH & Permissions Breakdown */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* WFH */}
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                        <Building className="h-4 w-4 text-blue-600" />
+                        WFH ({selectedCalendarDay.details?.wfhList?.length || 0})
+                      </h4>
+                      {selectedCalendarDay.details?.wfhList && selectedCalendarDay.details.wfhList.length > 0 ? (
+                        <div className="space-y-1.5">
+                          {selectedCalendarDay.details.wfhList.map((emp: any, idx: number) => (
+                            <div
+                              key={idx}
+                              className="p-2 rounded-xl bg-blue-50/60 border border-blue-200 text-xs flex items-center justify-between"
+                            >
+                              <span className="font-bold text-slate-900">{emp.name}</span>
+                              <span className="font-mono text-slate-500 font-medium">{emp.employeeCode}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-400 italic bg-slate-50 p-2.5 rounded-xl">None</p>
+                      )}
+                    </div>
+
+                    {/* Permissions */}
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                        <Clock3 className="h-4 w-4 text-amber-600" />
+                        Permissions ({selectedCalendarDay.details?.permissionsList?.length || 0})
+                      </h4>
+                      {selectedCalendarDay.details?.permissionsList && selectedCalendarDay.details.permissionsList.length > 0 ? (
+                        <div className="space-y-1.5">
+                          {selectedCalendarDay.details.permissionsList.map((emp: any, idx: number) => (
+                            <div
+                              key={idx}
+                              className="p-2 rounded-xl bg-amber-50/60 border border-amber-200 text-xs flex items-center justify-between"
+                            >
+                              <span className="font-bold text-slate-900">{emp.name}</span>
+                              <span className="font-mono text-amber-800 font-bold">{emp.time}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-400 italic bg-slate-50 p-2.5 rounded-xl">None</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center justify-end px-6 py-3 bg-slate-50 border-t border-slate-100 shrink-0">
+                  <button
+                    onClick={() => setSelectedCalendarDay(null)}
+                    className="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs transition-all cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -1470,6 +1935,21 @@ const AdminLeaveRequests: React.FC = () => {
                   <span className="font-bold block text-slate-700">Reason:</span>
                   <span>{actionModal.request.reason}</span>
                 </div>
+                {actionModal.request.handoverEmployee && (
+                  <div className="pt-1.5 border-t border-slate-200/80">
+                    <span className="font-bold block text-teal-800 text-[11px]">
+                      Delegated Work Coverage (Handover):
+                    </span>
+                    <span className="font-semibold text-slate-800">
+                      {actionModal.request.handoverEmployee.name} ({actionModal.request.handoverEmployee.employeeCode})
+                    </span>
+                    {actionModal.request.handoverNotes && (
+                      <p className="text-[10.5px] text-slate-500 italic mt-0.5">
+                        "{actionModal.request.handoverNotes}"
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Admin Remarks */}

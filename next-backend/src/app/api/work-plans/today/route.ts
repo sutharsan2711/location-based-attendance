@@ -69,19 +69,24 @@ export async function GET(req: NextRequest) {
 
     // Calculate KPI Score:
     // Completed: 100%, In-Progress: 50%, Not Completed: 0%
-    let calculatedKpi = 75; // default benchmark
+    let calculatedKpi = 0; // default baseline 0
+    let kpiLabel = "No Tasks";
     if (totalTasks > 0) {
       calculatedKpi = Math.round(((completedCount * 100 + inProgressCount * 50) / totalTasks));
+      if (calculatedKpi >= 90) kpiLabel = "Excellent";
+      else if (calculatedKpi >= 80) kpiLabel = "Very Good";
+      else if (calculatedKpi >= 70) kpiLabel = "Good";
+      else if (calculatedKpi >= 60) kpiLabel = "Needs Attention";
+      else kpiLabel = "At Risk";
     } else if (note?.kpiScore !== null && note?.kpiScore !== undefined) {
       calculatedKpi = note.kpiScore;
+      if (calculatedKpi >= 90) kpiLabel = "Excellent";
+      else if (calculatedKpi >= 80) kpiLabel = "Very Good";
+      else if (calculatedKpi >= 70) kpiLabel = "Good";
+      else if (calculatedKpi >= 60) kpiLabel = "Needs Attention";
+      else if (calculatedKpi > 0) kpiLabel = "At Risk";
+      else kpiLabel = "No Tasks";
     }
-
-    let kpiLabel = "Good";
-    if (calculatedKpi >= 90) kpiLabel = "Excellent";
-    else if (calculatedKpi >= 80) kpiLabel = "Very Good";
-    else if (calculatedKpi >= 70) kpiLabel = "Good";
-    else if (calculatedKpi >= 60) kpiLabel = "Needs Attention";
-    else kpiLabel = "At Risk";
 
     // Format check in / out times
     let checkInTime = "--:--";

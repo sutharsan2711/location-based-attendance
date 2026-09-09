@@ -68,6 +68,8 @@ export async function POST(req: NextRequest) {
 
     const status = isUserAdmin(authUser) && body.status ? body.status : "PENDING";
     const adminRemarks = isUserAdmin(authUser) ? body.adminRemarks || "Directly assigned by Admin" : null;
+    const handoverEmployeeId = body.handoverEmployeeId ? BigInt(body.handoverEmployeeId) : null;
+    const handoverNotes = body.handoverNotes ? String(body.handoverNotes).trim() : null;
 
     const created = await prisma.leaveRequest.create({
       data: {
@@ -81,8 +83,10 @@ export async function POST(req: NextRequest) {
         remarks: body.remarks?.trim() || null,
         adminRemarks,
         status,
+        handoverEmployeeId,
+        handoverNotes,
       },
-      include: { employee: true },
+      include: { employee: true, handoverEmployee: true },
     });
 
     return jsonResponse(formatLeave(created), { status: 201 });

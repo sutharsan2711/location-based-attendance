@@ -21,6 +21,7 @@ import MyPayslip from '../pages/employee/MyPayslip';
 import EmployeeTasks from '../pages/employee/EmployeeTasks';
 import EmployeeKpi from '../pages/employee/EmployeeKpi';
 import EmployeeAssets from '../pages/employee/EmployeeAssets';
+import EmployeeAnnouncements from '../pages/employee/EmployeeAnnouncements';
 
 const ADMIN_PANEL_URL = 'http://localhost:5200';
 
@@ -63,6 +64,7 @@ const AppRoutes: React.FC = () => {
         {/* Employee, Trainee, Intern and OJT Staff Routes */}
         <Route element={<ProtectedRoute allowedRoles={['EMPLOYEE', 'TRAINEE', 'INTERN', 'OJT']} />}>
           <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
+          <Route path="/employee/announcements" element={<EmployeeAnnouncements />} />
           <Route path="/employee/tasks" element={<EmployeeTasks />} />
           <Route path="/employee/attendance" element={<AttendanceHistory />} />
           <Route path="/employee/permissions" element={<EmployeePermissions />} />

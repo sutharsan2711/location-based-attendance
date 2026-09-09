@@ -45,6 +45,16 @@ export interface LeaveRequest {
   remarks?: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'WITHDRAWN';
   adminRemarks?: string;
+  handoverEmployeeId?: number | null;
+  handoverEmployee?: {
+    id: number;
+    name: string;
+    employeeCode: string;
+    email: string;
+    department?: string;
+    role?: string;
+  } | null;
+  handoverNotes?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -57,6 +67,8 @@ export interface LeaveCreatePayload {
   halfDaySession?: HalfDaySession;
   reason: string;
   remarks?: string;
+  handoverEmployeeId?: number | null;
+  handoverNotes?: string | null;
 }
 
 export interface AdminRecordLeavePayload {

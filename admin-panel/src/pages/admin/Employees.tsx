@@ -37,12 +37,35 @@ import {
   Smartphone,
   MousePointer,
   Headphones,
-  Keyboard,
-  Monitor,
   Package,
   Sparkles,
   ChevronDown,
+  SlidersHorizontal,
+  Eye,
+  EyeOff,
+  ExternalLink,
+  FileText,
+  Phone,
+  Mail,
+  Building2,
+  CreditCard,
+  Check,
+  Keyboard,
+  Monitor,
 } from 'lucide-react';
+
+export const TABLE_COLUMNS_CONFIG = [
+  { key: 'code', label: 'Employee Code', defaultVisible: true },
+  { key: 'name', label: 'Employee Name', defaultVisible: true },
+  { key: 'email', label: 'Email Address', defaultVisible: true },
+  { key: 'phone', label: 'Phone Number', defaultVisible: true },
+  { key: 'team', label: 'Team / Shift', defaultVisible: true },
+  { key: 'joined', label: 'Joining Month', defaultVisible: false },
+  { key: 'role', label: 'Assigned Role', defaultVisible: true },
+  { key: 'employmentType', label: 'Employment Type', defaultVisible: true },
+  { key: 'status', label: 'Account Status', defaultVisible: true },
+  { key: 'actions', label: 'Action Buttons', defaultVisible: true },
+];
 
 const INITIAL_ROLES = [
   { id: 'EMPLOYEE', label: 'EMPLOYEE (General Employee)' },
@@ -505,6 +528,53 @@ const Employees: React.FC = () => {
     }
   };
 
+  // Column Visibility State
+  const [selectedColumnKeys, setSelectedColumnKeys] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('admin_employee_table_columns_v2');
+      return saved ? JSON.parse(saved) : TABLE_COLUMNS_CONFIG.filter(c => c.defaultVisible).map(c => c.key);
+    } catch {
+      return TABLE_COLUMNS_CONFIG.filter(c => c.defaultVisible).map(c => c.key);
+    }
+  });
+  const [showColumnDropdown, setShowColumnDropdown] = useState<boolean>(false);
+  const columnDropdownRef = useRef<HTMLDivElement>(null);
+
+  // User Profile Preview Modal State
+  const [viewingProfileEmp, setViewingProfileEmp] = useState<Employee | null>(null);
+  const [viewProfileActiveTab, setViewProfileActiveTab] = useState<'overview' | 'personal' | 'address' | 'education' | 'accounts' | 'family' | 'assets'>('overview');
+
+  const toggleColumn = (key: string) => {
+    setSelectedColumnKeys((prev) => {
+      const next = prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key];
+      localStorage.setItem('admin_employee_table_columns_v2', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const selectAllColumns = () => {
+    const allKeys = TABLE_COLUMNS_CONFIG.map((c) => c.key);
+    setSelectedColumnKeys(allKeys);
+    localStorage.setItem('admin_employee_table_columns_v2', JSON.stringify(allKeys));
+  };
+
+  const resetDefaultColumns = () => {
+    const defaultKeys = TABLE_COLUMNS_CONFIG.filter((c) => c.defaultVisible).map((c) => c.key);
+    setSelectedColumnKeys(defaultKeys);
+    localStorage.setItem('admin_employee_table_columns_v2', JSON.stringify(defaultKeys));
+  };
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (columnDropdownRef.current && !columnDropdownRef.current.contains(event.target as Node)) {
+        setShowColumnDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const fetchEmployees = async () => {
     try {
       setLoading(true);
@@ -719,24 +789,53 @@ const Employees: React.FC = () => {
     }
   };
 
-  const columns = [
+  const allColumnDefs = [
     {
+      key: 'code',
       header: 'Employee Code',
-      render: (row: Employee) => <span className="font-bold text-slate-800">{row.employeeCode}</span>,
+      render: (row: Employee) => (
+        <button
+          type="button"
+          onClick={() => {
+            setViewingProfileEmp(row);
+            setViewProfileActiveTab('overview');
+          }}
+          className="font-bold text-indigo-600 hover:text-indigo-900 hover:underline cursor-pointer flex items-center gap-1 text-left"
+          title="Click to view full employee profile"
+        >
+          <span>{row.employeeCode}</span>
+        </button>
+      ),
     },
     {
+      key: 'name',
       header: 'Name',
-      render: (row: Employee) => <span className="font-semibold text-slate-700">{row.name}</span>,
+      render: (row: Employee) => (
+        <button
+          type="button"
+          onClick={() => {
+            setViewingProfileEmp(row);
+            setViewProfileActiveTab('overview');
+          }}
+          className="font-semibold text-slate-800 hover:text-indigo-600 cursor-pointer text-left block transition-colors"
+          title="Click to view full employee profile"
+        >
+          {row.name}
+        </button>
+      ),
     },
     {
+      key: 'email',
       header: 'Email',
       render: (row: Employee) => <span className="text-slate-500">{row.email}</span>,
     },
     {
+      key: 'phone',
       header: 'Phone',
       render: (row: Employee) => <span className="text-slate-500">{row.phone || '--'}</span>,
     },
     {
+      key: 'team',
       header: 'Team / Shift',
       render: (row: Employee) => {
         let dept = row.department;
@@ -790,6 +889,16 @@ const Employees: React.FC = () => {
       },
     },
     {
+      key: 'joined',
+      header: 'Joining Month',
+      render: (row: Employee) => (
+        <span className="text-xs text-slate-600 font-medium">
+          {(row as any).joined_month || (row as any).joinedMonth || '--'}
+        </span>
+      ),
+    },
+    {
+      key: 'role',
       header: 'Role',
       render: (row: Employee) => {
         const r = (row.role || 'EMPLOYEE').toUpperCase();
@@ -873,6 +982,7 @@ const Employees: React.FC = () => {
       },
     },
     {
+      key: 'employmentType',
       header: 'Employment Type',
       render: (row: Employee) => {
         const rawType = (
@@ -939,6 +1049,7 @@ const Employees: React.FC = () => {
       },
     },
     {
+      key: 'status',
       header: 'Status',
       render: (row: Employee) => (
         <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold ${
@@ -950,9 +1061,25 @@ const Employees: React.FC = () => {
       ),
     },
     {
+      key: 'actions',
       header: 'Actions',
       render: (row: Employee) => (
         <div className="flex items-center gap-1.5">
+          {/* View Profile */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setViewingProfileEmp(row);
+              setViewProfileActiveTab('overview');
+            }}
+            className="py-1 px-2.5 text-xs font-bold flex items-center gap-1 text-indigo-600 hover:bg-indigo-50 border-indigo-200 cursor-pointer"
+            title="View Full User Profile"
+          >
+            <UserIcon className="h-3.5 w-3.5" />
+            <span>Profile</span>
+          </Button>
+
           {/* Edit Complete Profile Information */}
           <Button
             variant="primary"
@@ -1008,6 +1135,10 @@ const Employees: React.FC = () => {
       ),
     },
   ];
+
+  const columns = useMemo(() => {
+    return allColumnDefs.filter((col) => selectedColumnKeys.includes(col.key));
+  }, [selectedColumnKeys, customTeams, customRoles, customStaffTypes]);
 
   const filteredEmployees = useMemo(() => {
     return employees.filter(emp => {
@@ -1195,6 +1326,85 @@ const Employees: React.FC = () => {
               <option key={cr.id} value={cr.id}>{cr.label}</option>
             ))}
           </select>
+
+          {/* Column Customizer Dropdown */}
+          <div className="relative" ref={columnDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setShowColumnDropdown(!showColumnDropdown)}
+              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                showColumnDropdown
+                  ? 'bg-indigo-50 text-indigo-700 border-indigo-300 ring-2 ring-indigo-100'
+                  : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+              }`}
+              title="Select which columns to show or hide in the table"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              <span>Columns ({selectedColumnKeys.length}/{TABLE_COLUMNS_CONFIG.length})</span>
+              <ChevronDown className={`h-3 w-3 transition-transform ${showColumnDropdown ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showColumnDropdown && (
+              <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white border border-slate-200 shadow-xl p-3 z-50 animate-in fade-in zoom-in-95 space-y-2">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                  <span className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+                    <Eye className="h-3.5 w-3.5 text-indigo-600" />
+                    <span>Table Columns</span>
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={selectAllColumns}
+                      className="text-[10px] font-bold text-indigo-600 hover:underline cursor-pointer"
+                    >
+                      All
+                    </button>
+                    <span className="text-slate-300">•</span>
+                    <button
+                      type="button"
+                      onClick={resetDefaultColumns}
+                      className="text-[10px] font-bold text-slate-500 hover:underline cursor-pointer"
+                    >
+                      Reset
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1 max-h-60 overflow-y-auto pr-1">
+                  {TABLE_COLUMNS_CONFIG.map((col) => {
+                    const isChecked = selectedColumnKeys.includes(col.key);
+                    return (
+                      <label
+                        key={col.key}
+                        className={`flex items-center justify-between p-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
+                          isChecked ? 'bg-indigo-50/70 text-indigo-900' : 'hover:bg-slate-50 text-slate-600'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => toggleColumn(col.key)}
+                            className="rounded text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5 accent-indigo-600 cursor-pointer"
+                          />
+                          <span>{col.label}</span>
+                        </span>
+                        {isChecked ? (
+                          <Eye className="h-3 w-3 text-indigo-600" />
+                        ) : (
+                          <EyeOff className="h-3 w-3 text-slate-300" />
+                        )}
+                      </label>
+                    );
+                  })}
+                </div>
+
+                <div className="pt-2 border-t border-slate-100 text-[10px] text-slate-400 text-center">
+                  Preferences automatically saved
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -1207,6 +1417,432 @@ const Employees: React.FC = () => {
           <Table data={filteredEmployees} columns={columns} keyExtractor={(row) => row.id} />
         </Card>
       )}
+
+      {/* ───────────────────────────────────────────────────────────── */}
+      {/* USER PROFILE PREVIEW MODAL (VIEW ALL INFORMATION)             */}
+      {/* ───────────────────────────────────────────────────────────── */}
+      {viewingProfileEmp && (() => {
+        let pData: any = defaultProfileData;
+        const pEmp = viewingProfileEmp as any;
+        if (pEmp.profileData) {
+          try {
+            pData = { ...defaultProfileData, ...JSON.parse(pEmp.profileData) };
+          } catch (e) {
+            console.error('Failed to parse employee profileData', e);
+          }
+        }
+
+        const dept = pEmp.department || pData.department || 'IT';
+        const role = pEmp.role || 'EMPLOYEE';
+        const staffType = pEmp.employment_type || pEmp.staffType || (['OJT', 'TRAINEE', 'INTERN'].includes(role) ? role : 'FULL_TIME');
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto animate-in fade-in">
+            <div className="w-full max-w-4xl rounded-3xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-6 max-h-[92vh]">
+              {/* Profile Top Banner / Header */}
+              <div className="bg-gradient-to-r from-indigo-700 via-indigo-600 to-blue-600 p-6 text-white relative">
+                <button
+                  type="button"
+                  onClick={() => setViewingProfileEmp(null)}
+                  className="absolute top-4 right-4 text-white/80 hover:text-white p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+                  title="Close Profile"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div className="h-16 w-16 rounded-2xl bg-white/20 backdrop-blur-md text-white font-black text-2xl flex items-center justify-center border-2 border-white/30 shadow-lg shrink-0">
+                    {viewingProfileEmp.name.charAt(0).toUpperCase()}
+                  </div>
+
+                  <div className="flex-1 space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-xl font-black tracking-tight">{viewingProfileEmp.name}</h2>
+                      <span className="font-mono text-xs font-bold bg-white/20 px-2.5 py-0.5 rounded-full border border-white/30">
+                        {viewingProfileEmp.employeeCode}
+                      </span>
+                      <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
+                        viewingProfileEmp.status === 'ACTIVE'
+                          ? 'bg-emerald-400/30 text-emerald-100 border border-emerald-300/40'
+                          : 'bg-rose-400/30 text-rose-100 border border-rose-300/40'
+                      }`}>
+                        {viewingProfileEmp.status}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-indigo-100 font-medium flex flex-wrap items-center gap-x-4 gap-y-1">
+                      <span className="flex items-center gap-1"><Mail className="h-3.5 w-3.5" /> {viewingProfileEmp.email}</span>
+                      {viewingProfileEmp.phone && (
+                        <span className="flex items-center gap-1"><Phone className="h-3.5 w-3.5" /> {viewingProfileEmp.phone}</span>
+                      )}
+                      <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" /> Team: {dept}</span>
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 self-stretch sm:self-auto pt-2 sm:pt-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const target = viewingProfileEmp;
+                        setViewingProfileEmp(null);
+                        openProfileEditor(target);
+                      }}
+                      className="px-3.5 py-2 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-bold text-xs shadow-md transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Edit2 className="h-3.5 w-3.5" />
+                      <span>Edit Full Info</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Profile Navigation Tabs */}
+              <div className="flex items-center gap-1 px-6 border-b border-slate-100 bg-slate-50/80 overflow-x-auto text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => setViewProfileActiveTab('overview')}
+                  className={`py-3 px-3.5 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                    viewProfileActiveTab === 'overview'
+                      ? 'border-indigo-600 text-indigo-600 bg-white shadow-2xs'
+                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <Briefcase className="h-4 w-4" />
+                  <span>Job & Shift</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setViewProfileActiveTab('personal')}
+                  className={`py-3 px-3.5 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                    viewProfileActiveTab === 'personal'
+                      ? 'border-indigo-600 text-indigo-600 bg-white shadow-2xs'
+                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <UserIcon className="h-4 w-4" />
+                  <span>Personal</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setViewProfileActiveTab('address')}
+                  className={`py-3 px-3.5 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                    viewProfileActiveTab === 'address'
+                      ? 'border-indigo-600 text-indigo-600 bg-white shadow-2xs'
+                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <MapPin className="h-4 w-4" />
+                  <span>Address</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setViewProfileActiveTab('education')}
+                  className={`py-3 px-3.5 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                    viewProfileActiveTab === 'education'
+                      ? 'border-indigo-600 text-indigo-600 bg-white shadow-2xs'
+                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <GraduationCap className="h-4 w-4" />
+                  <span>Education</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setViewProfileActiveTab('accounts')}
+                  className={`py-3 px-3.5 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                    viewProfileActiveTab === 'accounts'
+                      ? 'border-indigo-600 text-indigo-600 bg-white shadow-2xs'
+                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <CreditCard className="h-4 w-4" />
+                  <span>Bank & Statutory</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setViewProfileActiveTab('family')}
+                  className={`py-3 px-3.5 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                    viewProfileActiveTab === 'family'
+                      ? 'border-indigo-600 text-indigo-600 bg-white shadow-2xs'
+                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <UsersIcon className="h-4 w-4" />
+                  <span>Family</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setViewProfileActiveTab('assets')}
+                  className={`py-3 px-3.5 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                    viewProfileActiveTab === 'assets'
+                      ? 'border-indigo-600 text-indigo-600 bg-white shadow-2xs'
+                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <Laptop className="h-4 w-4" />
+                  <span>Assigned Assets ({pData.allocatedAssets?.length || 0})</span>
+                </button>
+              </div>
+
+              {/* Tab Contents */}
+              <div className="p-6 overflow-y-auto max-h-[58vh] space-y-4 text-xs">
+                {/* 1. OVERVIEW & JOB */}
+                {viewProfileActiveTab === 'overview' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Position & Role</span>
+                      <p className="font-extrabold text-sm text-slate-800">{role}</p>
+                      <p className="text-[11px] text-slate-500">Employment Type: <span className="font-bold text-slate-700">{staffType}</span></p>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Assigned Team / Shift</span>
+                      <p className="font-extrabold text-sm text-indigo-700">{dept}</p>
+                      <p className="text-[11px] text-slate-500">Joining Month: <span className="font-bold text-slate-700">{pEmp.joined_month || pEmp.joinedMonth || pData.joinedMonth || '--'}</span></p>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Account Status</span>
+                      <p className="font-extrabold text-sm text-emerald-700 flex items-center gap-1">
+                        <CheckCircle className="h-4 w-4" />
+                        <span>{viewingProfileEmp.status}</span>
+                      </p>
+                      <p className="text-[11px] text-slate-500">Employee ID: <span className="font-mono font-bold text-slate-700">#{viewingProfileEmp.id}</span></p>
+                    </div>
+
+                    <div className="sm:col-span-3 p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="font-bold text-indigo-900">Attendance & Leave Actions</p>
+                        <p className="text-[11px] text-indigo-700">View complete punch history and logs for this employee.</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const emp = viewingProfileEmp;
+                            setViewingProfileEmp(null);
+                            openHistoryModal(emp);
+                          }}
+                          className="bg-white font-bold"
+                        >
+                          <CalendarDays className="h-3.5 w-3.5 mr-1" />
+                          <span>View Punch History</span>
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. PERSONAL DETAILS */}
+                {viewProfileActiveTab === 'personal' && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block">Date of Birth</span>
+                      <span className="font-bold text-slate-800">{pData.dob || '--'}</span>
+                    </div>
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block">Blood Group</span>
+                      <span className="font-bold text-slate-800">{pData.bloodGroup || '--'}</span>
+                    </div>
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block">Father's Name</span>
+                      <span className="font-bold text-slate-800">{pData.fatherName || '--'}</span>
+                    </div>
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block">Marital Status</span>
+                      <span className="font-bold text-slate-800">{pData.maritalStatus || '--'}</span>
+                    </div>
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block">Nationality</span>
+                      <span className="font-bold text-slate-800">{pData.nationality || 'Indian'}</span>
+                    </div>
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block">Religion</span>
+                      <span className="font-bold text-slate-800">{pData.religion || '--'}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. ADDRESS */}
+                {viewProfileActiveTab === 'address' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block flex items-center gap-1">
+                        <MapPin className="h-3.5 w-3.5 text-indigo-600" /> Present Address
+                      </span>
+                      <p className="font-semibold text-slate-700 leading-relaxed whitespace-pre-wrap">{pData.presentAddress || 'No present address recorded.'}</p>
+                    </div>
+
+                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block flex items-center gap-1">
+                        <MapPin className="h-3.5 w-3.5 text-slate-400" /> Permanent Address
+                      </span>
+                      <p className="font-semibold text-slate-700 leading-relaxed whitespace-pre-wrap">{pData.permanentAddress || 'No permanent address recorded.'}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. EDUCATION */}
+                {viewProfileActiveTab === 'education' && (
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block flex items-center gap-1">
+                      <GraduationCap className="h-3.5 w-3.5 text-indigo-600" /> Highest Qualification
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold block">Degree / Course</span>
+                        <span className="font-bold text-slate-800">{pData.educationDegree || '--'}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold block">Institution / University</span>
+                        <span className="font-bold text-slate-800">{pData.educationInstitution || '--'}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold block">Year of Passing</span>
+                        <span className="font-bold text-slate-800">{pData.educationYear || '--'}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold block">Percentage / CGPA</span>
+                        <span className="font-bold text-slate-800">{pData.educationGrade || '--'}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 5. BANKING & STATUTORY */}
+                {viewProfileActiveTab === 'accounts' && (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block flex items-center gap-1">
+                        <Landmark className="h-3.5 w-3.5 text-emerald-600" /> Bank Account Details
+                      </span>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div>
+                          <span className="text-[10px] text-slate-400 font-bold block">Bank Name</span>
+                          <span className="font-bold text-slate-800">{pData.bankName || '--'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-400 font-bold block">Account Number</span>
+                          <span className="font-mono font-bold text-slate-800">{pData.bankAccountNumber || '--'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-400 font-bold block">IFSC Code</span>
+                          <span className="font-mono font-bold text-slate-800">{pData.bankIfscCode || '--'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-400 font-bold block">Branch</span>
+                          <span className="font-bold text-slate-800">{pData.bankBranch || '--'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block flex items-center gap-1">
+                        <CreditCard className="h-3.5 w-3.5 text-blue-600" /> Statutory & Identification Numbers
+                      </span>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div>
+                          <span className="text-[10px] text-slate-400 font-bold block">PAN Card</span>
+                          <span className="font-mono font-bold text-slate-800">{pData.panNumber || '--'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-400 font-bold block">Aadhaar Card</span>
+                          <span className="font-mono font-bold text-slate-800">{pData.aadhaarNumber || '--'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-400 font-bold block">UAN Number</span>
+                          <span className="font-mono font-bold text-slate-800">{pData.uanNumber || '--'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-400 font-bold block">PF Number</span>
+                          <span className="font-mono font-bold text-slate-800">{pData.pfNumber || '--'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 6. FAMILY & EMERGENCY */}
+                {viewProfileActiveTab === 'family' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block">Family Info</span>
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between"><span className="text-slate-400 font-medium">Father's Name:</span> <span className="font-bold text-slate-800">{pData.fatherName || '--'}</span></div>
+                        <div className="flex justify-between"><span className="text-slate-400 font-medium">Spouse Name:</span> <span className="font-bold text-slate-800">{pData.spouse || '--'}</span></div>
+                        <div className="flex justify-between"><span className="text-slate-400 font-medium">Marriage Date:</span> <span className="font-bold text-slate-800">{pData.marriageDate || '--'}</span></div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-rose-50/50 rounded-2xl border border-rose-100 space-y-2">
+                      <span className="text-[10px] font-bold text-rose-600 uppercase block flex items-center gap-1">
+                        <ShieldAlert className="h-3.5 w-3.5" /> Emergency Contact
+                      </span>
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between"><span className="text-slate-500 font-medium">Contact Person:</span> <span className="font-bold text-slate-800">{pData.emergencyContactName || '--'}</span></div>
+                        <div className="flex justify-between"><span className="text-slate-500 font-medium">Relationship:</span> <span className="font-bold text-slate-800">{pData.emergencyContactRelation || '--'}</span></div>
+                        <div className="flex justify-between"><span className="text-slate-500 font-medium">Phone Number:</span> <span className="font-bold text-slate-800">{pData.emergencyContactPhone || '--'}</span></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 7. ASSIGNED ASSETS */}
+                {viewProfileActiveTab === 'assets' && (
+                  <div>
+                    {(!pData.allocatedAssets || pData.allocatedAssets.length === 0) ? (
+                      <div className="p-8 text-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50">
+                        <Package className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                        <p className="font-bold text-slate-600">No equipment currently allocated</p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Edit full profile info or use Asset Management to assign laptops, mice, etc.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {pData.allocatedAssets.map((ast: AssetItem, idx: number) => (
+                          <div key={ast.id || idx} className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <span className="font-extrabold text-slate-800 flex items-center gap-1.5">
+                                <Laptop className="h-3.5 w-3.5 text-indigo-600" />
+                                {ast.name}
+                              </span>
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                {ast.status || 'Assigned'}
+                              </span>
+                            </div>
+                            <div className="text-[11px] text-slate-500 space-y-0.5">
+                              {ast.model && <div>Model: <span className="font-medium text-slate-700">{ast.model}</span></div>}
+                              {ast.assetTag && <div>Tag / Serial: <span className="font-mono font-medium text-slate-700">{ast.assetTag}</span></div>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/80">
+                <span className="text-[11px] text-slate-400 font-medium">
+                  GreytHR Profile System • ID #{viewingProfileEmp.id}
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setViewingProfileEmp(null)}>
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ───────────────────────────────────────────────────────────── */}
       {/* FULL EMPLOYEE INFORMATION EDITOR MODAL (ADMIN ONLY)            */}

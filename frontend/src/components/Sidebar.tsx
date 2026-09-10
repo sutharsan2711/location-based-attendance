@@ -18,17 +18,24 @@ import {
   Clock,
   Laptop,
   Megaphone,
+  X,
+  LogOut,
 } from 'lucide-react';
 
-const Sidebar: React.FC = () => {
-  const { user } = useAuth();
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onCloseMobile?: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onCloseMobile }) => {
+  const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
   // State for collapsible sub-menus
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
-    'Leave': location.pathname.includes('/leaves'),
-    'Attendance': location.pathname.includes('/attendance') || location.pathname === '/employee/dashboard',
+    Leave: location.pathname.includes('/leaves'),
+    Attendance: location.pathname.includes('/attendance') || location.pathname === '/employee/dashboard',
   });
 
   const toggleMenu = (name: string) => {
@@ -45,22 +52,47 @@ const Sidebar: React.FC = () => {
         .toUpperCase()
     : 'EP';
 
-  return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-slate-200/80 bg-white/95 backdrop-blur-md md:flex select-none shadow-sm">
+  const handleLinkClick = () => {
+    if (onCloseMobile) {
+      onCloseMobile();
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+    if (onCloseMobile) onCloseMobile();
+  };
+
+  const menuContent = (
+    <>
       {/* ── 1. Brand Header ── */}
-      <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100">
-        <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-indigo-500 flex flex-col items-center justify-center text-white shadow-md shadow-indigo-500/20 font-black leading-none shrink-0 ring-2 ring-indigo-50">
-          <span className="text-xs tracking-tight font-extrabold">EC</span>
-          <span className="text-[7px] font-bold tracking-wider uppercase mt-0.5 opacity-90">Learnix</span>
+      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-indigo-500 flex flex-col items-center justify-center text-white shadow-md shadow-indigo-500/20 font-black leading-none shrink-0 ring-2 ring-indigo-50">
+            <span className="text-xs tracking-tight font-extrabold">EC</span>
+            <span className="text-[7px] font-bold tracking-wider uppercase mt-0.5 opacity-90">Learnix</span>
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-black text-slate-800 tracking-tight font-display">EC Learnix</span>
+            <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Employee Portal</span>
+          </div>
         </div>
-        <div className="flex flex-col min-w-0">
-          <span className="text-sm font-black text-slate-800 tracking-tight font-display">EC Learnix</span>
-          <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Employee Portal</span>
-        </div>
+
+        {/* Mobile Close Button */}
+        {onCloseMobile && (
+          <button
+            onClick={onCloseMobile}
+            className="md:hidden p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            title="Close menu"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       {/* ── 2. User Info Card ── */}
-      <div className="px-4 py-3.5 border-b border-slate-100 bg-gradient-to-b from-slate-50/80 to-transparent">
+      <div className="px-4 py-3.5 border-b border-slate-100 bg-gradient-to-b from-slate-50/80 to-transparent shrink-0">
         <div className="flex items-center gap-3 p-2 rounded-2xl bg-white border border-slate-200/70 shadow-xs hover:border-indigo-200 transition-all">
           <div className="relative shrink-0">
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white font-bold text-xs shadow-xs">
@@ -75,8 +107,11 @@ const Sidebar: React.FC = () => {
             </p>
           </div>
           <button
-            onClick={() => navigate('/employee/profile')}
-            className="text-slate-400 hover:text-indigo-600 transition-colors p-1 hover:bg-indigo-50 rounded-lg"
+            onClick={() => {
+              navigate('/employee/profile');
+              handleLinkClick();
+            }}
+            className="text-slate-400 hover:text-indigo-600 transition-colors p-1 hover:bg-indigo-50 rounded-lg cursor-pointer"
             title="My Profile"
           >
             <Settings className="h-3.5 w-3.5" />
@@ -89,6 +124,7 @@ const Sidebar: React.FC = () => {
         {/* Home / Dashboard */}
         <NavLink
           to="/employee/dashboard"
+          onClick={handleLinkClick}
           className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all ${
               isActive || location.pathname === '/'
@@ -104,6 +140,7 @@ const Sidebar: React.FC = () => {
         {/* Company Announcements */}
         <NavLink
           to="/employee/announcements"
+          onClick={handleLinkClick}
           className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all ${
               isActive
@@ -119,6 +156,7 @@ const Sidebar: React.FC = () => {
         {/* My Tasks */}
         <NavLink
           to="/employee/tasks"
+          onClick={handleLinkClick}
           className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all ${
               isActive
@@ -145,12 +183,17 @@ const Sidebar: React.FC = () => {
               <CheckCircle className="h-4 w-4 shrink-0 text-emerald-600" />
               <span className="font-semibold text-slate-800">Attendance</span>
             </div>
-            {openMenus['Attendance'] ? <ChevronUp className="h-3.5 w-3.5 text-slate-400" /> : <ChevronDown className="h-3.5 w-3.5 text-slate-400" />}
+            {openMenus['Attendance'] ? (
+              <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
+            ) : (
+              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+            )}
           </button>
           {openMenus['Attendance'] && (
             <div className="pl-9 pr-2 py-1 space-y-1 text-[11px] animate-fade-in">
               <NavLink
                 to="/employee/dashboard"
+                onClick={handleLinkClick}
                 className={({ isActive }) =>
                   `block py-1.5 px-2 rounded-lg transition-colors ${
                     isActive ? 'text-indigo-600 font-bold bg-indigo-50/50' : 'text-slate-500 hover:text-indigo-600 hover:bg-slate-50'
@@ -161,6 +204,7 @@ const Sidebar: React.FC = () => {
               </NavLink>
               <NavLink
                 to="/employee/attendance"
+                onClick={handleLinkClick}
                 className={({ isActive }) =>
                   `block py-1.5 px-2 rounded-lg transition-colors ${
                     isActive ? 'text-indigo-600 font-bold bg-indigo-50/50' : 'text-slate-500 hover:text-indigo-600 hover:bg-slate-50'
@@ -187,13 +231,18 @@ const Sidebar: React.FC = () => {
               <Calendar className="h-4 w-4 shrink-0 text-indigo-500" />
               <span className="font-semibold text-slate-800">Leave & Permission</span>
             </div>
-            {openMenus['Leave'] ? <ChevronUp className="h-3.5 w-3.5 text-slate-400" /> : <ChevronDown className="h-3.5 w-3.5 text-slate-400" />}
+            {openMenus['Leave'] ? (
+              <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
+            ) : (
+              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+            )}
           </button>
           {openMenus['Leave'] && (
             <div className="pl-9 pr-2 py-1 space-y-1 text-[11px] animate-fade-in">
               <NavLink
                 to="/employee/leaves"
                 end
+                onClick={handleLinkClick}
                 className={({ isActive }) =>
                   `block py-1.5 px-2 rounded-lg transition-colors ${
                     isActive ? 'text-indigo-600 font-bold bg-indigo-50/50' : 'text-slate-500 hover:text-indigo-600 hover:bg-slate-50'
@@ -204,6 +253,7 @@ const Sidebar: React.FC = () => {
               </NavLink>
               <NavLink
                 to="/employee/leaves/balances"
+                onClick={handleLinkClick}
                 className={({ isActive }) =>
                   `block py-1.5 px-2 rounded-lg transition-colors ${
                     isActive ? 'text-indigo-600 font-bold bg-indigo-50/50' : 'text-slate-500 hover:text-indigo-600 hover:bg-slate-50'
@@ -214,6 +264,7 @@ const Sidebar: React.FC = () => {
               </NavLink>
               <NavLink
                 to="/employee/leaves/calendar"
+                onClick={handleLinkClick}
                 className={({ isActive }) =>
                   `block py-1.5 px-2 rounded-lg transition-colors ${
                     isActive ? 'text-indigo-600 font-bold bg-indigo-50/50' : 'text-slate-500 hover:text-indigo-600 hover:bg-slate-50'
@@ -224,6 +275,7 @@ const Sidebar: React.FC = () => {
               </NavLink>
               <NavLink
                 to="/employee/leaves/holidays"
+                onClick={handleLinkClick}
                 className={({ isActive }) =>
                   `block py-1.5 px-2 rounded-lg transition-colors ${
                     isActive ? 'text-indigo-600 font-bold bg-indigo-50/50' : 'text-slate-500 hover:text-indigo-600 hover:bg-slate-50'
@@ -239,6 +291,7 @@ const Sidebar: React.FC = () => {
         {/* My Payroll */}
         <NavLink
           to="/employee/payroll"
+          onClick={handleLinkClick}
           className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all ${
               isActive
@@ -254,6 +307,7 @@ const Sidebar: React.FC = () => {
         {/* My KPI Performance */}
         <NavLink
           to="/employee/kpi"
+          onClick={handleLinkClick}
           className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all ${
               isActive
@@ -269,6 +323,7 @@ const Sidebar: React.FC = () => {
         {/* My Assets & Requests */}
         <NavLink
           to="/employee/assets"
+          onClick={handleLinkClick}
           className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all ${
               isActive
@@ -284,6 +339,7 @@ const Sidebar: React.FC = () => {
         {/* Profile */}
         <NavLink
           to="/employee/profile"
+          onClick={handleLinkClick}
           className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all ${
               isActive
@@ -296,9 +352,44 @@ const Sidebar: React.FC = () => {
           <span>My Profile & Info</span>
         </NavLink>
       </nav>
-    </aside>
+
+      {/* Mobile Logout Button at Bottom */}
+      <div className="p-4 border-t border-slate-100 md:hidden shrink-0">
+        <button
+          onClick={handleLogout}
+          className="flex w-full items-center justify-center gap-2 px-3 py-2.5 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition-all"
+        >
+          <LogOut className="h-4 w-4" />
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* ── Desktop Permanent Sidebar ── */}
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-slate-200/80 bg-white/95 backdrop-blur-md md:flex select-none shadow-sm">
+        {menuContent}
+      </aside>
+
+      {/* ── Mobile Slide-out Drawer ── */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex">
+          {/* Backdrop Overlay */}
+          <div
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs animate-fade-in"
+            onClick={onCloseMobile}
+          />
+
+          {/* Drawer Panel */}
+          <aside className="relative z-50 w-72 max-w-[85vw] flex flex-col bg-white shadow-2xl animate-in slide-in-from-left duration-200 select-none h-full">
+            {menuContent}
+          </aside>
+        </div>
+      )}
+    </>
   );
 };
 
 export default Sidebar;
-

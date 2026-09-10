@@ -507,7 +507,7 @@ const EmployeeDashboard: React.FC = () => {
   const hasCheckedOut = attendance?.status === 'COMPLETED' || Boolean(attendance?.logoutTime);
 
   if (loading) {
-    return <Loading fullScreen message="Loading Eclearnix EDTECH Portal..." />;
+    return <Loading message="Loading Eclearnix EDTECH Portal..." />;
   }
 
   return (

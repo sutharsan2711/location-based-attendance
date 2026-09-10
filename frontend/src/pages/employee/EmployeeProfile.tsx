@@ -285,6 +285,10 @@ const EmployeeProfile: React.FC = () => {
   const rawPan = pInfo.panNumber || 'ABCDE1234F';
   const maskedPan = rawPan.length > 4 ? `XXXXX${rawPan.slice(-4)}` : 'XXXXX1234F';
 
+  if (loading && !profile) {
+    return <Loading message="Loading employee profile..." />;
+  }
+
   return (
     <div className="space-y-4 max-w-7xl mx-auto pb-16 animate-slide">
       {/* ── Top Header Ribbon ── */}

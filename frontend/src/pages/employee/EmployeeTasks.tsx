@@ -205,7 +205,7 @@ const EmployeeTasks: React.FC = () => {
   };
 
   if (loading) {
-    return <Loading fullScreen message="Loading Tasks and Daily Work Plans..." />;
+    return <Loading message="Loading Tasks and Daily Work Plans..." />;
   }
 
   return (

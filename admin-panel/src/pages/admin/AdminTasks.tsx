@@ -428,7 +428,7 @@ const AdminTasks: React.FC = () => {
   };
 
   if (loading && workPlans.length === 0 && tasks.length === 0) {
-    return <Loading fullScreen message="Loading Task Management & Work Plans..." />;
+    return <Loading message="Loading Task Management & Work Plans..." />;
   }
 
   // Work plan categories for filter dropdown

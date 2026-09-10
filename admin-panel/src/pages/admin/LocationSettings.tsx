@@ -142,7 +142,7 @@ const LocationSettings: React.FC = () => {
     }
   };
 
-  if (loading) return <Loading fullScreen message="Loading company locations..." />;
+  if (loading) return <Loading message="Loading company locations..." />;
 
   return (
     <div className="space-y-6">

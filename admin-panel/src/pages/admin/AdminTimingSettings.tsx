@@ -263,7 +263,7 @@ const AdminTimingSettings: React.FC = () => {
 
   const presetGraceOptions = [0, 5, 10, 15, 30];
 
-  if (loading) return <Loading fullScreen message="Loading office timing engine..." />;
+  if (loading) return <Loading message="Loading office timing engine..." />;
 
   return (
     <div className="space-y-6 max-w-7xl pb-16 animate-fade-in text-slate-800">

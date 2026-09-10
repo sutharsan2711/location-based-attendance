@@ -305,7 +305,7 @@ const AdminDashboard: React.FC = () => {
     fetchDashboardData(startDate, endDate);
   }, [startDate, endDate]);
 
-  if (loading && !stats) return <Loading fullScreen message="Loading dashboard insights..." />;
+  if (loading && !stats) return <Loading message="Loading dashboard insights..." />;
 
   const rangeLabel = isSingleDay
     ? formatShortDate(startDate)

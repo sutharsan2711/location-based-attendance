@@ -265,7 +265,7 @@ const EmployeeAssets: React.FC = () => {
   const pendingRequestsCount = requests.filter((r) => r.status === 'PENDING').length;
 
   if (loading) {
-    return <Loading fullScreen message="Loading your assigned assets and requests..." />;
+    return <Loading message="Loading your assigned assets and requests..." />;
   }
 
   return (

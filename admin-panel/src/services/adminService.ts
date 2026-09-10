@@ -124,29 +124,129 @@ export const adminService = {
     return response.data;
   },
 
-  getCalendarSummary: async (year?: number, month?: number): Promise<CalendarSummaryDay[]> => {
+  getCalendarSummary: async (year?: number, month?: number, department?: string): Promise<CalendarSummaryResponse> => {
     const params = new URLSearchParams();
     if (year) params.append('year', String(year));
     if (month) params.append('month', String(month));
+    if (department && department !== 'ALL') params.append('department', department);
     const response = await api.get('/admin/calendar/summary', { params });
     return response.data;
   },
 };
 
-export interface CalendarSummaryDay {
+export interface CalendarEmployeePresent {
+  id: number;
+  name: string;
+  employeeCode: string;
+  department: string;
+  loginTime: string | null;
+  logoutTime: string | null;
+  status: string;
+  timingStatus: string;
+  workMode?: string;
+}
+
+export interface CalendarEmployeeLeave {
+  id: number;
+  name: string;
+  employeeCode: string;
+  department: string;
+  leaveType: string;
+  reason: string;
+  isHalfDay?: boolean;
+  halfDaySession?: string | null;
+}
+
+export interface CalendarEmployeeWfh {
+  id: number;
+  name: string;
+  employeeCode: string;
+  department: string;
+  reason: string;
+}
+
+export interface CalendarEmployeeLate {
+  id: number;
+  name: string;
+  employeeCode: string;
+  department: string;
+  loginTime: string | null;
+  timingStatus: string;
+}
+
+export interface CalendarEmployeePermission {
+  id: number;
+  name: string;
+  employeeCode: string;
+  department: string;
+  fromTime: string | null;
+  toTime: string | null;
+  reason: string;
+}
+
+export interface CalendarEmployeeAbsent {
+  id: number;
+  name: string;
+  employeeCode: string;
+  department: string;
+}
+
+export interface CalendarDayData {
   date: string;
-  presents: number;
-  leaves: number;
-  wfh: number;
-  permissions: number;
-  late: number;
+  day: number;
+  dayOfWeek: string;
+  isWeekend: boolean;
+  isHoliday: boolean;
+  holidayName: string | null;
+  holidayType: string | null;
+  totalEmployees: number;
+  presentCount: number;
+  leaveCount: number;
+  wfhCount: number;
+  lateCount: number;
+  permissionCount: number;
+  absentCount: number;
+  presentEmployees: CalendarEmployeePresent[];
+  leaveEmployees: CalendarEmployeeLeave[];
+  wfhEmployees: CalendarEmployeeWfh[];
+  lateEmployees: CalendarEmployeeLate[];
+  permissionEmployees: CalendarEmployeePermission[];
+  absentEmployees: CalendarEmployeeAbsent[];
+  // Compatibility aliases
+  presents?: number;
+  leaves?: number;
+  wfh?: number;
+  permissions?: number;
+  late?: number;
   details?: {
-    presentsList: { employeeId: number; name: string; employeeCode: string; department?: string }[];
-    leavesList: { employeeId: number; name: string; employeeCode: string; leaveType: string; handoverEmployee?: string }[];
-    wfhList: { employeeId: number; name: string; employeeCode: string }[];
-    permissionsList: { employeeId: number; name: string; employeeCode: string; time: string }[];
-    lateList: { employeeId: number; name: string; employeeCode: string; checkIn: string }[];
+    presentsList?: any[];
+    leavesList?: any[];
+    wfhList?: any[];
+    permissionsList?: any[];
+    lateList?: any[];
   };
 }
+
+export interface CalendarSummaryResponse {
+  year: number;
+  month: number;
+  department: string;
+  totalEmployees: number;
+  departments: string[];
+  metrics: {
+    totalPresentSum: number;
+    totalLeavesSum: number;
+    totalWfhSum: number;
+    totalLateSum: number;
+    totalPermissionsSum: number;
+    daysInMonth: number;
+  };
+  dailySummaries: Record<string, CalendarDayData>;
+  days: CalendarDayData[];
+}
+
+// Backward compatibility
+export type CalendarSummaryDay = CalendarDayData;
+
 
 

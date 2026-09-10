@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { attendanceService } from '../../services/attendanceService';
 import { adminService } from '../../services/adminService';
 import { employeeService } from '../../services/employeeService';
@@ -16,6 +17,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Calendar,
+  CalendarDays,
   ListFilter,
   Download,
   Clock,
@@ -30,6 +32,7 @@ import {
 } from 'lucide-react';
 
 const Attendance: React.FC = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'daily' | 'monthly'>('daily');
 
   // ── Daily Tab State ──
@@ -674,10 +677,10 @@ const Attendance: React.FC = () => {
         </div>
 
         {/* Tab switcher buttons */}
-        <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl">
+        <div className="flex flex-wrap items-center gap-2 bg-slate-100 p-1 rounded-2xl">
           <button
             onClick={() => setActiveTab('daily')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'daily'
                 ? 'bg-white text-slate-800 shadow-sm'
                 : 'text-slate-500 hover:text-slate-800'
@@ -688,7 +691,7 @@ const Attendance: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab('monthly')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'monthly'
                 ? 'bg-white text-emerald-700 shadow-sm'
                 : 'text-slate-500 hover:text-slate-800'
@@ -696,6 +699,13 @@ const Attendance: React.FC = () => {
           >
             <Calendar className="h-4 w-4" />
             Date-as-Columns Time Grid
+          </button>
+          <button
+            onClick={() => navigate('/calendar')}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-primary-700 bg-primary-50 hover:bg-primary-100 hover:text-primary-800 transition-all border border-primary-200/60 shadow-xs cursor-pointer"
+          >
+            <CalendarDays className="h-4 w-4 text-primary-600" />
+            Monthly Attendance Calendar
           </button>
         </div>
       </div>

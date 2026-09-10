@@ -54,6 +54,10 @@ const LeaveCalendar: React.FC = () => {
     return leaves.find((l) => formattedDay >= l.fromDate && formattedDay <= l.toDate);
   };
 
+  if (loading) {
+    return <Loading message="Loading leave calendar..." />;
+  }
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12 select-none animate-fade-in">
       <div className="flex items-center justify-between">

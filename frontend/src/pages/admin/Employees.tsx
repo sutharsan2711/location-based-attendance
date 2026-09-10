@@ -215,7 +215,7 @@ const Employees: React.FC = () => {
     },
   ];
 
-  if (loading) return <Loading fullScreen message="Loading employees profiles..." />;
+  if (loading) return <Loading message="Loading employees profiles..." />;
 
   return (
     <div className="space-y-6">

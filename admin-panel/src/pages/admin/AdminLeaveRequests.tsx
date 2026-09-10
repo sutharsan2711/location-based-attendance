@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { requestService } from '../../services/requestService';
 import { employeeService } from '../../services/employeeService';
-import { adminService, CalendarSummaryDay } from '../../services/adminService';
+import { adminService, CalendarSummaryDay, CalendarDayData } from '../../services/adminService';
 import {
   LeaveRequest,
   PermissionRequest,
@@ -200,7 +200,46 @@ const AdminLeaveRequests: React.FC = () => {
     setCalendarLoading(true);
     try {
       const data = await adminService.getCalendarSummary(year, month);
-      setCalendarDays(data);
+      const mapped = (data.days || []).map((d) => ({
+        ...d,
+        presents: d.presentCount,
+        leaves: d.leaveCount,
+        wfh: d.wfhCount,
+        permissions: d.permissionCount,
+        late: d.lateCount,
+        details: {
+          presentsList: d.presentEmployees.map((e) => ({
+            employeeId: e.id,
+            name: e.name,
+            employeeCode: e.employeeCode,
+            department: e.department,
+          })),
+          leavesList: d.leaveEmployees.map((e) => ({
+            employeeId: e.id,
+            name: e.name,
+            employeeCode: e.employeeCode,
+            leaveType: e.leaveType,
+          })),
+          wfhList: d.wfhEmployees.map((e) => ({
+            employeeId: e.id,
+            name: e.name,
+            employeeCode: e.employeeCode,
+          })),
+          permissionsList: d.permissionEmployees.map((e) => ({
+            employeeId: e.id,
+            name: e.name,
+            employeeCode: e.employeeCode,
+            time: e.fromTime ? new Date(e.fromTime).toLocaleTimeString() : '',
+          })),
+          lateList: d.lateEmployees.map((e) => ({
+            employeeId: e.id,
+            name: e.name,
+            employeeCode: e.employeeCode,
+            checkIn: e.loginTime ? new Date(e.loginTime).toLocaleTimeString() : '',
+          })),
+        },
+      }));
+      setCalendarDays(mapped as any);
     } catch (err) {
       console.error('Failed to fetch calendar summary', err);
     } finally {
@@ -1372,8 +1411,28 @@ const AdminLeaveRequests: React.FC = () => {
                   // Actual month days
                   for (let d = 1; d <= totalDays; d++) {
                     const dateStr = `${calYear}-${String(calMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                    const dayData = calendarDays.find((cd) => cd.date === dateStr) || {
+                    const foundDay = calendarDays.find((cd) => cd.date === dateStr);
+                    const dayData: CalendarDayData = foundDay || {
                       date: dateStr,
+                      day: d,
+                      dayOfWeek: '',
+                      isWeekend: false,
+                      isHoliday: false,
+                      holidayName: null,
+                      holidayType: null,
+                      totalEmployees: 0,
+                      presentCount: 0,
+                      leaveCount: 0,
+                      wfhCount: 0,
+                      lateCount: 0,
+                      permissionCount: 0,
+                      absentCount: 0,
+                      presentEmployees: [],
+                      leaveEmployees: [],
+                      wfhEmployees: [],
+                      lateEmployees: [],
+                      permissionEmployees: [],
+                      absentEmployees: [],
                       presents: 0,
                       leaves: 0,
                       wfh: 0,
@@ -1381,13 +1440,19 @@ const AdminLeaveRequests: React.FC = () => {
                       late: 0,
                     };
 
+                    const presentsCount = dayData.presentCount ?? dayData.presents ?? 0;
+                    const leavesCount = dayData.leaveCount ?? dayData.leaves ?? 0;
+                    const wfhCount = dayData.wfhCount ?? dayData.wfh ?? 0;
+                    const permissionsCount = dayData.permissionCount ?? dayData.permissions ?? 0;
+                    const lateCount = dayData.lateCount ?? dayData.late ?? 0;
+
                     const isToday = dateStr === todayStr;
                     const hasData =
-                      dayData.presents > 0 ||
-                      dayData.leaves > 0 ||
-                      dayData.wfh > 0 ||
-                      dayData.permissions > 0 ||
-                      dayData.late > 0;
+                      presentsCount > 0 ||
+                      leavesCount > 0 ||
+                      wfhCount > 0 ||
+                      permissionsCount > 0 ||
+                      lateCount > 0;
 
                     cells.push(
                       <div
@@ -1420,34 +1485,34 @@ const AdminLeaveRequests: React.FC = () => {
 
                         {/* Counts Badges */}
                         <div className="mt-2 space-y-1">
-                          {dayData.presents > 0 && (
+                          {presentsCount > 0 && (
                             <div className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100/80 text-emerald-800 flex items-center justify-between">
                               <span>🟢 Presents</span>
-                              <span className="font-black">{dayData.presents}</span>
+                              <span className="font-black">{presentsCount}</span>
                             </div>
                           )}
-                          {dayData.leaves > 0 && (
+                          {leavesCount > 0 && (
                             <div className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-rose-100/80 text-rose-800 flex items-center justify-between">
                               <span>🔴 Leaves</span>
-                              <span className="font-black">{dayData.leaves}</span>
+                              <span className="font-black">{leavesCount}</span>
                             </div>
                           )}
-                          {dayData.wfh > 0 && (
+                          {wfhCount > 0 && (
                             <div className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-blue-100/80 text-blue-800 flex items-center justify-between">
                               <span>🔵 WFH</span>
-                              <span className="font-black">{dayData.wfh}</span>
+                              <span className="font-black">{wfhCount}</span>
                             </div>
                           )}
-                          {dayData.permissions > 0 && (
+                          {permissionsCount > 0 && (
                             <div className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100/80 text-amber-800 flex items-center justify-between">
                               <span>🟡 Perms</span>
-                              <span className="font-black">{dayData.permissions}</span>
+                              <span className="font-black">{permissionsCount}</span>
                             </div>
                           )}
-                          {dayData.late > 0 && (
+                          {lateCount > 0 && (
                             <div className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-orange-100/80 text-orange-800 flex items-center justify-between">
                               <span>🟠 Late</span>
-                              <span className="font-black">{dayData.late}</span>
+                              <span className="font-black">{lateCount}</span>
                             </div>
                           )}
                           {!hasData && (

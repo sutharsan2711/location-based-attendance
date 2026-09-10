@@ -1169,7 +1169,7 @@ const Employees: React.FC = () => {
   const ojtCount = employees.filter(e => (e.role || '').toUpperCase() === 'OJT').length;
   const adminCount = employees.filter(e => (e.role || '').toUpperCase() === 'ADMIN').length;
 
-  if (loading) return <Loading fullScreen message="Loading employees profiles..." />;
+  if (loading) return <Loading message="Loading employees profiles..." />;
 
   return (
     <div className="space-y-6">

@@ -57,7 +57,7 @@ const AdminDashboard: React.FC = () => {
     fetchDashboardData();
   }, []);
 
-  if (loading) return <Loading fullScreen message="Loading dashboard insights..." />;
+  if (loading) return <Loading message="Loading dashboard insights..." />;
   if (error || !stats) {
     return (
       <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-800">

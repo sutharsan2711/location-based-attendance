@@ -156,7 +156,7 @@ const DatabaseReset: React.FC = () => {
     }
   };
 
-  if (loading) return <Loading fullScreen message="Loading database status..." />;
+  if (loading) return <Loading message="Loading database status..." />;
 
   return (
     <div className="space-y-6 max-w-6xl">

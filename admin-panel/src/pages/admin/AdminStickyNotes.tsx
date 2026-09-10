@@ -275,7 +275,7 @@ const AdminStickyNotes: React.FC = () => {
   };
 
   if (loading && notes.length === 0) {
-    return <Loading fullScreen message="Loading Admin Sticky Notes..." />;
+    return <Loading message="Loading Admin Sticky Notes..." />;
   }
 
   return (

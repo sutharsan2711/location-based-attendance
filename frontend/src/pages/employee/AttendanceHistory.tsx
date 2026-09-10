@@ -198,7 +198,7 @@ const AttendanceHistory: React.FC = () => {
     },
   ];
 
-  if (loading) return <Loading fullScreen message="Loading attendance history..." />;
+  if (loading) return <Loading message="Loading attendance history..." />;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12 select-none animate-fade-in">

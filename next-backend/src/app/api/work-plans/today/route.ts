@@ -15,8 +15,10 @@ export async function GET(req: NextRequest) {
     const dateQuery = searchParams.get("date");
     const now = dateQuery ? new Date(dateQuery) : new Date();
 
-    const startOfDay = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0));
-    const endOfDay = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999));
+    const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
+    const endOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+    const bufferStart = new Date(startOfDay.getTime() - 14 * 3600 * 1000);
+    const bufferEnd = new Date(endOfDay.getTime() + 14 * 3600 * 1000);
 
     const empId = BigInt(authUser.id);
 
@@ -25,8 +27,8 @@ export async function GET(req: NextRequest) {
       where: {
         employeeId: empId,
         planDate: {
-          gte: startOfDay,
-          lte: endOfDay,
+          gte: bufferStart,
+          lte: bufferEnd,
         },
       },
       orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
@@ -37,8 +39,8 @@ export async function GET(req: NextRequest) {
       where: {
         employeeId: empId,
         noteDate: {
-          gte: startOfDay,
-          lte: endOfDay,
+          gte: bufferStart,
+          lte: bufferEnd,
         },
       },
     });
@@ -48,8 +50,8 @@ export async function GET(req: NextRequest) {
       where: {
         employeeId: empId,
         attendanceDate: {
-          gte: startOfDay,
-          lte: endOfDay,
+          gte: bufferStart,
+          lte: bufferEnd,
         },
       },
       orderBy: { id: "desc" },

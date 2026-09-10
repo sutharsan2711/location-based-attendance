@@ -14,16 +14,18 @@ export async function GET(req: NextRequest) {
     const dateQuery = searchParams.get("date");
     const now = dateQuery ? new Date(dateQuery) : new Date();
 
-    // Query whole day window to avoid any timezone/offset mismatch
-    const startOfDay = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0));
-    const endOfDay = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999));
+    // Query whole day window + 14h buffer to handle all client/server timezone offsets (UTC vs IST +5:30)
+    const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
+    const endOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+    const bufferStart = new Date(startOfDay.getTime() - 14 * 3600 * 1000);
+    const bufferEnd = new Date(endOfDay.getTime() + 14 * 3600 * 1000);
 
     const attendance = await prisma.attendance.findFirst({
       where: {
         employeeId: BigInt(authUser.id),
         attendanceDate: {
-          gte: startOfDay,
-          lte: endOfDay,
+          gte: bufferStart,
+          lte: bufferEnd,
         },
       },
       include: {

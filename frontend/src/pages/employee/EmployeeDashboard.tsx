@@ -343,14 +343,34 @@ const EmployeeDashboard: React.FC = () => {
         }
       }
 
+      let finalAttendance: any = null;
       if (attRes) {
-        const parsed = (attRes && typeof attRes === 'object' && 'attendance' in attRes)
-          ? ((attRes as any).attendance
-              ? { ...(attRes as any).attendance, isWfhApproved: (attRes as any).isWfhApproved, wfhRequest: (attRes as any).wfhRequest }
-              : ({ isWfhApproved: (attRes as any).isWfhApproved, wfhRequest: (attRes as any).wfhRequest } as any))
-          : attRes;
-        setAttendance(parsed);
+        if ('loginTime' in attRes && attRes.loginTime) {
+          finalAttendance = attRes;
+        } else if (attRes.attendance && typeof attRes.attendance === 'object' && attRes.attendance.loginTime) {
+          finalAttendance = {
+            ...attRes.attendance,
+            isWfhApproved: attRes.isWfhApproved,
+            wfhRequest: attRes.wfhRequest,
+          };
+        } else if (attRes && typeof attRes === 'object') {
+          finalAttendance = {
+            ...(attRes.attendance || {}),
+            isWfhApproved: attRes.isWfhApproved,
+            wfhRequest: attRes.wfhRequest,
+          };
+        }
       }
+
+      // If attRes didn't have loginTime, fallback to res.attendance from getTodayDashboard()
+      if ((!finalAttendance || !finalAttendance.loginTime) && res?.attendance?.loginTime) {
+        finalAttendance = {
+          ...(finalAttendance || {}),
+          ...res.attendance,
+        };
+      }
+
+      setAttendance(finalAttendance);
 
       if (tasksRes) {
         setAssignedTasks(tasksRes || []);
@@ -372,10 +392,7 @@ const EmployeeDashboard: React.FC = () => {
       }
 
       const activePlans = res?.plans || [];
-      const parsedForSummary = (attRes && typeof attRes === 'object' && 'attendance' in attRes)
-        ? (attRes as any).attendance
-        : attRes;
-      updateLocalSummary(activePlans, parsedForSummary);
+      updateLocalSummary(activePlans, finalAttendance);
     } catch (err) {
       console.error('Failed to load dashboard:', err);
     } finally {

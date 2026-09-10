@@ -855,66 +855,70 @@ const EmployeeLeaves: React.FC = () => {
 
       {/* ── UNIFIED APPLY MODAL ── */}
       {showApplyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-          <div className="relative w-full max-w-lg rounded-3xl bg-white p-7 shadow-2xl border border-slate-100 animate-scale-up my-8">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-md animate-fade-in">
+          <div className="relative w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-slate-200/80 max-h-[90vh] flex flex-col overflow-hidden animate-scale-up">
+            {/* Modal Header - Pinned at top */}
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                <div className="h-10 w-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold shadow-xs">
                   <PlusCircle className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">Apply for Leave / Permission</h3>
-                  <p className="text-xs text-slate-400">Choose request type and assign task handover</p>
+                  <h3 className="text-base font-bold text-slate-900">Apply for Leave / Permission</h3>
+                  <p className="text-xs text-slate-400">Choose request type and optional handover</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowApplyModal(false)}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl"
+                className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Request Type Selector */}
-            <div className="mt-5 grid grid-cols-2 gap-3 p-1.5 bg-slate-100 rounded-2xl border border-slate-200">
-              <button
-                type="button"
-                onClick={() => setApplyType('LEAVE')}
-                className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                  applyType === 'LEAVE'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <CalendarDays className="h-4 w-4" />
-                Full / Multi-Day Leave
-              </button>
-              <button
-                type="button"
-                onClick={() => setApplyType('PERMISSION')}
-                className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                  applyType === 'PERMISSION'
-                    ? 'bg-white text-teal-600 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Clock3 className="h-4 w-4" />
-                Hourly Permission
-              </button>
+            {/* Request Type Selector - Pinned underneath header */}
+            <div className="px-6 pt-4 pb-2 shrink-0 bg-white">
+              <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100/90 rounded-2xl border border-slate-200/80">
+                <button
+                  type="button"
+                  onClick={() => setApplyType('LEAVE')}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                    applyType === 'LEAVE'
+                      ? 'bg-white text-blue-600 shadow-sm border border-slate-200/60'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <CalendarDays className="h-4 w-4" />
+                  <span>Full / Multi-Day Leave</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setApplyType('PERMISSION')}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                    applyType === 'PERMISSION'
+                      ? 'bg-white text-teal-600 shadow-sm border border-slate-200/60'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Clock3 className="h-4 w-4" />
+                  <span>Hourly Permission</span>
+                </button>
+              </div>
             </div>
 
-            <form onSubmit={handleApply} className="mt-5 space-y-4">
+            {/* Modal Body - Smoothly scrollable */}
+            <form onSubmit={handleApply} className="flex-1 overflow-y-auto px-6 py-3 space-y-4">
               {applyType === 'LEAVE' ? (
                 <>
                   {/* Leave Type */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                      Leave Type *
+                      Leave Type <span className="text-rose-500">*</span>
                     </label>
                     <select
                       value={leaveType}
                       onChange={(e) => setLeaveType(e.target.value as LeaveType)}
-                      className="w-full px-4 py-2.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      className="w-full px-3.5 py-2.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     >
                       <option value="CASUAL_LEAVE">Casual Leave (CL)</option>
                       <option value="SICK_LEAVE">Sick Leave (SL)</option>
@@ -926,7 +930,7 @@ const EmployeeLeaves: React.FC = () => {
 
                     {/* Comp Off Info Helper */}
                     {leaveType === 'COMP_OFF' && (
-                      <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs space-y-1 animate-fade-in">
+                      <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs space-y-1 animate-fade-in">
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-emerald-900">Available Comp-Off Balance:</span>
                           <span className="font-extrabold text-emerald-800 font-mono px-2 py-0.5 bg-emerald-100/90 rounded-md">
@@ -941,7 +945,7 @@ const EmployeeLeaves: React.FC = () => {
 
                     {/* Work From Home Info Helper */}
                     {leaveType === 'WORK_FROM_HOME' && (
-                      <div className="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-2xl text-xs space-y-1 animate-fade-in">
+                      <div className="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs space-y-1 animate-fade-in">
                         <div className="flex items-center gap-1.5">
                           <span className="text-base">🏡</span>
                           <span className="font-bold text-purple-900">Admin-Controlled Work From Home</span>
@@ -957,30 +961,32 @@ const EmployeeLeaves: React.FC = () => {
                   <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-2.5">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-slate-700">Duration Type:</span>
-                      <div className="flex items-center gap-3">
-                        <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700">
-                          <input
-                            type="radio"
-                            name="isHalfDayRadio"
-                            checked={!isHalfDay}
-                            onChange={() => setIsHalfDay(false)}
-                            className="text-blue-600 focus:ring-blue-500"
-                          />
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsHalfDay(false)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            !isHalfDay
+                              ? 'bg-blue-600 text-white shadow-xs'
+                              : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                          }`}
+                        >
                           Full / Multi Day (1.0+)
-                        </label>
-                        <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-blue-700">
-                          <input
-                            type="radio"
-                            name="isHalfDayRadio"
-                            checked={isHalfDay}
-                            onChange={() => {
-                              setIsHalfDay(true);
-                              setToDate(fromDate);
-                            }}
-                            className="text-blue-600 focus:ring-blue-500"
-                          />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsHalfDay(true);
+                            setToDate(fromDate);
+                          }}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            isHalfDay
+                              ? 'bg-blue-600 text-white shadow-xs'
+                              : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                          }`}
+                        >
                           Half Day (0.5)
-                        </label>
+                        </button>
                       </div>
                     </div>
 
@@ -1013,7 +1019,7 @@ const EmployeeLeaves: React.FC = () => {
                           setFromDate(e.target.value);
                           if (isHalfDay) setToDate(e.target.value);
                         }}
-                        className="w-full px-4 py-2.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        className="w-full px-3.5 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                       />
                     </div>
                     {!isHalfDay && (
@@ -1026,14 +1032,14 @@ const EmployeeLeaves: React.FC = () => {
                           required
                           value={toDate}
                           onChange={(e) => setToDate(e.target.value)}
-                          className="w-full px-4 py-2.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                          className="w-full px-3.5 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                         />
                       </div>
                     )}
                   </div>
 
                   {/* ── WORK HANDOVER DELEGATION SECTION ── */}
-                  <div className="p-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl space-y-3">
+                  <div className="p-3.5 bg-indigo-50/50 border border-indigo-100 rounded-2xl space-y-2.5">
                     <div className="flex items-center gap-2 text-indigo-900 font-bold text-xs">
                       <UserCheck className="h-4 w-4 text-indigo-600" />
                       <span>Task Delegation / Work Handover (Optional)</span>
@@ -1085,7 +1091,7 @@ const EmployeeLeaves: React.FC = () => {
                       required
                       value={permDate}
                       onChange={(e) => setPermDate(e.target.value)}
-                      className="w-full px-4 py-2.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                      className="w-full px-3.5 py-2.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                     />
                   </div>
 
@@ -1100,7 +1106,7 @@ const EmployeeLeaves: React.FC = () => {
                         required
                         value={permFromTime}
                         onChange={(e) => setPermFromTime(e.target.value)}
-                        className="w-full px-4 py-2.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                        className="w-full px-3.5 py-2.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                       />
                     </div>
                     <div>
@@ -1112,7 +1118,7 @@ const EmployeeLeaves: React.FC = () => {
                         required
                         value={permToTime}
                         onChange={(e) => setPermToTime(e.target.value)}
-                        className="w-full px-4 py-2.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                        className="w-full px-3.5 py-2.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                       />
                     </div>
                   </div>
@@ -1122,7 +1128,7 @@ const EmployeeLeaves: React.FC = () => {
               {/* Reason */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Reason for Request *
+                  Reason for Request <span className="text-rose-500">*</span>
                 </label>
                 <textarea
                   rows={2}
@@ -1130,7 +1136,7 @@ const EmployeeLeaves: React.FC = () => {
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="e.g., Medical appointment, Family emergency, Work from home..."
-                  className="w-full px-4 py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-none"
+                  className="w-full px-3.5 py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
                 />
               </div>
 
@@ -1144,25 +1150,32 @@ const EmployeeLeaves: React.FC = () => {
                   value={remarks}
                   onChange={(e) => setRemarks(e.target.value)}
                   placeholder="Optional note for supervisor..."
-                  className="w-full px-4 py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  className="w-full px-3.5 py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 />
               </div>
 
-              {/* Submit Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+              {/* Submit Buttons - Pinned at bottom of form / modal */}
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowApplyModal(false)}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
+                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitLoading}
-                  className="px-6 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition-all cursor-pointer"
+                  className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition-all cursor-pointer disabled:opacity-50"
                 >
-                  {submitLoading ? 'Submitting...' : 'Submit Application'}
+                  {submitLoading ? (
+                    <span className="flex items-center gap-1.5">
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                      <span>Submitting...</span>
+                    </span>
+                  ) : (
+                    'Submit Application'
+                  )}
                 </button>
               </div>
             </form>

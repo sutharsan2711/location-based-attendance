@@ -15,9 +15,11 @@ export const getKpiTier = (score: number) => {
 };
 
 const KpiGauge: React.FC<KpiGaugeProps> = ({ score = 75, label, size = 220 }) => {
-  const clampedScore = Math.max(0, Math.min(100, Math.round(score)));
+  const safeScore = typeof score === 'number' && !isNaN(score) ? score : 0;
+  const clampedScore = Math.max(0, Math.min(100, Math.round(safeScore)));
   const tier = getKpiTier(clampedScore);
   const displayLabel = label || tier.label;
+
 
   const radius = 72;
   const strokeWidth = 12;

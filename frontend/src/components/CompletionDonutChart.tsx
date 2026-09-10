@@ -15,20 +15,20 @@ const COLORS = {
 
 const CompletionDonutChart: React.FC<CompletionDonutChartProps> = ({ summary }) => {
   const data = [
-    { name: 'Completed', value: summary.completedCount || 0, color: COLORS.Completed },
-    { name: 'In Progress', value: summary.inProgressCount || 0, color: COLORS.InProgress },
-    { name: 'Not Completed', value: summary.notCompletedCount || 0, color: COLORS.NotCompleted },
-    { name: 'Not Started', value: summary.notStartedCount || 0, color: COLORS.NotStarted },
+    { name: 'Completed', value: summary?.completedCount || 0, color: COLORS.Completed },
+    { name: 'In Progress', value: summary?.inProgressCount || 0, color: COLORS.InProgress },
+    { name: 'Not Completed', value: summary?.notCompletedCount || 0, color: COLORS.NotCompleted },
+    { name: 'Not Started', value: summary?.notStartedCount || 0, color: COLORS.NotStarted },
   ].filter((d) => d.value > 0);
 
-  const total = summary.totalTasks || 0;
-  const completionPercent = total > 0 ? Math.round(((summary.completedCount || 0) / total) * 100) : 0;
+  const total = summary?.totalTasks || 0;
+  const completionPercent = total > 0 ? Math.round(((summary?.completedCount || 0) / total) * 100) : 0;
   const chartData = data.length > 0 ? data : [{ name: 'No Tasks', value: 1, color: '#e2e8f0' }];
 
   return (
-    <div className="flex flex-col items-center justify-between h-full">
-      <div className="relative w-full h-44 flex items-center justify-center">
-        <ResponsiveContainer width="100%" height="100%">
+    <div className="flex flex-col items-center justify-between h-full w-full">
+      <div className="relative w-full h-44 flex items-center justify-center min-w-0">
+        <ResponsiveContainer width="100%" height={176} minWidth={0}>
           <PieChart>
             <Pie
               data={chartData}

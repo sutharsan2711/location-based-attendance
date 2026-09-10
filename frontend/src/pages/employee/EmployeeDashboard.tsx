@@ -572,7 +572,7 @@ const EmployeeDashboard: React.FC = () => {
       </div>
 
       {/* ── Active Announcement Alert Banner ── */}
-      {announcements.length > 0 && (
+      {announcements.length > 0 && announcements[0] && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-amber-300/90 rounded-3xl text-xs shadow-xs animate-fade-in">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm">
@@ -580,18 +580,18 @@ const EmployeeDashboard: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-black text-slate-900 text-xs sm:text-sm">{announcements[0].title}</span>
+                <span className="font-black text-slate-900 text-xs sm:text-sm">{announcements[0]?.title || 'Notice'}</span>
                 <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-200 text-amber-950 uppercase tracking-wider">
-                  {announcements[0].priority}
+                  {announcements[0]?.priority || 'INFO'}
                 </span>
-                {announcements[0].isPinned && (
+                {announcements[0]?.isPinned && (
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
                     📌 Pinned
                   </span>
                 )}
               </div>
               <p className="text-[11px] text-slate-600 line-clamp-1 font-medium mt-0.5 max-w-2xl">
-                {announcements[0].content}
+                {announcements[0]?.content || ''}
               </p>
             </div>
           </div>
@@ -632,22 +632,22 @@ const EmployeeDashboard: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-1">
             {teamLeaves.slice(0, 6).map((tl) => (
               <div
-                key={tl.id}
+                key={tl?.id || Math.random()}
                 className="p-3 rounded-2xl bg-slate-50/80 border border-slate-100 hover:border-indigo-200 transition-colors text-xs flex items-center justify-between gap-2"
               >
                 <div>
-                  <span className="font-bold text-slate-800 block text-xs">{tl.employee.name}</span>
+                  <span className="font-bold text-slate-800 block text-xs">{tl?.employee?.name || (tl as any)?.employeeName || 'Team Member'}</span>
                   <span className="text-[10.5px] text-slate-400 font-medium block">
-                    {tl.fromDate === tl.toDate ? tl.fromDate : `${tl.fromDate} - ${tl.toDate}`}
+                    {tl?.fromDate === tl?.toDate ? tl?.fromDate : `${tl?.fromDate || ''} - ${tl?.toDate || ''}`}
                   </span>
-                  {tl.handoverEmployee && (
+                  {tl?.handoverEmployee && (
                     <span className="text-[10px] text-teal-700 font-medium block mt-0.5">
-                      Handover: {tl.handoverEmployee.name}
+                      Handover: {tl.handoverEmployee?.name || 'Colleague'}
                     </span>
                   )}
                 </div>
                 <span className="px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold shrink-0">
-                  {tl.leaveType.replace(/_/g, ' ')}
+                  {tl?.leaveType ? tl.leaveType.replace(/_/g, ' ') : 'LEAVE'}
                 </span>
               </div>
             ))}

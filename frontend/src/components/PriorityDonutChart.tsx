@@ -15,19 +15,19 @@ const COLORS = {
 
 const PriorityDonutChart: React.FC<PriorityDonutChartProps> = ({ summary }) => {
   const data = [
-    { name: 'High', value: summary.highPriorityCount || 0, color: COLORS.High },
-    { name: 'Medium', value: summary.mediumPriorityCount || 0, color: COLORS.Medium },
-    { name: 'Low', value: summary.lowPriorityCount || 0, color: COLORS.Low },
-    { name: 'Not Set', value: summary.notSetPriorityCount || 0, color: COLORS.NotSet },
+    { name: 'High', value: summary?.highPriorityCount || 0, color: COLORS.High },
+    { name: 'Medium', value: summary?.mediumPriorityCount || 0, color: COLORS.Medium },
+    { name: 'Low', value: summary?.lowPriorityCount || 0, color: COLORS.Low },
+    { name: 'Not Set', value: summary?.notSetPriorityCount || 0, color: COLORS.NotSet },
   ].filter((d) => d.value > 0);
 
-  const total = summary.totalTasks || 0;
+  const total = summary?.totalTasks || 0;
   const chartData = data.length > 0 ? data : [{ name: 'No Tasks', value: 1, color: '#e2e8f0' }];
 
   return (
-    <div className="flex flex-col items-center justify-between h-full">
-      <div className="relative w-full h-44 flex items-center justify-center">
-        <ResponsiveContainer width="100%" height="100%">
+    <div className="flex flex-col items-center justify-between h-full w-full">
+      <div className="relative w-full h-44 flex items-center justify-center min-w-0">
+        <ResponsiveContainer width="100%" height={176} minWidth={0}>
           <PieChart>
             <Pie
               data={chartData}

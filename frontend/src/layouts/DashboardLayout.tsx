@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
+import ErrorBoundary from '../components/ErrorBoundary';
 import { Outlet } from 'react-router-dom';
 
 const DashboardLayout: React.FC = () => {
@@ -14,7 +15,9 @@ const DashboardLayout: React.FC = () => {
       <div className="flex flex-col flex-1 md:pl-60 min-h-screen w-full max-w-full">
         <Navbar onToggleMobileMenu={() => setMobileMenuOpen((prev) => !prev)} />
         <main className="flex-1 p-3.5 sm:p-5 md:p-6 flex flex-col w-full max-w-full overflow-x-hidden">
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
     </div>
@@ -22,3 +25,4 @@ const DashboardLayout: React.FC = () => {
 };
 
 export default DashboardLayout;
+

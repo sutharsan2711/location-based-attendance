@@ -215,12 +215,12 @@ const AttendanceHistory: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           {/* View Mode Toggle */}
           <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
             <button
               onClick={() => setViewMode('excel')}
-              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                 viewMode === 'excel'
                   ? 'bg-white text-emerald-700 shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
@@ -231,7 +231,7 @@ const AttendanceHistory: React.FC = () => {
             </button>
             <button
               onClick={() => setViewMode('table')}
-              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                 viewMode === 'table'
                   ? 'bg-white text-blue-600 shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
@@ -244,7 +244,7 @@ const AttendanceHistory: React.FC = () => {
 
           <button
             onClick={handleExportCSV}
-            className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm"
+            className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
           >
             <Download className="h-3.5 w-3.5" /> Download Excel CSV
           </button>
@@ -252,8 +252,8 @@ const AttendanceHistory: React.FC = () => {
       </div>
 
       {/* Quick Search */}
-      <div className="flex items-center justify-between gap-4 bg-white p-3 rounded-xl border border-slate-200/80 shadow-sm">
-        <div className="relative max-w-sm flex-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-xs">
+        <div className="relative w-full sm:max-w-sm flex-1">
           <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
           <input
             type="text"
@@ -263,7 +263,7 @@ const AttendanceHistory: React.FC = () => {
             className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-slate-200 text-xs outline-none focus:border-blue-500 bg-white"
           />
         </div>
-        <div className="text-xs text-slate-500 font-semibold font-mono">
+        <div className="text-xs text-slate-500 font-semibold font-mono self-end sm:self-auto">
           Showing {filteredHistory.length} records
         </div>
       </div>

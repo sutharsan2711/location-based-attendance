@@ -536,7 +536,7 @@ const EmployeeDashboard: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             {assignedTasks.length > 0 && (
               <button
                 onClick={() => setActiveTaskTab('ASSIGNED')}
@@ -696,11 +696,10 @@ const EmployeeDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* ── 2. Top Metric Overview Cards (Merged Task Overview + KPI + Attendance) ── */}
-      {/* ── 2. Top Metric Overview Cards (Balanced 3-Column Grid) ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4.5">
+      {/* ── 2. Top Metric Overview Cards (Fluid Adaptive Grid) ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 min-w-0">
         {/* 1. Merged Today's Tasks Overview Card */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between">
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between min-w-0">
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
@@ -718,7 +717,7 @@ const EmployeeDashboard: React.FC = () => {
             </div>
 
             {/* 4 Merged Metric Columns */}
-            <div className="grid grid-cols-4 gap-2 pt-3.5 text-center">
+            <div className="grid grid-cols-2 xs:grid-cols-4 sm:grid-cols-4 gap-2 pt-3.5 text-center">
               <div className="p-2 rounded-xl bg-slate-50/70 border border-slate-100">
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Total</span>
                 <span className="text-xl font-black text-slate-800 block mt-0.5">{summary.totalTasks}</span>
@@ -938,9 +937,9 @@ const EmployeeDashboard: React.FC = () => {
       )}
 
       {/* ── 3. Work Plan & Assigned Tasks Section ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Left 2 Cols: Table */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start min-w-0">
+        {/* Left Table */}
+        <div className="xl:col-span-8 bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden min-w-0">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border-b border-slate-100 gap-3">
             <div className="flex items-center gap-2 flex-wrap">
               <button
@@ -1177,7 +1176,7 @@ const EmployeeDashboard: React.FC = () => {
         </div>
 
         {/* Right 1 Col: Today's Planned Tasks Donut Chart */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 flex flex-col justify-between">
+        <div className="xl:col-span-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 flex flex-col justify-between min-w-0">
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="font-bold text-slate-800 text-sm">Today's Planned Tasks</h3>
@@ -1191,9 +1190,9 @@ const EmployeeDashboard: React.FC = () => {
       </div>
 
       {/* ── 4. Evening - Work Status Update Section ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Left 2 Cols: Evening Work Status Table */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start min-w-0">
+        {/* Left: Evening Work Status Table */}
+        <div className="xl:col-span-8 bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden min-w-0">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border-b border-slate-100 gap-3">
             <div>
               <div className="flex items-center gap-2">
@@ -1308,7 +1307,7 @@ const EmployeeDashboard: React.FC = () => {
       </div>
 
       {/* ── 5. Bottom 3-Card Section: KPI Score + Task Summary + My Notes ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5.5 items-stretch min-w-0">
         {/* Card 1: Today's KPI Score */}
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 flex flex-col justify-between">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">

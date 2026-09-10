@@ -162,7 +162,7 @@ const Login: React.FC = () => {
         </div>
 
         {/* Login Glass Card */}
-        <div className="bg-slate-900/80 backdrop-blur-2xl border border-white/10 p-7 sm:p-8 rounded-3xl shadow-2xl space-y-5">
+        <div className="bg-slate-900/80 backdrop-blur-2xl border border-white/10 p-5 sm:p-7 md:p-8 rounded-3xl shadow-2xl space-y-5">
           {/* Location Status Notice */}
           {geoLoading ? (
             <div className="flex items-center justify-between rounded-2xl border border-indigo-500/30 bg-indigo-500/10 px-3.5 py-2.5 text-xs text-indigo-300 animate-pulse">

@@ -158,6 +158,21 @@ export async function POST(req: NextRequest) {
     });
     const isWfh = Boolean(approvedWfh);
 
+    // Enforce geofence boundary if not Work From Home
+    if (!isWfh) {
+      if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) {
+        return errorResponse("Location coordinates are required to check in. Please turn on device GPS and allow location access in your browser.", 400);
+      }
+
+      if (!matchedLocation) {
+        const distFormatted = minDistance < 1000 ? `${minDistance.toFixed(1)}m` : `${(minDistance / 1000).toFixed(2)}km`;
+        return errorResponse(
+          `Out of range! You are ${distFormatted} away from ${nearestLocation.companyName} (Allowed Radius: ${nearestLocation.allowedRadius}m). Please move closer to the office or submit a Work From Home request.`,
+          400
+        );
+      }
+    }
+
     const isLate = isTimeAfter(now, threshH, threshM);
     let timingStatus: "PRESENT" | "LATE" | "PERMISSION" = "PRESENT";
 

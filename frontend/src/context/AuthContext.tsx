@@ -79,23 +79,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setToken(storedToken);
           setUser(parsed);
           scheduleAutoLogout(loginTime);
+          // Unblock rendering immediately so mobile loads in 0ms!
+          setLoading(false);
           
-          // Verify user exists on backend and refresh profile info
-          try {
-            const response = await api.get<User>('/auth/me');
-            if (response && response.data) {
-              setUser(response.data);
-              localStorage.setItem('user', JSON.stringify(response.data));
-            }
-          } catch (apiErr: any) {
-            // Only log out if backend explicitly rejected the token with 401 or 403
-            if (apiErr?.response && (apiErr.response.status === 401 || apiErr.response.status === 403)) {
-              console.warn('Session expired or unauthorized on backend, logging out', apiErr);
-              logout();
-            } else {
-              console.warn('Network offline or backend slow to respond, continuing with cached session profile.');
-            }
-          }
+          // Verify user exists on backend and refresh profile info asynchronously
+          api.get<User>('/auth/me')
+            .then((response) => {
+              if (response && response.data) {
+                setUser(response.data);
+                localStorage.setItem('user', JSON.stringify(response.data));
+              }
+            })
+            .catch((apiErr: any) => {
+              // Only log out if backend explicitly rejected the token with 401 or 403
+              if (apiErr?.response && (apiErr.response.status === 401 || apiErr.response.status === 403)) {
+                console.warn('Session expired or unauthorized on backend, logging out', apiErr);
+                logout();
+              } else {
+                console.warn('Network offline or backend slow to respond, continuing with cached session profile.');
+              }
+            });
+          return;
         } catch (error) {
           console.error('Failed to parse stored user', error);
           logout();

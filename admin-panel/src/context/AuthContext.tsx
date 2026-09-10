@@ -78,26 +78,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setToken(storedToken);
           setUser(JSON.parse(storedUser));
           scheduleAutoLogout(loginTime);
+          // Unblock rendering immediately
+          setLoading(false);
 
-          // Verify token is still valid on backend
-          try {
-            if (!storedToken.startsWith('admin-jwt-token-session-')) {
-              const response = await api.get<User>('/auth/me');
-              // Block non-admins
-              if (response.data.role !== 'ADMIN') {
-                logout();
-                return;
-              }
-              setUser(response.data);
-              localStorage.setItem('admin_user', JSON.stringify(response.data));
-            }
-          } catch (apiError: any) {
-            if (apiError?.response && (apiError.response.status === 401 || apiError.response.status === 403)) {
-              logout();
-            } else {
-              console.warn('Network offline or backend slow to respond, continuing with cached admin session.');
-            }
+          // Verify token is still valid on backend asynchronously
+          if (!storedToken.startsWith('admin-jwt-token-session-')) {
+            api.get<User>('/auth/me')
+              .then((response) => {
+                if (response?.data) {
+                  if (response.data.role !== 'ADMIN') {
+                    logout();
+                    return;
+                  }
+                  setUser(response.data);
+                  localStorage.setItem('admin_user', JSON.stringify(response.data));
+                }
+              })
+              .catch((apiError: any) => {
+                if (apiError?.response && (apiError.response.status === 401 || apiError.response.status === 403)) {
+                  logout();
+                } else {
+                  console.warn('Network offline or backend slow to respond, continuing with cached admin session.');
+                }
+              });
           }
+          return;
         } catch (error) {
           logout();
         }

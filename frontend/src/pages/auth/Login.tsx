@@ -90,26 +90,36 @@ const Login: React.FC = () => {
     const password = data.password.trim();
 
     try {
-      setLoadingMessage('Authenticating credentials...');
+      setLoadingMessage('Acquiring and verifying live GPS coordinates...');
       let coords: { latitude: number; longitude: number; accuracy: number } | null = null;
 
+      // Mandatory GPS verification: Get fresh coordinates
       try {
         coords = await getCoordinates();
       } catch (locErr: any) {
-        console.warn('Geolocation notice during login (proceeding with credential auth):', locErr);
+        setLoading(false);
+        setError(
+          locErr?.message ||
+          'Device GPS / Location is required. Please switch ON Location in your phone settings and tap Allow to log in.'
+        );
+        return; // Strictly stop login if GPS is denied or turned off!
+      }
+
+      if (!coords || typeof coords.latitude !== 'number' || typeof coords.longitude !== 'number') {
+        setLoading(false);
+        setError('Accurate GPS coordinates could not be retrieved. Please ensure GPS is active and retry.');
+        return;
       }
 
       setLoadingMessage('Connecting to portal...');
       const response = await authService.login(
         identifier,
         password,
-        coords
-          ? {
-              latitude: coords.latitude,
-              longitude: coords.longitude,
-              accuracy: coords.accuracy,
-            }
-          : undefined
+        {
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          accuracy: coords.accuracy,
+        }
       );
 
       login(response.token, response.user);

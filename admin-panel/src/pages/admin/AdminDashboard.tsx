@@ -632,8 +632,8 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             {/* Attendance Chart Body */}
-            <div className="h-80 w-full mt-4">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="h-80 min-h-[300px] w-full mt-4">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={260}>
                 {attendanceViewMode === 'bar' ? (
                   <BarChart data={chartData} margin={{ top: 15, right: 10, left: -20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -814,8 +814,8 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             {/* Punch Trends Chart Body */}
-            <div className="h-80 w-full mt-4">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="h-80 min-h-[300px] w-full mt-4">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={260}>
                 {punchViewMode === 'area' ? (
                   <AreaChart data={chartData} margin={{ top: 15, right: 10, left: -20, bottom: 5 }}>
                     <defs>

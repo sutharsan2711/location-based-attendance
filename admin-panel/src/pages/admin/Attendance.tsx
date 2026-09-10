@@ -1291,10 +1291,10 @@ const Attendance: React.FC = () => {
                           {/* Employee Name + Code (Col 2) */}
                           <td className="p-2.5 sticky left-[90px] bg-white z-10 border-r border-slate-400 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.15)]">
                             <span className="font-bold text-slate-900 block text-xs truncate max-w-[150px] font-sans">
-                              {emp.employeeName}
+                              {emp.employeeName || emp.name || 'Employee'}
                             </span>
                             <span className="text-[10px] text-slate-400 font-mono font-medium">
-                              {emp.employeeCode}
+                              {emp.employeeCode || emp.code}
                             </span>
                           </td>
 

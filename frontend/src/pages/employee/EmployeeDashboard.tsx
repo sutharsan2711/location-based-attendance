@@ -461,55 +461,131 @@ const EmployeeDashboard: React.FC = () => {
         }
       }
 
-      const hasCheckedIn =
+      const isAlreadyCheckedIn =
         attendance?.status === 'LOGGED_IN' ||
         attendance?.status === 'WORK_FROM_HOME' ||
         attendance?.status === 'COMPLETED' ||
         Boolean(attendance?.loginTime);
-      const hasCheckedOut = attendance?.status === 'COMPLETED' || Boolean(attendance?.logoutTime);
+      const isAlreadyCheckedOut = attendance?.status === 'COMPLETED' || Boolean(attendance?.logoutTime);
 
-      if (!hasCheckedIn) {
+      if (!isAlreadyCheckedIn) {
         const res = await attendanceService.loginAttendance({
           latitude: lat ?? undefined,
           longitude: lng ?? undefined,
           accuracy: acc,
         });
-        setSwipeSuccess(res?.message || 'Checked in successfully! Have a great productive day.');
-        const updatedAtt = (res as any)?.attendance
-          ? { ...(res as any).attendance, isWfhApproved: attendance?.isWfhApproved, wfhRequest: attendance?.wfhRequest }
+
+        const loginIso = (res as any)?.timestamp || (res as any)?.attendance?.loginTime || new Date().toISOString();
+        const formattedIn = new Date(loginIso).toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        });
+
+        const statusMsg =
+          (res as any)?.timingStatus === 'LATE'
+            ? `Checked in at ${formattedIn} (Late arrival recorded).`
+            : (res as any)?.timingStatus === 'PERMISSION'
+            ? `Checked in at ${formattedIn} (Permission recorded).`
+            : `Checked in successfully at ${formattedIn}! Have a great productive day.`;
+
+        setSwipeSuccess(res?.message || statusMsg);
+
+        const updatedAtt: Attendance = (res as any)?.attendance
+          ? {
+              ...(res as any).attendance,
+              loginTime: (res as any).attendance.loginTime || loginIso,
+              status: (res as any).attendance.status || (res as any)?.status || 'LOGGED_IN',
+              timingStatus: (res as any).attendance.timingStatus || (res as any)?.timingStatus || 'PRESENT',
+              loginDistance: (res as any).attendance.loginDistance ?? (res as any)?.distance,
+              isWfhApproved: attendance?.isWfhApproved,
+              wfhRequest: attendance?.wfhRequest,
+            }
           : {
-              ...(attendance || {}),
+              ...(attendance || ({} as any)),
+              id: (attendance as any)?.id || Date.now(),
+              attendanceDate: new Date().toISOString().slice(0, 10),
               status: (res as any)?.status || 'LOGGED_IN',
-              loginTime: (res as any)?.timestamp || new Date().toISOString(),
+              loginTime: loginIso,
               loginDistance: (res as any)?.distance,
               timingStatus: (res as any)?.timingStatus || 'PRESENT',
+              isWfhApproved: attendance?.isWfhApproved,
+              wfhRequest: attendance?.wfhRequest,
             };
-        setAttendance(updatedAtt as any);
-        updateLocalSummary(plans, updatedAtt as any);
-      } else if (!hasCheckedOut) {
+
+        setAttendance(updatedAtt);
+        updateLocalSummary(plans, updatedAtt);
+
+        // Update recentSwipes list immediately so modal has the latest entry
+        setRecentSwipes((prev) => {
+          const todayDateStr = new Date().toISOString().slice(0, 10);
+          const filtered = prev.filter((s) => s.attendanceDate !== todayDateStr);
+          return [updatedAtt, ...filtered];
+        });
+
+        setTimeout(() => setSwipeSuccess(null), 6000);
+      } else if (!isAlreadyCheckedOut) {
         const res = await attendanceService.logoutAttendance({
           latitude: lat ?? undefined,
           longitude: lng ?? undefined,
           accuracy: acc,
         });
-        setSwipeSuccess(res?.message || 'Checked out successfully! Have a wonderful evening.');
-        const updatedAtt = (res as any)?.attendance
-          ? { ...(res as any).attendance, isWfhApproved: attendance?.isWfhApproved, wfhRequest: attendance?.wfhRequest }
-          : {
-              ...(attendance || {}),
+
+        const logoutIso = (res as any)?.timestamp || (res as any)?.attendance?.logoutTime || new Date().toISOString();
+        const formattedOut = new Date(logoutIso).toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        });
+
+        let durationMsg = '';
+        if (attendance?.loginTime) {
+          const startMs = new Date(attendance.loginTime).getTime();
+          const endMs = new Date(logoutIso).getTime();
+          const diffMs = Math.max(0, endMs - startMs);
+          const hrs = Math.floor(diffMs / 3600000);
+          const mins = Math.floor((diffMs % 3600000) / 60000);
+          durationMsg = hrs > 0 ? ` Total work duration: ${hrs}h ${mins}m.` : ` Total work duration: ${mins}m.`;
+        }
+
+        setSwipeSuccess(res?.message || `Checked out successfully at ${formattedOut}!${durationMsg} Have a wonderful evening.`);
+
+        const updatedAtt: Attendance = (res as any)?.attendance
+          ? {
+              ...(res as any).attendance,
+              logoutTime: (res as any).attendance.logoutTime || logoutIso,
               status: 'COMPLETED',
-              logoutTime: (res as any)?.timestamp || new Date().toISOString(),
+              logoutDistance: (res as any).attendance.logoutDistance ?? (res as any)?.distance,
+              isWfhApproved: attendance?.isWfhApproved,
+              wfhRequest: attendance?.wfhRequest,
+            }
+          : {
+              ...(attendance || ({} as any)),
+              status: 'COMPLETED',
+              logoutTime: logoutIso,
               logoutDistance: (res as any)?.distance,
+              isWfhApproved: attendance?.isWfhApproved,
+              wfhRequest: attendance?.wfhRequest,
             };
-        setAttendance(updatedAtt as any);
-        updateLocalSummary(plans, updatedAtt as any);
+
+        setAttendance(updatedAtt);
+        updateLocalSummary(plans, updatedAtt);
+
+        // Update recentSwipes list immediately
+        setRecentSwipes((prev) => {
+          const todayDateStr = new Date().toISOString().slice(0, 10);
+          const filtered = prev.filter((s) => s.attendanceDate !== todayDateStr);
+          return [updatedAtt, ...filtered];
+        });
+
+        setTimeout(() => setSwipeSuccess(null), 6000);
       } else {
         setSwipeError('You have already completed attendance for today.');
         setActionLoading(false);
         return;
       }
 
-      // Sync fresh data from all endpoints in background
+      // Sync fresh data from all endpoints in background silently
       fetchDashboard(true).catch(() => {});
     } catch (err: any) {
       setSwipeError(err?.response?.data?.error || err.message || 'Failed to record attendance swipe.');
@@ -533,6 +609,7 @@ const EmployeeDashboard: React.FC = () => {
 
   const hasCheckedIn =
     attendance?.status === 'LOGGED_IN' ||
+    attendance?.status === 'WORK_FROM_HOME' ||
     attendance?.status === 'COMPLETED' ||
     Boolean(attendance?.loginTime);
   const hasCheckedOut = attendance?.status === 'COMPLETED' || Boolean(attendance?.logoutTime);
@@ -544,7 +621,7 @@ const EmployeeDashboard: React.FC = () => {
         <div className="absolute right-0 top-0 -mt-8 -mr-8 h-48 w-48 rounded-full bg-white/10 blur-2xl pointer-events-none" />
         <div className="absolute left-1/3 bottom-0 -mb-8 h-32 w-32 rounded-full bg-blue-400/20 blur-xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           <div className="space-y-1.5">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-[11px] font-semibold text-blue-100 border border-white/20">
               <Sparkles className="h-3.5 w-3.5 text-amber-300" />
@@ -559,10 +636,56 @@ const EmployeeDashboard: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            {/* Primary Check In / Check Out Action Button in Top Banner */}
+            <button
+              onClick={handleSwipe}
+              disabled={actionLoading || (hasCheckedIn && hasCheckedOut)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs shadow-lg transition-all cursor-pointer shrink-0 active:scale-95 ${
+                actionLoading
+                  ? 'bg-white/25 text-white/80 border border-white/30 cursor-wait'
+                  : !hasCheckedIn
+                  ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-emerald-900/30'
+                  : !hasCheckedOut
+                  ? 'bg-amber-400 hover:bg-amber-300 text-slate-900 shadow-amber-900/30'
+                  : 'bg-white/20 text-white border border-white/30 cursor-default active:scale-100'
+              }`}
+              title={
+                actionLoading
+                  ? 'Processing attendance...'
+                  : !hasCheckedIn
+                  ? 'Click to Check In'
+                  : !hasCheckedOut
+                  ? 'Click to Check Out'
+                  : 'Attendance Completed'
+              }
+            >
+              {actionLoading ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin text-white" />
+                  <span>{!hasCheckedIn ? 'Checking In...' : 'Checking Out...'}</span>
+                </>
+              ) : !hasCheckedIn ? (
+                <>
+                  <LogIn className="h-4 w-4" />
+                  <span>Check In</span>
+                </>
+              ) : !hasCheckedOut ? (
+                <>
+                  <LogOut className="h-4 w-4" />
+                  <span>Check Out</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                  <span>Shift Done ✓</span>
+                </>
+              )}
+            </button>
+
             {assignedTasks.length > 0 && (
               <button
                 onClick={() => setActiveTaskTab('ASSIGNED')}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   activeTaskTab === 'ASSIGNED'
                     ? 'bg-amber-400 text-slate-900 shadow-md'
                     : 'bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/20 text-white'
@@ -577,7 +700,7 @@ const EmployeeDashboard: React.FC = () => {
             <button
               onClick={() => fetchDashboard(true)}
               disabled={refreshing}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/20 text-xs font-semibold text-white transition-all cursor-pointer"
+              className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/20 text-xs font-semibold text-white transition-all cursor-pointer"
               title="Refresh Dashboard"
             >
               <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
@@ -589,11 +712,78 @@ const EmployeeDashboard: React.FC = () => {
                 setEditingItem(null);
                 setIsAddTaskOpen(true);
               }}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-blue-800 hover:bg-blue-50 font-bold text-xs shadow-lg shadow-black/10 transition-all cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-blue-800 hover:bg-blue-50 font-bold text-xs shadow-lg shadow-black/10 transition-all cursor-pointer"
             >
               <Plus className="h-4 w-4 text-blue-600" />
               <span>+ Add Morning Task</span>
             </button>
+          </div>
+        </div>
+
+        {/* ── Banner Bottom Row: Attendance Timings Strip ── */}
+        <div className="relative z-10 mt-5 pt-4 border-t border-white/15 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          {/* 1. Status */}
+          <div className="bg-white/10 backdrop-blur-md rounded-xl p-2.5 border border-white/15 flex items-center gap-2.5">
+            <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
+              !hasCheckedIn ? 'bg-white/15 text-white/70' : !hasCheckedOut ? 'bg-emerald-400/20 text-emerald-300' : 'bg-blue-400/20 text-blue-200'
+            }`}>
+              <Clock className="h-4 w-4" />
+            </div>
+            <div>
+              <span className="text-[10px] uppercase font-bold text-blue-200 tracking-wider block">Status</span>
+              <span className="font-bold text-white text-xs mt-0.5 inline-flex items-center gap-1.5">
+                {!hasCheckedIn ? (
+                  <span className="text-white/80">Not Punched In</span>
+                ) : !hasCheckedOut ? (
+                  <>
+                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-emerald-300">Punched In</span>
+                  </>
+                ) : (
+                  <span className="text-blue-200">Shift Completed</span>
+                )}
+              </span>
+            </div>
+          </div>
+
+          {/* 2. Check-In Time */}
+          <div className="bg-white/10 backdrop-blur-md rounded-xl p-2.5 border border-white/15 flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-lg bg-emerald-400/20 text-emerald-300 flex items-center justify-center shrink-0">
+              <LogIn className="h-4 w-4" />
+            </div>
+            <div>
+              <span className="text-[10px] uppercase font-bold text-blue-200 tracking-wider block">Check-In</span>
+              <span className="font-bold text-white text-xs mt-0.5 block font-mono">{summary.checkInTime}</span>
+            </div>
+          </div>
+
+          {/* 3. Check-Out Time */}
+          <div className="bg-white/10 backdrop-blur-md rounded-xl p-2.5 border border-white/15 flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-lg bg-amber-400/20 text-amber-300 flex items-center justify-center shrink-0">
+              <LogOut className="h-4 w-4" />
+            </div>
+            <div>
+              <span className="text-[10px] uppercase font-bold text-blue-200 tracking-wider block">Check-Out</span>
+              <span className="font-bold text-white text-xs mt-0.5 block font-mono">{summary.checkOutTime}</span>
+            </div>
+          </div>
+
+          {/* 4. Live Working Hours */}
+          <div className="bg-white/10 backdrop-blur-md rounded-xl p-2.5 border border-white/15 flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-lg bg-indigo-400/20 text-indigo-200 flex items-center justify-center shrink-0">
+              <TrendingUp className="h-4 w-4" />
+            </div>
+            <div>
+              <span className="text-[10px] uppercase font-bold text-blue-200 tracking-wider flex items-center gap-1.5">
+                <span>Total Work Hours</span>
+                {liveWorkHours.isLive && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
+                )}
+              </span>
+              <span className={`font-mono font-bold text-xs mt-0.5 block ${liveWorkHours.isLive ? 'text-emerald-300' : 'text-white'}`}>
+                {liveWorkHours.text}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -700,21 +890,31 @@ const EmployeeDashboard: React.FC = () => {
 
       {/* Swipe status notification alerts */}
       {swipeSuccess && (
-        <div className="flex items-center justify-between p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold animate-slide">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-            <span>{swipeSuccess}</span>
+        <div className="flex items-center justify-between p-3.5 sm:p-4 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-2xl text-xs font-semibold shadow-xs animate-slide">
+          <div className="flex items-center gap-3">
+            <div className="p-1.5 bg-emerald-600 text-white rounded-xl shrink-0 shadow-xs">
+              <CheckCircle2 className="h-4 w-4" />
+            </div>
+            <div>
+              <span className="font-bold text-emerald-950 block text-xs">Attendance Updated</span>
+              <span className="text-emerald-800 text-[11.5px] font-medium">{swipeSuccess}</span>
+            </div>
           </div>
-          <button onClick={() => setSwipeSuccess(null)} className="text-emerald-500 hover:text-emerald-700 font-bold">✕</button>
+          <button onClick={() => setSwipeSuccess(null)} className="p-1 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-100 rounded-lg transition-colors font-bold cursor-pointer">✕</button>
         </div>
       )}
       {swipeError && (
-        <div className="flex items-center justify-between p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-semibold animate-slide">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
-            <span>{swipeError}</span>
+        <div className="flex items-center justify-between p-3.5 sm:p-4 bg-rose-50 border border-rose-200 text-rose-900 rounded-2xl text-xs font-semibold shadow-xs animate-slide">
+          <div className="flex items-center gap-3">
+            <div className="p-1.5 bg-rose-600 text-white rounded-xl shrink-0 shadow-xs">
+              <AlertTriangle className="h-4 w-4" />
+            </div>
+            <div>
+              <span className="font-bold text-rose-950 block text-xs">Attendance Alert</span>
+              <span className="text-rose-800 text-[11.5px] font-medium">{swipeError}</span>
+            </div>
           </div>
-          <button onClick={() => setSwipeError(null)} className="text-rose-500 hover:text-rose-700 font-bold">✕</button>
+          <button onClick={() => setSwipeError(null)} className="p-1 text-rose-600 hover:text-rose-800 hover:bg-rose-100 rounded-lg transition-colors font-bold cursor-pointer">✕</button>
         </div>
       )}
 
@@ -840,25 +1040,53 @@ const EmployeeDashboard: React.FC = () => {
                   <span>Attendance</span>
                   <ExternalLink className="h-3 w-3 text-slate-400 group-hover:text-indigo-500 transition-colors shrink-0" />
                 </button>
-                {Boolean(attendance?.isWfhApproved || attendance?.status === 'WORK_FROM_HOME') && (
+                {Boolean(attendance?.isWfhApproved || attendance?.status === 'WORK_FROM_HOME') ? (
                   <span className="px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 text-[10px] font-bold border border-purple-200">
                     WFH
+                  </span>
+                ) : !hasCheckedIn ? (
+                  <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[10px] font-bold">
+                    Not In
+                  </span>
+                ) : !hasCheckedOut ? (
+                  <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold inline-flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Working
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold">
+                    Done ✓
                   </span>
                 )}
               </div>
               <button
                 onClick={handleSwipe}
                 disabled={actionLoading || (hasCheckedIn && hasCheckedOut)}
-                className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs shrink-0 whitespace-nowrap ${
-                  !hasCheckedIn
-                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs shrink-0 whitespace-nowrap active:scale-95 ${
+                  actionLoading
+                    ? 'bg-slate-100 text-slate-500 border border-slate-200 cursor-wait'
+                    : !hasCheckedIn
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
                     : !hasCheckedOut
-                    ? 'bg-amber-500 hover:bg-amber-600 text-white'
-                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-default'
+                    ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20'
+                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-default active:scale-100'
                 }`}
-                title={!hasCheckedIn ? 'Click to Check In' : !hasCheckedOut ? 'Click to Check Out' : 'Attendance Completed'}
+                title={
+                  actionLoading
+                    ? 'Processing attendance...'
+                    : !hasCheckedIn
+                    ? 'Click to Check In'
+                    : !hasCheckedOut
+                    ? 'Click to Check Out'
+                    : 'Attendance Completed'
+                }
               >
-                {!hasCheckedIn ? (
+                {actionLoading ? (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin text-slate-500" />
+                    <span>{!hasCheckedIn ? 'Checking In...' : 'Checking Out...'}</span>
+                  </>
+                ) : !hasCheckedIn ? (
                   <>
                     <LogIn className="h-3.5 w-3.5" />
                     <span>Check In</span>
@@ -1315,7 +1543,7 @@ const EmployeeDashboard: React.FC = () => {
         </div>
 
         {/* Right 1 Col: Today's Task Completion Donut Chart */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 flex flex-col justify-between">
+        <div className="xl:col-span-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 flex flex-col justify-between min-w-0">
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="font-bold text-slate-800 text-sm">Today's Task Completion</h3>

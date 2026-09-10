@@ -102,43 +102,80 @@ export async function GET(req: NextRequest) {
           if (att.timingStatus === "LATE") lateCount++;
           if (att.timingStatus === "PERMISSION") permissionCount++;
 
+          const inTimeFormatted = att.loginTime
+            ? new Date(att.loginTime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })
+            : "--";
+          const outTimeFormatted = att.logoutTime
+            ? new Date(att.logoutTime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })
+            : "--";
+
           daysMap[day] = {
-            status: att.status,
+            status: att.status === "LOGGED_IN" ? "Present" : att.status === "COMPLETED" ? "Present" : att.status,
             timingStatus: att.timingStatus,
-            loginTime: att.loginTime?.toISOString(),
-            logoutTime: att.logoutTime?.toISOString(),
+            loginTime: inTimeFormatted,
+            logoutTime: outTimeFormatted,
+            code:
+              att.timingStatus === "PERMISSION"
+                ? "Perm"
+                : att.timingStatus === "LATE"
+                ? "Late"
+                : "P",
           };
         } else if (leave) {
           daysMap[day] = {
-            status: "LEAVE",
+            status: "Leave",
             timingStatus: "LEAVE",
             leaveType: leave.leaveType,
+            code:
+              leave.leaveType === "CASUAL_LEAVE"
+                ? "CL"
+                : leave.leaveType === "SICK_LEAVE"
+                ? "SL"
+                : leave.leaveType === "WORK_FROM_HOME"
+                ? "WFH"
+                : "Leave",
           };
         } else if (holiday) {
           daysMap[day] = {
-            status: "HOLIDAY",
+            status: "Holiday",
             holidayName: holiday.name,
+            code: "HD",
           };
         } else if (isSunday) {
           daysMap[day] = {
-            status: "WEEKEND",
+            status: "Week Off",
+            code: "WO",
+            isSunday: true,
           };
         } else {
           daysMap[day] = {
-            status: "ABSENT",
+            status: "Absent",
+            code: "--",
           };
         }
       }
 
+      const totalLeaveCount = Object.values(daysMap).filter((d: any) => d.status === "Leave").length;
+      const shiftLoginTime = (emp.department || "").toUpperCase().includes("IT") ? "9.00" : "8.45";
+
       return {
         id: Number(emp.id),
+        employeeId: Number(emp.id),
         name: emp.name,
+        employeeName: emp.name,
         employeeCode: emp.employeeCode,
-        department: emp.department,
+        email: emp.email,
+        phone: emp.phone,
+        department: emp.department || "IT",
+        status: emp.status,
+        loginTime: shiftLoginTime,
         days: daysMap,
         presentDays: presentCount,
+        totalPresent: presentCount,
         lateDays: lateCount,
         permissionDays: permissionCount,
+        leaveDays: totalLeaveCount,
+        totalLeave: totalLeaveCount,
       };
     });
 
@@ -151,5 +188,259 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     console.error("GET /api/admin/attendance-monthly error:", error);
     return errorResponse(error.message || "Failed to fetch monthly attendance grid", 500);
+  }
+}
+
+// ── POST: Admin Manual Attendance Override / Sheet Update (P, AB, HD, Leave, Late, Perm, WO) ──
+export async function POST(req: NextRequest) {
+  try {
+    const authUser = await getAuthUser(req);
+    if (!authUser || !isUserAdmin(authUser)) {
+      return errorResponse("Forbidden: Admin access required", 403);
+    }
+
+    const body = await req.json();
+    const { employeeId, date, status, code, loginTime, logoutTime, year, month, days } = body;
+
+    if (!employeeId) {
+      return errorResponse("employeeId is required", 400);
+    }
+
+    const empId = BigInt(employeeId);
+    const emp = await prisma.user.findUnique({ where: { id: empId } });
+    if (!emp) {
+      return errorResponse("Employee not found", 404);
+    }
+
+    // Helper to apply single day status
+    const applyDayStatus = async (
+      targetDateStr: string,
+      targetCode: string,
+      inTimeStr?: string,
+      outTimeStr?: string
+    ) => {
+      const [yStr, mStr, dStr] = targetDateStr.split("-");
+      const y = parseInt(yStr, 10);
+      const m = parseInt(mStr, 10);
+      const d = parseInt(dStr, 10);
+      const targetDate = new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
+
+      const normalizedCode = (targetCode || "").toUpperCase().trim();
+
+      // Default timings
+      const defaultLogin = new Date(Date.UTC(y, m - 1, d, 9, 0, 0));
+      const defaultLogout = new Date(Date.UTC(y, m - 1, d, 18, 30, 0));
+
+      let customLogin = defaultLogin;
+      let customLogout = defaultLogout;
+
+      if (inTimeStr && inTimeStr !== "--") {
+        const [h, min] = inTimeStr.split(":").map((n) => parseInt(n, 10));
+        if (!isNaN(h) && !isNaN(min)) {
+          customLogin = new Date(Date.UTC(y, m - 1, d, h, min, 0));
+        }
+      }
+
+      if (outTimeStr && outTimeStr !== "--") {
+        const [h, min] = outTimeStr.split(":").map((n) => parseInt(n, 10));
+        if (!isNaN(h) && !isNaN(min)) {
+          customLogout = new Date(Date.UTC(y, m - 1, d, h, min, 0));
+        }
+      }
+
+      if (normalizedCode === "P" || normalizedCode === "PRESENT") {
+        // Mark Present
+        await prisma.attendance.upsert({
+          where: {
+            employeeId_attendanceDate: {
+              employeeId: empId,
+              attendanceDate: targetDate,
+            },
+          },
+          create: {
+            employeeId: empId,
+            attendanceDate: targetDate,
+            status: "COMPLETED",
+            timingStatus: "PRESENT",
+            loginTime: customLogin,
+            logoutTime: customLogout,
+          },
+          update: {
+            status: "COMPLETED",
+            timingStatus: "PRESENT",
+            loginTime: customLogin,
+            logoutTime: customLogout,
+          },
+        });
+
+        // Delete any conflicting leave requests for this single day
+        await prisma.leaveRequest.deleteMany({
+          where: {
+            employeeId: empId,
+            fromDate: { lte: targetDate },
+            toDate: { gte: targetDate },
+          },
+        });
+      } else if (normalizedCode === "LATE") {
+        // Mark Late
+        await prisma.attendance.upsert({
+          where: {
+            employeeId_attendanceDate: {
+              employeeId: empId,
+              attendanceDate: targetDate,
+            },
+          },
+          create: {
+            employeeId: empId,
+            attendanceDate: targetDate,
+            status: "COMPLETED",
+            timingStatus: "LATE",
+            loginTime: customLogin,
+            logoutTime: customLogout,
+          },
+          update: {
+            status: "COMPLETED",
+            timingStatus: "LATE",
+            loginTime: customLogin,
+            logoutTime: customLogout,
+          },
+        });
+      } else if (normalizedCode === "PERM" || normalizedCode === "PERMISSION") {
+        // Mark Permission
+        await prisma.attendance.upsert({
+          where: {
+            employeeId_attendanceDate: {
+              employeeId: empId,
+              attendanceDate: targetDate,
+            },
+          },
+          create: {
+            employeeId: empId,
+            attendanceDate: targetDate,
+            status: "COMPLETED",
+            timingStatus: "PERMISSION",
+            loginTime: customLogin,
+            logoutTime: customLogout,
+          },
+          update: {
+            status: "COMPLETED",
+            timingStatus: "PERMISSION",
+            loginTime: customLogin,
+            logoutTime: customLogout,
+          },
+        });
+      } else if (normalizedCode === "AB" || normalizedCode === "ABSENT" || normalizedCode === "--") {
+        // Mark Absent (Remove punch / leave)
+        await prisma.attendance.deleteMany({
+          where: {
+            employeeId: empId,
+            attendanceDate: targetDate,
+          },
+        });
+        await prisma.leaveRequest.deleteMany({
+          where: {
+            employeeId: empId,
+            fromDate: { lte: targetDate },
+            toDate: { gte: targetDate },
+          },
+        });
+      } else if (
+        normalizedCode === "CL" ||
+        normalizedCode === "SL" ||
+        normalizedCode === "LEAVE" ||
+        normalizedCode === "WFH"
+      ) {
+        // Remove attendance punch
+        await prisma.attendance.deleteMany({
+          where: {
+            employeeId: empId,
+            attendanceDate: targetDate,
+          },
+        });
+
+        const leaveType =
+          normalizedCode === "SL"
+            ? "SICK_LEAVE"
+            : normalizedCode === "WFH"
+            ? "WORK_FROM_HOME"
+            : "CASUAL_LEAVE";
+
+        // Create approved leave record
+        await prisma.leaveRequest.create({
+          data: {
+            employeeId: empId,
+            leaveType: leaveType as any,
+            fromDate: targetDate,
+            toDate: targetDate,
+            totalDays: 1,
+            reason: "Admin manual register override",
+            status: "APPROVED",
+            isHalfDay: false,
+          },
+        });
+      } else if (normalizedCode === "HD" || normalizedCode === "HOLIDAY") {
+        // Special Holiday / HD
+        await prisma.attendance.deleteMany({
+          where: {
+            employeeId: empId,
+            attendanceDate: targetDate,
+          },
+        });
+        await prisma.leaveRequest.deleteMany({
+          where: {
+            employeeId: empId,
+            fromDate: { lte: targetDate },
+            toDate: { gte: targetDate },
+          },
+        });
+      } else if (normalizedCode === "WO" || normalizedCode === "WEEK_OFF") {
+        // Week Off
+        await prisma.attendance.deleteMany({
+          where: {
+            employeeId: empId,
+            attendanceDate: targetDate,
+          },
+        });
+      }
+    };
+
+    // Case 1: Batch days update for month
+    if (days && typeof days === "object" && year && month) {
+      for (const [dayKey, dayVal] of Object.entries(days)) {
+        const dNum = parseInt(dayKey, 10);
+        if (isNaN(dNum)) continue;
+        const dStr = String(dNum).padStart(2, "0");
+        const mStr = String(month).padStart(2, "0");
+        const dateStr = `${year}-${mStr}-${dStr}`;
+
+        const codeVal = typeof dayVal === "string" ? dayVal : (dayVal as any).code;
+        const inTime = typeof dayVal === "object" ? (dayVal as any).loginTime : undefined;
+        const outTime = typeof dayVal === "object" ? (dayVal as any).logoutTime : undefined;
+
+        if (codeVal) {
+          await applyDayStatus(dateStr, codeVal, inTime, outTime);
+        }
+      }
+
+      return jsonResponse({
+        success: true,
+        message: `Updated attendance register for ${emp.name}`,
+      });
+    }
+
+    // Case 2: Single date update
+    if (date) {
+      const statusCode = code || status || "P";
+      await applyDayStatus(date, statusCode, loginTime, logoutTime);
+      return jsonResponse({
+        success: true,
+        message: `Updated attendance on ${date} to ${statusCode} for ${emp.name}`,
+      });
+    }
+
+    return errorResponse("Invalid request: date or days must be provided", 400);
+  } catch (error: any) {
+    console.error("POST /api/admin/attendance-monthly error:", error);
+    return errorResponse(error.message || "Failed to update attendance register", 500);
   }
 }

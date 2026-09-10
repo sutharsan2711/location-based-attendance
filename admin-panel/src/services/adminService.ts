@@ -81,6 +81,27 @@ export const adminService = {
     }
   },
 
+  updateMonthlyAttendanceDay: async (data: {
+    employeeId: number;
+    date: string;
+    code: string;
+    loginTime?: string;
+    logoutTime?: string;
+  }): Promise<any> => {
+    const response = await api.post('/admin/attendance-monthly', data);
+    return response.data;
+  },
+
+  updateMonthlyAttendanceBatch: async (data: {
+    employeeId: number;
+    year: number;
+    month: number;
+    days: Record<number, { code: string; loginTime?: string; logoutTime?: string }>;
+  }): Promise<any> => {
+    const response = await api.post('/admin/attendance-monthly', data);
+    return response.data;
+  },
+
   exportCsv: async (filters: {
     employeeId?: number;
     status?: string;

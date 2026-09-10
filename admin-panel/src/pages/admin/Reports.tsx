@@ -43,7 +43,18 @@ import {
   CheckCircle,
   XCircle,
   HelpCircle,
-  Award
+  Award,
+  Edit,
+  User,
+  Mail,
+  Phone,
+  Shield,
+  X,
+  Save,
+  Wand2,
+  CheckCheck,
+  FileEdit,
+  CalendarClock
 } from 'lucide-react';
 
 const Reports: React.FC = () => {
@@ -90,6 +101,244 @@ const Reports: React.FC = () => {
     val: 'Login Time',
     desc: 'Employee Assigned Shift Login Time',
   });
+
+  // ── Edit Employee Monthly Attendance Sheet (P, AB, HD, WO, CL, SL, Late, Perm, WFH) ──
+  const [editingSheetEmployee, setEditingSheetEmployee] = useState<any | null>(null);
+  const [sheetDaysState, setSheetDaysState] = useState<Record<number, { code: string; loginTime?: string; logoutTime?: string }>>({});
+  const [sheetSaveLoading, setSheetSaveLoading] = useState(false);
+  const [sheetMessage, setSheetMessage] = useState<string | null>(null);
+  const [sheetError, setSheetError] = useState<string | null>(null);
+
+  // ── Quick Single Day Cell Attendance Editor ──
+  const [editingDayCell, setEditingDayCell] = useState<{
+    employeeId: number;
+    employeeName: string;
+    employeeCode: string;
+    dayNum: number;
+    dateLabel: string;
+    dateStr: string;
+    code: string;
+    loginTime: string;
+    logoutTime: string;
+  } | null>(null);
+  const [daySaveLoading, setDaySaveLoading] = useState(false);
+  const [daySaveMessage, setDaySaveMessage] = useState<string | null>(null);
+
+  // ── Edit Employee Profile Details State & Handlers ──
+  const [editingEmployee, setEditingEmployee] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    employeeCode: '',
+    email: '',
+    phone: '',
+    department: 'IT',
+    role: 'EMPLOYEE',
+    status: 'ACTIVE' as 'ACTIVE' | 'INACTIVE',
+  });
+  const [editLoading, setEditLoading] = useState(false);
+  const [editMessage, setEditMessage] = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  const handleOpenEditEmployee = (emp: any) => {
+    setEditingEmployee(emp);
+    setEditMessage(null);
+    setEditError(null);
+    setEditForm({
+      name: emp.employeeName || emp.name || '',
+      employeeCode: emp.employeeCode || emp.code || '',
+      email: emp.email || '',
+      phone: emp.phone || '',
+      department: emp.department || 'IT',
+      role: emp.role || 'EMPLOYEE',
+      status: (emp.status as any) || 'ACTIVE',
+    });
+  };
+
+  const handleSaveEmployee = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingEmployee) return;
+    const empId = editingEmployee.employeeId || editingEmployee.id;
+    if (!empId) {
+      setEditError('Employee ID not found.');
+      return;
+    }
+
+    setEditLoading(true);
+    setEditError(null);
+    try {
+      await employeeService.update(Number(empId), {
+        name: editForm.name,
+        employeeCode: editForm.employeeCode,
+        email: editForm.email,
+        phone: editForm.phone,
+        department: editForm.department,
+        role: editForm.role as any,
+        status: editForm.status,
+      });
+
+      setEditMessage('Employee details updated successfully!');
+      await Promise.all([fetchFilters(), fetchMonthlyData(), runDailyReport()]);
+
+      setTimeout(() => {
+        setEditingEmployee(null);
+        setEditMessage(null);
+      }, 1000);
+    } catch (err: any) {
+      console.error('Failed to update employee details', err);
+      setEditError(err.response?.data?.error || err.message || 'Failed to update employee details.');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  // ── Handlers for Employee Monthly Attendance Sheet Editor (P, AB, HD, WO, CL, SL, Late, Perm, WFH) ──
+  const handleOpenEditAttendanceSheet = (emp: any) => {
+    setEditingSheetEmployee(emp);
+    setSheetMessage(null);
+    setSheetError(null);
+
+    const daysInit: Record<number, { code: string; loginTime?: string; logoutTime?: string }> = {};
+    for (let d = 1; d <= daysInMonth; d++) {
+      const existingCell = emp.days?.[String(d)];
+      const satObj = saturdaysInMonth.find((s) => s.dayNum === d);
+      const isSatLeave = satObj?.isLeave;
+      const isSun = new Date(selectedYear, selectedMonth - 1, d).getDay() === 0;
+
+      let defaultCode = '--';
+      if (existingCell?.code && existingCell.code !== '--') {
+        defaultCode = existingCell.code;
+      } else if (isSun || isSatLeave) {
+        defaultCode = 'WO';
+      }
+
+      daysInit[d] = {
+        code: defaultCode,
+        loginTime: existingCell?.loginTime && existingCell.loginTime !== '--' ? existingCell.loginTime : (emp.department === 'IT' ? '09:00' : '08:45'),
+        logoutTime: existingCell?.logoutTime && existingCell.logoutTime !== '--' ? existingCell.logoutTime : '18:30',
+      };
+    }
+    setSheetDaysState(daysInit);
+  };
+
+  const handleSetDayStatus = (dayNum: number, code: string) => {
+    setSheetDaysState((prev) => ({
+      ...prev,
+      [dayNum]: {
+        ...(prev[dayNum] || { loginTime: '09:00', logoutTime: '18:30' }),
+        code,
+      },
+    }));
+  };
+
+  const handleBulkSetSheet = (targetCode: string, weekdaysOnly = true) => {
+    setSheetDaysState((prev) => {
+      const next = { ...prev };
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dt = new Date(selectedYear, selectedMonth - 1, d);
+        const isSun = dt.getDay() === 0;
+        const satObj = saturdaysInMonth.find((s) => s.dayNum === d);
+        const isSatOff = satObj?.isLeave;
+
+        if (weekdaysOnly && (isSun || isSatOff)) {
+          next[d] = { ...(next[d] || { loginTime: '09:00', logoutTime: '18:30' }), code: 'WO' };
+        } else {
+          next[d] = { ...(next[d] || { loginTime: '09:00', logoutTime: '18:30' }), code: targetCode };
+        }
+      }
+      return next;
+    });
+  };
+
+  const handleSaveAttendanceSheet = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!editingSheetEmployee) return;
+    const empId = editingSheetEmployee.employeeId || editingSheetEmployee.id;
+    if (!empId) {
+      setSheetError('Employee ID not found.');
+      return;
+    }
+
+    setSheetSaveLoading(true);
+    setSheetError(null);
+    setSheetMessage(null);
+
+    try {
+      await adminService.updateMonthlyAttendanceBatch({
+        employeeId: Number(empId),
+        year: selectedYear,
+        month: selectedMonth,
+        days: sheetDaysState,
+      });
+
+      setSheetMessage('Attendance sheet updated successfully!');
+      await fetchMonthlyData();
+
+      setTimeout(() => {
+        setEditingSheetEmployee(null);
+        setSheetMessage(null);
+      }, 1000);
+    } catch (err: any) {
+      console.error('Failed to save attendance sheet', err);
+      setSheetError(err.response?.data?.message || err.message || 'Failed to update attendance sheet.');
+    } finally {
+      setSheetSaveLoading(false);
+    }
+  };
+
+  // ── Quick Day Cell Editor Handlers ──
+  const handleOpenEditDayCell = (emp: any, dayNum: number, dateLabel: string) => {
+    const dayCell = emp.days?.[String(dayNum)];
+    const satObj = saturdaysInMonth.find((s) => s.dayNum === dayNum);
+    const isSatLeave = satObj?.isLeave;
+    const isSun = new Date(selectedYear, selectedMonth - 1, dayNum).getDay() === 0;
+    const initialCode = dayCell?.code || (isSun || isSatLeave ? 'WO' : '--');
+
+    const mStr = String(selectedMonth).padStart(2, '0');
+    const dStr = String(dayNum).padStart(2, '0');
+    const dateStr = `${selectedYear}-${mStr}-${dStr}`;
+
+    setEditingDayCell({
+      employeeId: Number(emp.employeeId || emp.id),
+      employeeName: emp.employeeName || emp.name || 'Employee',
+      employeeCode: emp.employeeCode || emp.code || '',
+      dayNum,
+      dateLabel,
+      dateStr,
+      code: initialCode,
+      loginTime: dayCell?.loginTime && dayCell.loginTime !== '--' ? dayCell.loginTime : (emp.department === 'IT' ? '09:00' : '08:45'),
+      logoutTime: dayCell?.logoutTime && dayCell.logoutTime !== '--' ? dayCell.logoutTime : '18:30',
+    });
+    setDaySaveMessage(null);
+  };
+
+  const handleSaveDayCell = async (newCode: string, inTime?: string, outTime?: string) => {
+    if (!editingDayCell) return;
+    setDaySaveLoading(true);
+    setDaySaveMessage(null);
+
+    try {
+      await adminService.updateMonthlyAttendanceDay({
+        employeeId: editingDayCell.employeeId,
+        date: editingDayCell.dateStr,
+        code: newCode,
+        loginTime: inTime || editingDayCell.loginTime,
+        logoutTime: outTime || editingDayCell.logoutTime,
+      });
+
+      setDaySaveMessage(`Updated to ${newCode}!`);
+      await fetchMonthlyData();
+
+      setTimeout(() => {
+        setEditingDayCell(null);
+        setDaySaveMessage(null);
+      }, 700);
+    } catch (err: any) {
+      console.error('Failed to update day attendance', err);
+      alert('Failed to update day attendance: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setDaySaveLoading(false);
+    }
+  };
 
   const months = [
     { value: 1, name: 'January' },
@@ -361,10 +610,9 @@ const Reports: React.FC = () => {
   // Filter monthly rows by Search and Team/Role
   const filteredMonthlyEmployees = (monthlyData?.employees || []).filter((emp: any) => {
     const q = searchQuery.toLowerCase().trim();
-    const matchesSearch =
-      !q ||
-      emp.employeeName?.toLowerCase().includes(q) ||
-      emp.employeeCode?.toLowerCase().includes(q);
+    const empName = (emp.employeeName || emp.name || '').toLowerCase();
+    const empCode = (emp.employeeCode || emp.code || '').toLowerCase();
+    const matchesSearch = !q || empName.includes(q) || empCode.includes(q);
 
     if (!matchesSearch) return false;
 
@@ -931,10 +1179,13 @@ const Reports: React.FC = () => {
                       No of<br />days Leave
                     </th>
                     <th
-                      className="px-3 py-2 bg-black text-white font-extrabold min-w-[85px] leading-tight cursor-pointer"
+                      className="px-3 py-2 border-r border-slate-700 bg-black text-white font-extrabold min-w-[85px] leading-tight cursor-pointer"
                       onClick={() => handleCellClick('1', 'AP', 'Attendance %', 'Total Attendance Percentage')}
                     >
                       Attendance<br />%
+                    </th>
+                    <th className="px-3 py-2 bg-[#2d3748] text-white font-extrabold min-w-[75px] leading-tight text-center">
+                      Action
                     </th>
                   </tr>
 
@@ -971,8 +1222,11 @@ const Reports: React.FC = () => {
                     <th className="px-2 py-1.5 border-r border-slate-700 bg-black text-white text-[10px] font-bold">
                       Leave
                     </th>
-                    <th className="px-2 py-1.5 bg-black text-white text-[10px] font-bold">
+                    <th className="px-2 py-1.5 border-r border-slate-700 bg-black text-white text-[10px] font-bold">
                       %
+                    </th>
+                    <th className="px-2 py-1.5 bg-[#2d3748] text-white text-[10px] font-bold text-center">
+                      Edit
                     </th>
                   </tr>
                 </thead>
@@ -980,12 +1234,14 @@ const Reports: React.FC = () => {
                 <tbody>
                   {filteredMonthlyEmployees.length === 0 ? (
                     <tr>
-                      <td colSpan={daysInMonth + 7} className="py-12 text-center text-slate-400 font-semibold">
+                      <td colSpan={daysInMonth + 8} className="py-12 text-center text-slate-400 font-semibold">
                         No employee records found matching current filters.
                       </td>
                     </tr>
                   ) : (
                     filteredMonthlyEmployees.map((emp: any, rowIndex: number) => {
+                      const empName = emp.employeeName || emp.name || 'Employee';
+                      const empCode = emp.employeeCode || emp.code || `EMP-${emp.employeeId || emp.id}`;
                       const workingDays = emp.workingDays || monthlyData?.workingDays || 25;
                       const presentDays = emp.presentDays !== undefined ? emp.presentDays : emp.totalPresent;
                       const leaveDays = emp.leaveDays !== undefined ? emp.leaveDays : emp.totalLeave;
@@ -998,13 +1254,13 @@ const Reports: React.FC = () => {
 
                       return (
                         <tr
-                          key={emp.employeeId || emp.employeeCode}
+                          key={emp.employeeId || emp.employeeCode || rowIndex}
                           className="border-b border-slate-200 hover:bg-indigo-50/20 transition-colors"
                         >
                           {/* Login Time Column (8.45 / 9.00) */}
                           <td
                             className="px-2.5 py-2 border-r border-slate-200 font-mono font-bold text-slate-800 bg-white cursor-pointer hover:bg-indigo-100"
-                            onClick={() => handleCellClick(rowNum, 'A', loginTime, `${emp.employeeName} scheduled login time`)}
+                            onClick={() => handleCellClick(rowNum, 'A', loginTime, `${empName} scheduled login time`)}
                           >
                             {loginTime}
                           </td>
@@ -1012,17 +1268,40 @@ const Reports: React.FC = () => {
                           {/* Employee Code */}
                           <td
                             className="px-2.5 py-2 border-r border-slate-200 font-mono font-bold text-left text-slate-700 bg-white cursor-pointer hover:bg-indigo-100 truncate max-w-[90px]"
-                            onClick={() => handleCellClick(rowNum, 'B', emp.employeeCode, `Employee Code`)}
+                            onClick={() => handleCellClick(rowNum, 'B', empCode, `Employee Code`)}
                           >
-                            {emp.employeeCode}
+                            {empCode}
                           </td>
 
                           {/* Employee Name */}
                           <td
-                            className="px-3 py-2 border-r border-slate-200 font-semibold text-left text-slate-800 bg-white cursor-pointer hover:bg-indigo-100 truncate max-w-[140px]"
-                            onClick={() => handleCellClick(rowNum, 'C', emp.employeeName, `Employee Name (${emp.department || 'IT'})`)}
+                            className="px-3 py-2 border-r border-slate-200 text-left bg-white min-w-[150px] max-w-[190px]"
                           >
-                            <span>{emp.employeeName}</span>
+                            <div className="flex items-center justify-between gap-1.5 group">
+                              <div
+                                className="cursor-pointer truncate flex-1"
+                                onClick={() => handleCellClick(rowNum, 'C', empName, `Employee Name (${emp.department || 'IT'})`)}
+                                title={`${empName} (${emp.department || 'IT'})`}
+                              >
+                                <span className="font-bold text-slate-800 hover:text-indigo-600 transition-colors block truncate">
+                                  {empName}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-normal block truncate">
+                                  {emp.department || 'General'}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenEditEmployee(emp);
+                                }}
+                                className="p-1 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer"
+                                title={`Edit ${empName}'s Details`}
+                              >
+                                <Edit className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           </td>
 
                           {/* ── 31 DAY CELLS (P, AB, Spl Leave, WO, HD...) ── */}
@@ -1035,19 +1314,20 @@ const Reports: React.FC = () => {
 
                             return (
                               <td
-                                key={`cell-${emp.employeeId}-${dh.dayNum}`}
-                                className={`px-1 py-2 border-r border-slate-200 cursor-pointer transition-all hover:ring-2 hover:ring-indigo-500 hover:z-10 ${cellStyle}`}
-                                onClick={() =>
+                                key={`cell-${emp.employeeId || rowIndex}-${dh.dayNum}`}
+                                className={`px-1 py-2 border-r border-slate-200 cursor-pointer transition-all hover:ring-2 hover:ring-indigo-500 hover:z-10 relative group ${cellStyle}`}
+                                onClick={() => {
                                   handleCellClick(
                                     rowNum,
                                     String(dh.dayNum),
                                     cellValue,
-                                    `${emp.employeeName} on ${dh.dateLabel}: ${dayCell?.status || cellValue} (In: ${dayCell?.loginTime || '--'}, Out: ${dayCell?.logoutTime || '--'})`
-                                  )
-                                }
-                                title={`${emp.employeeName} (${dh.dateLabel}): ${dayCell?.status || cellValue}`}
+                                    `${empName} on ${dh.dateLabel}: ${dayCell?.status || cellValue} (In: ${dayCell?.loginTime || '--'}, Out: ${dayCell?.logoutTime || '--'})`
+                                  );
+                                  handleOpenEditDayCell(emp, dh.dayNum, dh.dateLabel);
+                                }}
+                                title={`Click to edit ${empName} status on ${dh.dateLabel} (Current: ${cellValue})`}
                               >
-                                {cellValue}
+                                <span>{cellValue}</span>
                               </td>
                             );
                           })}
@@ -1078,12 +1358,35 @@ const Reports: React.FC = () => {
 
                           {/* Summary: Attendance % */}
                           <td
-                            className={`px-2.5 py-2 font-mono font-black bg-[#f2f2f2] cursor-pointer hover:bg-slate-300 ${
+                            className={`px-2.5 py-2 border-r border-slate-200 font-mono font-black bg-[#f2f2f2] cursor-pointer hover:bg-slate-300 ${
                               isLowAtt ? 'text-[#c00000] bg-rose-50' : 'text-slate-900'
                             }`}
                             onClick={() => handleCellClick(rowNum, 'AP', `${attPct}%`, 'Attendance Percentage')}
                           >
                             {attPct}%
+                          </td>
+
+                          {/* Action Column - Edit Attendance Sheet & Details Buttons */}
+                          <td className="px-2 py-2 text-center bg-white min-w-[110px]">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditAttendanceSheet(emp)}
+                                className="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-[10px] shadow-2xs transition-all flex items-center gap-1 cursor-pointer"
+                                title={`Edit full monthly attendance sheet (P, AB, HD, Leave, etc.) for ${empName}`}
+                              >
+                                <CalendarClock className="h-3 w-3" />
+                                <span>Edit Sheet</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditEmployee(emp)}
+                                className="p-1 bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 font-bold rounded-lg text-[10px] border border-slate-200 transition-all cursor-pointer"
+                                title={`Edit ${empName} profile & department`}
+                              >
+                                <User className="h-3 w-3" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -1152,6 +1455,30 @@ const Reports: React.FC = () => {
                       return <span className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800 border border-amber-300">Late</span>;
                     }
                     return <span className="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-600 border border-emerald-200">Present</span>;
+                  },
+                },
+                {
+                  header: 'Action',
+                  render: (r: any) => {
+                    const empObj = employees.find((e) => e.id === r.employeeId || e.employeeCode === r.employeeCode) || {
+                      id: r.employeeId,
+                      employeeId: r.employeeId,
+                      employeeCode: r.employeeCode,
+                      employeeName: r.employeeName || r.name,
+                      name: r.employeeName || r.name,
+                      department: r.department,
+                    };
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditEmployee(empObj)}
+                        className="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-bold border border-indigo-200 flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                        title="Edit Employee Details"
+                      >
+                        <Edit className="h-3.5 w-3.5" />
+                        <span>Edit</span>
+                      </button>
+                    );
                   },
                 },
               ]}
@@ -1361,6 +1688,542 @@ const Reports: React.FC = () => {
               </Card>
             </>
           )}
+        </div>
+      )}
+
+      {/* ═════════════════════════════════════════════════════════════════════════ */}
+      {/* ✏️ EDIT EMPLOYEE DETAILS MODAL                                            */}
+      {/* ═════════════════════════════════════════════════════════════════════════ */}
+      {editingEmployee && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                  <User className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-white">Edit Employee Details</h3>
+                  <p className="text-xs text-slate-400">
+                    ID #{editingEmployee.employeeId || editingEmployee.id} • {editingEmployee.employeeCode || editForm.employeeCode}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingEmployee(null)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleSaveEmployee} className="p-6 space-y-4">
+              {editError && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  <span>{editError}</span>
+                </div>
+              )}
+
+              {editMessage && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-semibold text-emerald-700 flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 shrink-0" />
+                  <span>{editMessage}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Employee Name */}
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Employee Name <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <User className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      required
+                      value={editForm.name}
+                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                      placeholder="e.g. John Doe"
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Employee Code */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Employee Code <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editForm.employeeCode}
+                    onChange={(e) => setEditForm({ ...editForm, employeeCode: e.target.value })}
+                    placeholder="e.g. ECLCE2016"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  />
+                </div>
+
+                {/* Department */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Department</label>
+                  <select
+                    value={editForm.department}
+                    onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  >
+                    <option value="IT">IT Team</option>
+                    <option value="EDTECH">EdTech Team</option>
+                    <option value="BUSINESS_SOLUTION">Business Solution</option>
+                    <option value="OG_TEAM">OG Team</option>
+                    <option value="HR">HR Department</option>
+                    <option value="MARKETING">Marketing</option>
+                    <option value="OPERATIONS">Operations</option>
+                  </select>
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
+                  <div className="relative">
+                    <Mail className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="email"
+                      value={editForm.email}
+                      onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                      placeholder="employee@company.com"
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number</label>
+                  <div className="relative">
+                    <Phone className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      value={editForm.phone}
+                      onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                      placeholder="+91 9876543210"
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Role */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Role</label>
+                  <select
+                    value={editForm.role}
+                    onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  >
+                    <option value="EMPLOYEE">Employee</option>
+                    <option value="TEAM_LEAD">Team Lead</option>
+                    <option value="MANAGER">Manager</option>
+                    <option value="HR">HR</option>
+                    <option value="ADMIN">Admin</option>
+                    <option value="INTERN">Intern</option>
+                  </select>
+                </div>
+
+                {/* Account Status */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Account Status</label>
+                  <select
+                    value={editForm.status}
+                    onChange={(e) => setEditForm({ ...editForm, status: e.target.value as any })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  >
+                    <option value="ACTIVE">Active</option>
+                    <option value="INACTIVE">Inactive</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Modal Actions */}
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setEditingEmployee(null)}
+                  disabled={editLoading}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-200 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {editLoading ? (
+                    <>
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-3.5 w-3.5" />
+                      <span>Save Changes</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ═════════════════════════════════════════════════════════════════════════ */}
+      {/* 📅 EDIT EMPLOYEE MONTHLY ATTENDANCE REGISTER MODAL (P, AB, HD, WO, etc.) */}
+      {/* ═════════════════════════════════════════════════════════════════════════ */}
+      {editingSheetEmployee && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                  <CalendarClock className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-white flex items-center gap-2">
+                    <span>Edit Attendance Register Sheet</span>
+                    <span className="text-xs px-2 py-0.5 rounded-md bg-indigo-950 text-indigo-300 border border-indigo-700 font-mono">
+                      {months.find((m) => m.value === selectedMonth)?.name} {selectedYear}
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    {editingSheetEmployee.employeeName || editingSheetEmployee.name} ({editingSheetEmployee.employeeCode}) • {editingSheetEmployee.department || 'IT'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingSheetEmployee(null)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Quick Bulk Preset Toolbar */}
+            <div className="bg-slate-50 px-6 py-2.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs shrink-0">
+              <div className="flex items-center gap-1.5 text-slate-600 font-bold">
+                <Wand2 className="h-4 w-4 text-indigo-600" />
+                <span>Bulk Fast Actions:</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleBulkSetSheet('P', true)}
+                  className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                  title="Set all Monday-Friday to Present (P), keep weekends as Week Off (WO)"
+                >
+                  <CheckCheck className="h-3.5 w-3.5" />
+                  <span>Mark Weekdays Present (P)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleBulkSetSheet('WO', false)}
+                  className="px-2.5 py-1 rounded-lg bg-[#fce4d6] text-[#c65911] hover:bg-[#f8cbad] border border-[#f4b084] font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                  title="Mark standard Sunday/Saturday week offs"
+                >
+                  <Coffee className="h-3.5 w-3.5" />
+                  <span>Standard Week Offs (WO)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleBulkSetSheet('--', false)}
+                  className="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                >
+                  <XCircle className="h-3.5 w-3.5" />
+                  <span>Reset All to Absent (AB)</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Feedback Notifications */}
+            {sheetError && (
+              <div className="m-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                <span>{sheetError}</span>
+              </div>
+            )}
+            {sheetMessage && (
+              <div className="m-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-semibold text-emerald-700 flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 shrink-0" />
+                <span>{sheetMessage}</span>
+              </div>
+            )}
+
+            {/* Day Matrix Grid */}
+            <div className="p-6 overflow-y-auto flex-1 space-y-3">
+              <div className="text-xs text-slate-500 font-medium">
+                Click any status pill below for each day of {months.find((m) => m.value === selectedMonth)?.name} to update status (<strong className="text-slate-700">P, AB, WO, HD, CL, SL, Late, Perm, WFH</strong>):
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {Array.from({ length: daysInMonth }).map((_, i) => {
+                  const dayNum = i + 1;
+                  const dt = new Date(selectedYear, selectedMonth - 1, dayNum);
+                  const dow = dt.toLocaleDateString('en-US', { weekday: 'short' });
+                  const isSun = dt.getDay() === 0;
+                  const satObj = saturdaysInMonth.find((s) => s.dayNum === dayNum);
+                  const isSatLeave = satObj?.isLeave;
+
+                  const currentDayObj = sheetDaysState[dayNum] || { code: '--', loginTime: '09:00', logoutTime: '18:30' };
+                  const curCode = currentDayObj.code;
+
+                  return (
+                    <div
+                      key={`edit-day-${dayNum}`}
+                      className={`p-3 rounded-2xl border transition-all ${
+                        isSun || isSatLeave
+                          ? 'bg-[#fce4d6]/30 border-[#f4b084]/60'
+                          : curCode === 'P'
+                          ? 'bg-emerald-50/40 border-emerald-200'
+                          : curCode === 'HD'
+                          ? 'bg-[#fff2cc]/40 border-[#ffe699]'
+                          : curCode === 'CL' || curCode === 'SL' || curCode === 'Leave'
+                          ? 'bg-amber-50/50 border-amber-200'
+                          : curCode === 'AB' || curCode === '--'
+                          ? 'bg-rose-50/30 border-rose-200/80'
+                          : 'bg-white border-slate-200'
+                      }`}
+                    >
+                      {/* Day Title */}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-extrabold text-sm text-slate-800 font-mono">
+                            {String(dayNum).padStart(2, '0')}
+                          </span>
+                          <span className={`text-xs font-bold ${isSun ? 'text-[#c65911]' : 'text-slate-500'}`}>
+                            ({dow})
+                          </span>
+                        </div>
+                        <span
+                          className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
+                            curCode === 'P'
+                              ? 'bg-emerald-600 text-white'
+                              : curCode === 'AB' || curCode === '--'
+                              ? 'bg-rose-600 text-white'
+                              : curCode === 'WO'
+                              ? 'bg-[#fce4d6] text-[#c65911] border border-[#f4b084]'
+                              : curCode === 'HD'
+                              ? 'bg-[#fff2cc] text-[#7030a0] border border-[#ffe699]'
+                              : curCode === 'CL' || curCode === 'SL'
+                              ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                              : 'bg-indigo-600 text-white'
+                          }`}
+                        >
+                          {curCode === '--' ? 'AB' : curCode}
+                        </span>
+                      </div>
+
+                      {/* Status Badges Selector */}
+                      <div className="grid grid-cols-5 gap-1 text-[10px] font-bold">
+                        {[
+                          { label: 'P', val: 'P', color: 'hover:bg-emerald-100 text-emerald-700', active: 'bg-emerald-600 text-white' },
+                          { label: 'AB', val: 'AB', color: 'hover:bg-rose-100 text-rose-700', active: 'bg-rose-600 text-white' },
+                          { label: 'WO', val: 'WO', color: 'hover:bg-[#fce4d6] text-[#c65911]', active: 'bg-[#c65911] text-white' },
+                          { label: 'HD', val: 'HD', color: 'hover:bg-[#fff2cc] text-[#7030a0]', active: 'bg-[#7030a0] text-white' },
+                          { label: 'CL', val: 'CL', color: 'hover:bg-amber-100 text-amber-800', active: 'bg-amber-600 text-white' },
+                          { label: 'SL', val: 'SL', color: 'hover:bg-red-100 text-red-800', active: 'bg-red-600 text-white' },
+                          { label: 'Late', val: 'Late', color: 'hover:bg-amber-100 text-amber-800', active: 'bg-amber-700 text-white' },
+                          { label: 'Perm', val: 'Perm', color: 'hover:bg-indigo-100 text-indigo-800', active: 'bg-indigo-700 text-white' },
+                          { label: 'WFH', val: 'WFH', color: 'hover:bg-sky-100 text-sky-800', active: 'bg-sky-600 text-white' },
+                        ].map((btn) => {
+                          const isSelected = curCode === btn.val || (btn.val === 'AB' && curCode === '--');
+                          return (
+                            <button
+                              key={btn.val}
+                              type="button"
+                              onClick={() => handleSetDayStatus(dayNum, btn.val)}
+                              className={`py-1 rounded-md text-center transition-all cursor-pointer border ${
+                                isSelected
+                                  ? `${btn.active} border-transparent shadow-xs font-black`
+                                  : `bg-white border-slate-200 ${btn.color}`
+                              }`}
+                            >
+                              {btn.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Modal Footer Actions */}
+            <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex items-center justify-between shrink-0">
+              <div className="text-xs text-slate-500 font-semibold hidden sm:block">
+                All changes will be applied to database immediately upon saving.
+              </div>
+              <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                <button
+                  type="button"
+                  onClick={() => setEditingSheetEmployee(null)}
+                  disabled={sheetSaveLoading}
+                  className="px-4 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveAttendanceSheet}
+                  disabled={sheetSaveLoading}
+                  className="px-6 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-200 flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {sheetSaveLoading ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                      <span>Saving Register...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      <span>Save Attendance Sheet</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═════════════════════════════════════════════════════════════════════════ */}
+      {/* ⚡ QUICK SINGLE DAY ATTENDANCE CELL EDITOR MODAL (CLICK ON ANY DAY CELL) */}
+      {/* ═════════════════════════════════════════════════════════════════════════ */}
+      {editingDayCell && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                  <Calendar className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-white">Edit Day Attendance</h3>
+                  <p className="text-xs text-slate-400 font-semibold">
+                    {editingDayCell.employeeName} ({editingDayCell.employeeCode}) • <span className="text-indigo-300 font-bold">{editingDayCell.dateLabel}</span>
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingDayCell(null)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              {daySaveMessage && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-semibold text-emerald-700 flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 shrink-0" />
+                  <span>{daySaveMessage}</span>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-2">
+                  Select Attendance Status:
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: 'Present (P)', val: 'P', desc: 'On-time present', color: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300' },
+                    { label: 'Absent (AB)', val: 'AB', desc: 'No punch / absent', color: 'bg-rose-50 hover:bg-rose-100 text-rose-800 border-rose-300' },
+                    { label: 'Week Off (WO)', val: 'WO', desc: 'Scheduled off', color: 'bg-[#fce4d6] hover:bg-[#f8cbad] text-[#c65911] border-[#f4b084]' },
+                    { label: 'Holiday (HD)', val: 'HD', desc: 'Company/Special', color: 'bg-[#fff2cc] hover:bg-[#ffe699] text-[#7030a0] border-[#ffe699]' },
+                    { label: 'Casual Leave (CL)', val: 'CL', desc: 'Approved casual', color: 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-300' },
+                    { label: 'Sick Leave (SL)', val: 'SL', desc: 'Approved medical', color: 'bg-red-50 hover:bg-red-100 text-red-800 border-red-300' },
+                    { label: 'Late Login', val: 'Late', desc: 'Arrived late', color: 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300' },
+                    { label: 'Permission (Perm)', val: 'Perm', desc: 'Approved perm', color: 'bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border-indigo-300' },
+                    { label: 'Work From Home', val: 'WFH', desc: 'Remote working', color: 'bg-sky-50 hover:bg-sky-100 text-sky-800 border-sky-300' },
+                  ].map((st) => {
+                    const isSelected = editingDayCell.code === st.val || (st.val === 'AB' && editingDayCell.code === '--');
+                    return (
+                      <button
+                        key={st.val}
+                        type="button"
+                        onClick={() => handleSaveDayCell(st.val)}
+                        disabled={daySaveLoading}
+                        className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                          isSelected
+                            ? 'ring-2 ring-indigo-600 font-extrabold shadow-sm'
+                            : ''
+                        } ${st.color}`}
+                      >
+                        <span className="font-extrabold text-xs">{st.label}</span>
+                        <span className="text-[10px] opacity-75">{st.desc}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Timing Overrides */}
+              <div className="pt-3 border-t border-slate-100 grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">Login Time</label>
+                  <input
+                    type="time"
+                    value={editingDayCell.loginTime}
+                    onChange={(e) => setEditingDayCell({ ...editingDayCell, loginTime: e.target.value })}
+                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-800"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">Logout Time</label>
+                  <input
+                    type="time"
+                    value={editingDayCell.logoutTime}
+                    onChange={(e) => setEditingDayCell({ ...editingDayCell, logoutTime: e.target.value })}
+                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-800"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingDayCell(null)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSaveDayCell(editingDayCell.code, editingDayCell.loginTime, editingDayCell.logoutTime)}
+                  disabled={daySaveLoading}
+                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-200 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  {daySaveLoading ? (
+                    <>
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                      <span>Updating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-3.5 w-3.5" />
+                      <span>Apply Timings</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

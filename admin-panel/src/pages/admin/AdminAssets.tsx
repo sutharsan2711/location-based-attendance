@@ -528,54 +528,65 @@ const AdminAssets: React.FC = () => {
         </div>
 
         {activeTab === 'inventory' && (
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mr-1">Category:</span>
-              <button
-                onClick={() => setSelectedCategory('ALL')}
-                className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
-                  selectedCategory === 'ALL'
-                    ? 'bg-indigo-600 text-white shadow-2xs'
-                    : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
-                }`}
-              >
-                All ({assets.length})
-              </button>
-              {(categories.length > 0
-                ? categories.map((c) => c.name)
-                : ['LAPTOP', 'MONITOR', 'ACCESS_CARD', 'PERIPHERAL', 'MOBILE', 'FURNITURE', 'OTHER']
-              ).map((cat) => {
-                const count = assets.filter((a) => a.category === cat).length;
-                return (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
-                      selectedCategory === cat
-                        ? 'bg-indigo-600 text-white shadow-2xs'
-                        : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    {cat.replace('_', ' ')} {count > 0 && <span className="opacity-80">({count})</span>}
-                  </button>
-                );
-              })}
-
-              <div className="h-4 w-[1px] bg-slate-200 mx-1 hidden sm:block" />
-
-              {['ALL', 'AVAILABLE', 'ASSIGNED', 'UNDER_MAINTENANCE'].map((st) => (
-                <button
-                  key={st}
-                  onClick={() => setSelectedStatus(st)}
-                  className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
-                    selectedStatus === st
-                      ? 'bg-slate-900 text-white shadow-2xs'
-                      : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
-                  }`}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100 text-xs">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Category Dropdown */}
+              <div className="flex items-center gap-2">
+                <label htmlFor="assetCategoryFilter" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                  <Layers className="h-3.5 w-3.5 text-indigo-500" />
+                  <span>Category:</span>
+                </label>
+                <select
+                  id="assetCategoryFilter"
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer shadow-2xs hover:bg-white transition-colors min-w-[170px]"
                 >
-                  {st === 'AVAILABLE' ? 'In Stock' : st === 'ASSIGNED' ? 'Allocated' : st.replace('_', ' ')}
+                  <option value="ALL">All Categories ({assets.length})</option>
+                  {(categories.length > 0
+                    ? categories.map((c) => c.name)
+                    : ['LAPTOP', 'MONITOR', 'ACCESS_CARD', 'PERIPHERAL', 'MOBILE', 'FURNITURE', 'OTHER']
+                  ).map((cat) => {
+                    const count = assets.filter((a) => a.category === cat).length;
+                    return (
+                      <option key={cat} value={cat}>
+                        {cat.replace(/_/g, ' ')} ({count})
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              {/* Status Dropdown */}
+              <div className="flex items-center gap-2">
+                <label htmlFor="assetStatusFilter" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                  <Sliders className="h-3.5 w-3.5 text-slate-400" />
+                  <span>Status:</span>
+                </label>
+                <select
+                  id="assetStatusFilter"
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                  className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer shadow-2xs hover:bg-white transition-colors min-w-[150px]"
+                >
+                  <option value="ALL">All Statuses</option>
+                  <option value="AVAILABLE">In Stock (Available)</option>
+                  <option value="ASSIGNED">Allocated (Assigned)</option>
+                  <option value="UNDER_MAINTENANCE">Under Maintenance</option>
+                </select>
+              </div>
+
+              {(selectedCategory !== 'ALL' || selectedStatus !== 'ALL') && (
+                <button
+                  onClick={() => {
+                    setSelectedCategory('ALL');
+                    setSelectedStatus('ALL');
+                  }}
+                  className="px-2.5 py-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
+                >
+                  ✕ Clear Filters
                 </button>
-              ))}
+              )}
             </div>
 
             <button

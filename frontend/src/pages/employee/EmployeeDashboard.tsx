@@ -5,6 +5,9 @@ import { useGeolocation } from '../../hooks/useGeolocation';
 import { workPlanService } from '../../services/workPlanService';
 import { attendanceService } from '../../services/attendanceService';
 import { taskService } from '../../services/taskService';
+import { locationService } from '../../services/locationService';
+import { CompanyLocation } from '../../types/location';
+import { calculateDistance } from '../../utils/locationUtils';
 import { Task, TaskPriority, TaskStatus } from '../../types/task';
 import {
   DailyWorkPlanItem,
@@ -103,6 +106,13 @@ const EmployeeDashboard: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+
+  // Office Geofence & Live Distance State
+  const [officeLocations, setOfficeLocations] = useState<CompanyLocation[]>([]);
+  const [liveDistance, setLiveDistance] = useState<number | null>(null);
+  const [nearestOffice, setNearestOffice] = useState<CompanyLocation | null>(null);
+  const [isDistanceLoading, setIsDistanceLoading] = useState<boolean>(false);
+  const [gpsError, setGpsError] = useState<string | null>(null);
 
   // Admin Assigned Tasks State
   const [assignedTasks, setAssignedTasks] = useState<Task[]>([]);
@@ -249,6 +259,61 @@ const EmployeeDashboard: React.FC = () => {
     });
   };
 
+  // ── Calculate Distance to Closest Office Location ──
+  const calculateAndSetDistance = useCallback((lat: number, lon: number, offices: CompanyLocation[]) => {
+    if (!offices || offices.length === 0) return;
+
+    let minDistance = Infinity;
+    let closestOffice: CompanyLocation | null = null;
+
+    offices.forEach((office) => {
+      const officeLat = typeof office.latitude === 'string' ? parseFloat(office.latitude) : office.latitude;
+      const officeLon = typeof office.longitude === 'string' ? parseFloat(office.longitude) : office.longitude;
+      if (!isNaN(officeLat) && !isNaN(officeLon)) {
+        const d = calculateDistance(lat, lon, officeLat, officeLon);
+        if (d < minDistance) {
+          minDistance = d;
+          closestOffice = office;
+        }
+      }
+    });
+
+    if (closestOffice && minDistance !== Infinity) {
+      setLiveDistance(minDistance);
+      setNearestOffice(closestOffice);
+      setGpsError(null);
+    }
+  }, []);
+
+  // ── Reload GPS & Recalculate Distance ──
+  const reloadGpsDistance = useCallback(async () => {
+    setIsDistanceLoading(true);
+    setGpsError(null);
+    try {
+      // 1. Ensure office locations are loaded
+      let currentOffices = officeLocations;
+      if (!currentOffices || currentOffices.length === 0) {
+        try {
+          currentOffices = await locationService.getAllLocations();
+          setOfficeLocations(currentOffices);
+        } catch (e) {
+          console.warn('Failed to load office locations for distance calc:', e);
+        }
+      }
+
+      // 2. Fetch fresh device GPS coordinates
+      const coords = await getCoordinates();
+      if (coords && typeof coords.latitude === 'number' && typeof coords.longitude === 'number') {
+        calculateAndSetDistance(coords.latitude, coords.longitude, currentOffices);
+      }
+    } catch (err: any) {
+      console.warn('GPS distance retrieval error:', err);
+      setGpsError(err.message || 'GPS location unavailable');
+    } finally {
+      setIsDistanceLoading(false);
+    }
+  }, [officeLocations, getCoordinates, calculateAndSetDistance]);
+
   // ── 1. Fetch Dashboard Data ──
   const fetchDashboard = useCallback(async (isSilent = false) => {
     try {
@@ -261,9 +326,14 @@ const EmployeeDashboard: React.FC = () => {
         taskService.getMyTasks().catch(() => []),
         announcementService.getActive().catch(() => []),
         requestService.getTeamLeaves().catch(() => []),
+        locationService.getAllLocations().catch(() => []),
       ]);
-      const timeoutFallback = new Promise<any[]>((resolve) => setTimeout(() => resolve([null, null, [], [], []]), 5000));
-      const [res, attRes, tasksRes, annRes, teamLeavesRes] = await Promise.race([fetchAll, timeoutFallback]);
+      const timeoutFallback = new Promise<any[]>((resolve) => setTimeout(() => resolve([null, null, [], [], [], []]), 5000));
+      const [res, attRes, tasksRes, annRes, teamLeavesRes, locsRes] = await Promise.race([fetchAll, timeoutFallback]);
+
+      if (locsRes && Array.isArray(locsRes) && locsRes.length > 0) {
+        setOfficeLocations(locsRes);
+      }
 
       if (res) {
         setDashboardData(res);
@@ -317,7 +387,8 @@ const EmployeeDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchDashboard();
-  }, [fetchDashboard]);
+    reloadGpsDistance();
+  }, [fetchDashboard, reloadGpsDistance]);
 
   // ── 2. Open Swipes & History Modal ──
   const handleOpenSwipesModal = async () => {
@@ -682,6 +753,74 @@ const EmployeeDashboard: React.FC = () => {
               )}
             </button>
 
+            {/* Live GPS Distance Badge & Reload Button */}
+            <div
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl backdrop-blur-md border text-xs font-semibold transition-all ${
+                attendance?.isWfhApproved
+                  ? 'bg-purple-500/20 border-purple-300/40 text-purple-100'
+                  : liveDistance !== null && nearestOffice && liveDistance <= (nearestOffice.allowedRadius || 500)
+                  ? 'bg-emerald-500/25 border-emerald-300/40 text-white'
+                  : 'bg-white/15 border-white/20 text-white'
+              }`}
+              title={
+                attendance?.isWfhApproved
+                  ? 'Work From Home Approved - Geofence Bypassed'
+                  : nearestOffice
+                  ? `Office: ${nearestOffice.companyName} (Allowed: ${nearestOffice.allowedRadius || 500}m)`
+                  : 'Live Distance to Office'
+              }
+            >
+              <MapPin
+                className={`h-4 w-4 shrink-0 ${
+                  isDistanceLoading
+                    ? 'animate-bounce text-amber-300'
+                    : attendance?.isWfhApproved
+                    ? 'text-purple-300'
+                    : liveDistance !== null && nearestOffice && liveDistance <= (nearestOffice.allowedRadius || 500)
+                    ? 'text-emerald-300'
+                    : 'text-amber-300'
+                }`}
+              />
+              <div className="flex flex-col text-left leading-tight">
+                <span className="text-[9px] uppercase font-bold tracking-wider opacity-85">
+                  {attendance?.isWfhApproved ? 'WFH Active' : 'Distance'}
+                </span>
+                <span className="font-bold text-xs font-mono">
+                  {isDistanceLoading ? (
+                    <span className="inline-flex items-center gap-1 opacity-90">
+                      <RefreshCw className="h-2.5 w-2.5 animate-spin" /> Locating...
+                    </span>
+                  ) : attendance?.isWfhApproved ? (
+                    <span className="text-purple-200">WFH Mode 🏡</span>
+                  ) : liveDistance !== null ? (
+                    <span>
+                      {liveDistance < 1000 ? `${Math.round(liveDistance)}m` : `${(liveDistance / 1000).toFixed(2)}km`}
+                      {nearestOffice && (
+                        <span className={`ml-1 text-[10px] font-medium ${liveDistance <= (nearestOffice.allowedRadius || 500) ? 'text-emerald-200' : 'text-amber-200'}`}>
+                          ({liveDistance <= (nearestOffice.allowedRadius || 500) ? 'In Range' : 'Out Range'})
+                        </span>
+                      )}
+                    </span>
+                  ) : gpsError ? (
+                    <span className="text-rose-200 text-[10px]">GPS Off</span>
+                  ) : (
+                    <span className="opacity-80">--</span>
+                  )}
+                </span>
+              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  reloadGpsDistance();
+                }}
+                disabled={isDistanceLoading}
+                className="p-1 hover:bg-white/20 active:bg-white/30 rounded-lg transition-all cursor-pointer text-white shrink-0 ml-0.5"
+                title="Click to Reload Live Distance"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isDistanceLoading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+
             {assignedTasks.length > 0 && (
               <button
                 onClick={() => setActiveTaskTab('ASSIGNED')}
@@ -720,8 +859,8 @@ const EmployeeDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* ── Banner Bottom Row: Attendance Timings Strip ── */}
-        <div className="relative z-10 mt-5 pt-4 border-t border-white/15 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+        {/* ── Banner Bottom Row: Attendance Timings & Live Distance Strip ── */}
+        <div className="relative z-10 mt-5 pt-4 border-t border-white/15 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
           {/* 1. Status */}
           <div className="bg-white/10 backdrop-blur-md rounded-xl p-2.5 border border-white/15 flex items-center gap-2.5">
             <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
@@ -784,6 +923,54 @@ const EmployeeDashboard: React.FC = () => {
                 {liveWorkHours.text}
               </span>
             </div>
+          </div>
+
+          {/* 5. Live Office Distance & Reload Button */}
+          <div className="bg-white/10 backdrop-blur-md rounded-xl p-2.5 border border-white/15 flex items-center justify-between gap-2 col-span-2 sm:col-span-3 lg:col-span-1">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
+                attendance?.isWfhApproved
+                  ? 'bg-purple-400/20 text-purple-200'
+                  : liveDistance !== null && nearestOffice && liveDistance <= (nearestOffice.allowedRadius || 500)
+                  ? 'bg-emerald-400/20 text-emerald-300'
+                  : 'bg-amber-400/20 text-amber-300'
+              }`}>
+                <MapPin className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] uppercase font-bold text-blue-200 tracking-wider block truncate">
+                  {attendance?.isWfhApproved ? 'WFH Geofence' : 'Live Distance'}
+                </span>
+                <span className="font-bold text-white text-xs mt-0.5 block font-mono truncate">
+                  {isDistanceLoading ? (
+                    <span className="text-blue-100 flex items-center gap-1">
+                      <RefreshCw className="h-3 w-3 animate-spin" /> Locating...
+                    </span>
+                  ) : attendance?.isWfhApproved ? (
+                    <span className="text-purple-200 font-semibold">WFH Active 🏡</span>
+                  ) : liveDistance !== null ? (
+                    <span className={nearestOffice && liveDistance <= (nearestOffice.allowedRadius || 500) ? 'text-emerald-300' : 'text-amber-300'}>
+                      {liveDistance < 1000 ? `${Math.round(liveDistance)}m` : `${(liveDistance / 1000).toFixed(2)}km`}
+                      <span className="text-[10px] ml-1 font-normal opacity-90">
+                        {nearestOffice && liveDistance <= (nearestOffice.allowedRadius || 500) ? '• In Range' : '• Out Range'}
+                      </span>
+                    </span>
+                  ) : gpsError ? (
+                    <span className="text-rose-300 text-[10px]" title={gpsError}>Location Off</span>
+                  ) : (
+                    <span className="text-blue-200">--</span>
+                  )}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={reloadGpsDistance}
+              disabled={isDistanceLoading}
+              className="p-1.5 hover:bg-white/20 active:bg-white/30 rounded-lg transition-colors cursor-pointer text-white shrink-0"
+              title="Reload live GPS distance"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isDistanceLoading ? 'animate-spin' : ''}`} />
+            </button>
           </div>
         </div>
       </div>

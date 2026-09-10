@@ -46,16 +46,36 @@ export async function GET(req: NextRequest) {
     });
 
     // Fetch attendance for today
-    const attendance = await prisma.attendance.findFirst({
+    const latestAttendance = await prisma.attendance.findFirst({
       where: {
         employeeId: empId,
-        attendanceDate: {
-          gte: bufferStart,
-          lte: bufferEnd,
-        },
       },
-      orderBy: { id: "desc" },
+      orderBy: [{ attendanceDate: "desc" }, { id: "desc" }],
     });
+
+    const nowIso = new Date().toISOString().slice(0, 10);
+    const nowLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+    let isToday = false;
+    if (latestAttendance) {
+      const attDateStr = latestAttendance.attendanceDate
+        ? new Date(latestAttendance.attendanceDate).toISOString().slice(0, 10)
+        : "";
+      const loginDateStr = latestAttendance.loginTime
+        ? new Date(latestAttendance.loginTime).toISOString().slice(0, 10)
+        : "";
+
+      if (attDateStr === nowIso || attDateStr === nowLocal || loginDateStr === nowIso || loginDateStr === nowLocal) {
+        isToday = true;
+      } else if (latestAttendance.loginTime) {
+        const diffHours = (Date.now() - new Date(latestAttendance.loginTime).getTime()) / (1000 * 3600);
+        if (diffHours < 20) {
+          isToday = true;
+        }
+      }
+    }
+
+    const attendance = isToday ? latestAttendance : null;
 
     // Calculate Summary Metrics
     const totalTasks = plans.length;

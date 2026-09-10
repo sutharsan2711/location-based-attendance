@@ -14,19 +14,12 @@ export async function GET(req: NextRequest) {
     const dateQuery = searchParams.get("date");
     const now = dateQuery ? new Date(dateQuery) : new Date();
 
-    // Query whole day window + 14h buffer to handle all client/server timezone offsets (UTC vs IST +5:30)
-    const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
-    const endOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
-    const bufferStart = new Date(startOfDay.getTime() - 14 * 3600 * 1000);
-    const bufferEnd = new Date(endOfDay.getTime() + 14 * 3600 * 1000);
+    const empId = BigInt(authUser.id);
 
-    const attendance = await prisma.attendance.findFirst({
+    // Fetch the most recent attendance record for this employee
+    const latestAttendance = await prisma.attendance.findFirst({
       where: {
-        employeeId: BigInt(authUser.id),
-        attendanceDate: {
-          gte: bufferStart,
-          lte: bufferEnd,
-        },
+        employeeId: empId,
       },
       include: {
         employee: {
@@ -41,17 +34,47 @@ export async function GET(req: NextRequest) {
           },
         },
       },
-      orderBy: { id: "desc" },
+      orderBy: [{ attendanceDate: "desc" }, { id: "desc" }],
     });
 
+    // Check if the latest attendance belongs to today (or within the current 20h window)
+    const nowIso = new Date().toISOString().slice(0, 10);
+    const nowLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+    let isToday = false;
+    if (latestAttendance) {
+      const attDateStr = latestAttendance.attendanceDate
+        ? new Date(latestAttendance.attendanceDate).toISOString().slice(0, 10)
+        : "";
+      const loginDateStr = latestAttendance.loginTime
+        ? new Date(latestAttendance.loginTime).toISOString().slice(0, 10)
+        : "";
+
+      if (attDateStr === nowIso || attDateStr === nowLocal || loginDateStr === nowIso || loginDateStr === nowLocal) {
+        isToday = true;
+      } else if (latestAttendance.loginTime) {
+        const diffHours = (Date.now() - new Date(latestAttendance.loginTime).getTime()) / (1000 * 3600);
+        if (diffHours < 20) {
+          isToday = true;
+        }
+      }
+    }
+
+    const attendance = isToday ? latestAttendance : null;
+
     // Check if approved Work From Home (WFH) is active for today
+    const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
+    const endOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+    const bufferStart = new Date(startOfDay.getTime() - 14 * 3600 * 1000);
+    const bufferEnd = new Date(endOfDay.getTime() + 14 * 3600 * 1000);
+
     const approvedWfh = await prisma.leaveRequest.findFirst({
       where: {
-        employeeId: BigInt(authUser.id),
+        employeeId: empId,
         leaveType: "WORK_FROM_HOME",
         status: "APPROVED",
-        fromDate: { lte: endOfDay },
-        toDate: { gte: startOfDay },
+        fromDate: { lte: bufferEnd },
+        toDate: { gte: bufferStart },
       },
     });
 

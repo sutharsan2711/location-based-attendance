@@ -327,12 +327,17 @@ const EmployeeDashboard: React.FC = () => {
         announcementService.getActive().catch(() => []),
         requestService.getTeamLeaves().catch(() => []),
         locationService.getAllLocations().catch(() => []),
+        attendanceService.getHistory().catch(() => []),
       ]);
-      const timeoutFallback = new Promise<any[]>((resolve) => setTimeout(() => resolve([null, null, [], [], [], []]), 5000));
-      const [res, attRes, tasksRes, annRes, teamLeavesRes, locsRes] = await Promise.race([fetchAll, timeoutFallback]);
+      const timeoutFallback = new Promise<any[]>((resolve) => setTimeout(() => resolve([null, null, [], [], [], [], []]), 5000));
+      const [res, attRes, tasksRes, annRes, teamLeavesRes, locsRes, historyRes] = await Promise.race([fetchAll, timeoutFallback]);
 
       if (locsRes && Array.isArray(locsRes) && locsRes.length > 0) {
         setOfficeLocations(locsRes);
+      }
+
+      if (historyRes && Array.isArray(historyRes) && historyRes.length > 0) {
+        setRecentSwipes(historyRes);
       }
 
       if (res) {
@@ -368,6 +373,22 @@ const EmployeeDashboard: React.FC = () => {
           ...(finalAttendance || {}),
           ...res.attendance,
         };
+      }
+
+      // If still missing loginTime, fallback to latest swipe from historyRes if within today/recent window
+      if ((!finalAttendance || !finalAttendance.loginTime) && historyRes && Array.isArray(historyRes) && historyRes.length > 0) {
+        const latest = historyRes[0];
+        const nowIso = new Date().toISOString().slice(0, 10);
+        const latestDate = latest.attendanceDate ? String(latest.attendanceDate).slice(0, 10) : "";
+        const latestLogin = latest.loginTime ? String(latest.loginTime).slice(0, 10) : "";
+        const isRecent = latest.loginTime && (Date.now() - new Date(latest.loginTime).getTime()) < 20 * 3600 * 1000;
+
+        if (latestDate === nowIso || latestLogin === nowIso || isRecent) {
+          finalAttendance = {
+            ...(finalAttendance || {}),
+            ...latest,
+          };
+        }
       }
 
       setAttendance(finalAttendance);

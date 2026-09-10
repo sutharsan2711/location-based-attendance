@@ -447,8 +447,8 @@ const EmployeeDashboard: React.FC = () => {
           lat = coords.latitude;
           lng = coords.longitude;
           acc = coords.accuracy || 15;
-        } catch (e) {
-          console.warn('Geolocation fallback:', e);
+        } catch (e: any) {
+          console.warn('Geolocation warning on swipe:', e);
         }
       }
 
@@ -461,15 +461,15 @@ const EmployeeDashboard: React.FC = () => {
 
       if (!hasCheckedIn) {
         const res = await attendanceService.loginAttendance({
-          latitude: lat || 13.0827,
-          longitude: lng || 80.2707,
+          latitude: lat ?? undefined,
+          longitude: lng ?? undefined,
           accuracy: acc,
         });
         setSwipeSuccess(res?.message || 'Checked in successfully! Have a great productive day.');
       } else if (!hasCheckedOut) {
         const res = await attendanceService.logoutAttendance({
-          latitude: lat || 13.0827,
-          longitude: lng || 80.2707,
+          latitude: lat ?? undefined,
+          longitude: lng ?? undefined,
           accuracy: acc,
         });
         setSwipeSuccess(res?.message || 'Checked out successfully! Have a wonderful evening.');

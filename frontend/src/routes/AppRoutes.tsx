@@ -23,7 +23,17 @@ import EmployeeKpi from '../pages/employee/EmployeeKpi';
 import EmployeeAssets from '../pages/employee/EmployeeAssets';
 import EmployeeAnnouncements from '../pages/employee/EmployeeAnnouncements';
 
-const ADMIN_PANEL_URL = 'http://localhost:5200';
+export const getAdminPanelUrl = (): string => {
+  if (import.meta.env.VITE_ADMIN_PANEL_URL) {
+    return import.meta.env.VITE_ADMIN_PANEL_URL as string;
+  }
+  if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+    const protocol = window.location.protocol || 'http:';
+    const hostname = window.location.hostname || 'localhost';
+    return `${protocol}//${hostname}:5200`;
+  }
+  return 'http://localhost:5200';
+};
 
 const HomeRedirect: React.FC = () => {
   const { user, loading } = useAuth();
@@ -31,7 +41,7 @@ const HomeRedirect: React.FC = () => {
   if (!user) return <Navigate to="/login" replace />;
 
   if (user.role === 'ADMIN') {
-    window.location.href = ADMIN_PANEL_URL;
+    window.location.href = getAdminPanelUrl();
     return null;
   }
 
@@ -43,7 +53,7 @@ const LoginRoute: React.FC = () => {
   if (loading) return <Loading fullScreen message="Signing in..." />;
   if (user) {
     if (user.role === 'ADMIN') {
-      window.location.href = ADMIN_PANEL_URL;
+      window.location.href = getAdminPanelUrl();
       return null;
     }
     return <Navigate to="/employee/dashboard" replace />;

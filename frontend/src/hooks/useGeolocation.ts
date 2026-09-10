@@ -13,6 +13,7 @@ export interface GeolocationState {
   loading: boolean;
   error: string | null;
   permissionStatus: 'prompt' | 'granted' | 'denied' | 'unsupported' | 'unknown';
+  isVerified: boolean;
 }
 
 export const useGeolocation = () => {
@@ -23,6 +24,7 @@ export const useGeolocation = () => {
     loading: false,
     error: null,
     permissionStatus: typeof navigator !== 'undefined' && 'geolocation' in navigator ? 'unknown' : 'unsupported',
+    isVerified: false,
   });
 
   const checkPermission = useCallback(async (): Promise<'prompt' | 'granted' | 'denied' | 'unsupported'> => {
@@ -51,16 +53,18 @@ export const useGeolocation = () => {
     checkPermission();
   }, [checkPermission]);
 
-  const getCoordinates = useCallback((strict: boolean = true): Promise<GeolocationCoordinates> => {
+  const getCoordinates = useCallback((): Promise<GeolocationCoordinates> => {
     return new Promise<GeolocationCoordinates>((resolve, reject) => {
       if (typeof navigator === 'undefined' || !navigator.geolocation) {
-        const errMsg = 'Geolocation is not supported by your browser.';
-        setState((prev) => ({ ...prev, loading: false, error: errMsg, permissionStatus: 'unsupported' }));
-        if (strict) {
-          reject(new Error(errMsg));
-        } else {
-          resolve({ latitude: 11.078319, longitude: 76.999745, accuracy: 20 });
-        }
+        const errMsg = 'Geolocation is not supported by your browser/device.';
+        setState((prev) => ({
+          ...prev,
+          loading: false,
+          error: errMsg,
+          permissionStatus: 'unsupported',
+          isVerified: false,
+        }));
+        reject(new Error(errMsg));
         return;
       }
 
@@ -70,7 +74,7 @@ export const useGeolocation = () => {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude, accuracy } = position.coords;
-            const validAcc = (accuracy && accuracy > 0) ? accuracy : 15;
+            const validAcc = accuracy && accuracy > 0 ? accuracy : 15;
             setState({
               latitude,
               longitude,
@@ -78,60 +82,47 @@ export const useGeolocation = () => {
               loading: false,
               error: null,
               permissionStatus: 'granted',
+              isVerified: true,
             });
             resolve({ latitude, longitude, accuracy: validAcc });
           },
           (error) => {
             if (highAccuracy && error.code !== error.PERMISSION_DENIED) {
-              // Rapid fallback to standard accuracy (Wi-Fi/IP location) for laptops & desktops
+              // Rapid fallback to standard accuracy (Wi-Fi/cellular) before failing
               tryGetPosition(false);
               return;
             }
 
-            let errorMessage = 'An error occurred while accessing your location.';
+            let errorMessage = 'An error occurred while accessing device GPS location.';
             let permStatus: 'denied' | 'prompt' = 'prompt';
 
             switch (error.code) {
               case error.PERMISSION_DENIED:
-                errorMessage = 'Location permission is denied. Please enable location access in browser settings.';
+                errorMessage = 'Location permission is denied. Please enable location access in your browser settings.';
                 permStatus = 'denied';
                 break;
               case error.POSITION_UNAVAILABLE:
-                errorMessage = 'Unable to determine your GPS location. Please check device location settings.';
+                errorMessage = 'Device GPS / Location is turned off. Please switch ON Location in your phone settings and tap retry.';
                 break;
               case error.TIMEOUT:
-                errorMessage = 'Location request timed out. Please refresh and try again.';
+                errorMessage = 'GPS location request timed out. Please ensure phone location is enabled and try again.';
                 break;
             }
 
-            if (strict) {
-              setState({
-                latitude: null,
-                longitude: null,
-                accuracy: null,
-                loading: false,
-                error: errorMessage,
-                permissionStatus: permStatus,
-              });
-              reject(new Error(errorMessage));
-            } else {
-              // Fallback default coordinates when strict is false
-              const fallbackLat = 11.078319;
-              const fallbackLng = 76.999745;
-              setState({
-                latitude: fallbackLat,
-                longitude: fallbackLng,
-                accuracy: 25,
-                loading: false,
-                error: null,
-                permissionStatus: permStatus === 'denied' ? 'denied' : 'granted',
-              });
-              resolve({ latitude: fallbackLat, longitude: fallbackLng, accuracy: 25 });
-            }
+            setState({
+              latitude: null,
+              longitude: null,
+              accuracy: null,
+              loading: false,
+              error: errorMessage,
+              permissionStatus: permStatus,
+              isVerified: false,
+            });
+            reject(new Error(errorMessage));
           },
           {
             enableHighAccuracy: highAccuracy,
-            timeout: highAccuracy ? 4000 : 5000,
+            timeout: highAccuracy ? 8000 : 10000,
             maximumAge: 5000,
           }
         );
@@ -149,9 +140,11 @@ export const useGeolocation = () => {
       accuracy: null,
       loading: false,
       error: null,
+      isVerified: false,
     }));
   }, []);
 
   return { ...state, getCoordinates, checkPermission, resetGeolocation };
 };
+
 

@@ -86,12 +86,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (response && response.data) {
               setUser(response.data);
               localStorage.setItem('user', JSON.stringify(response.data));
-            } else {
-              logout();
             }
           } catch (apiErr: any) {
-            console.warn('User validation failed on backend, logging out', apiErr);
-            logout();
+            // Only log out if backend explicitly rejected the token with 401 or 403
+            if (apiErr?.response && (apiErr.response.status === 401 || apiErr.response.status === 403)) {
+              console.warn('Session expired or unauthorized on backend, logging out', apiErr);
+              logout();
+            } else {
+              console.warn('Network offline or backend slow to respond, continuing with cached session profile.');
+            }
           }
         } catch (error) {
           console.error('Failed to parse stored user', error);

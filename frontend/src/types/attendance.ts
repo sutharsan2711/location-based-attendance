@@ -30,9 +30,9 @@ export interface Attendance {
 }
 
 export interface AttendanceRequest {
-  latitude: number;
-  longitude: number;
-  accuracy: number;
+  latitude?: number;
+  longitude?: number;
+  accuracy?: number;
 }
 
 export interface AttendanceResponse {

@@ -35,13 +35,15 @@ const Login: React.FC = () => {
     error: geoError,
     latitude,
     longitude,
+    accuracy,
+    loading: geoLoading,
+    isVerified,
   } = useGeolocation();
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState<string>('Signing in...');
   const [showPassword, setShowPassword] = useState(false);
-  const [locPrompted, setLocPrompted] = useState(false);
 
   // If already logged in, redirect
   useEffect(() => {
@@ -55,7 +57,7 @@ const Login: React.FC = () => {
     const initLocation = async () => {
       const status = await checkPermission();
       if (status === 'granted') {
-        getCoordinates(false).catch(() => {});
+        getCoordinates().catch(() => {});
       }
     };
     initLocation();
@@ -63,9 +65,8 @@ const Login: React.FC = () => {
 
   const handleRequestLocation = async () => {
     setError(null);
-    setLocPrompted(true);
     try {
-      await getCoordinates(false);
+      await getCoordinates();
     } catch (err: any) {
       console.warn('Location retrieval notice:', err);
     }
@@ -93,9 +94,9 @@ const Login: React.FC = () => {
       let coords: { latitude: number; longitude: number; accuracy: number } | null = null;
 
       try {
-        coords = await getCoordinates(false);
+        coords = await getCoordinates();
       } catch (locErr: any) {
-        console.warn('Geolocation notice during login:', locErr);
+        console.warn('Geolocation notice during login (proceeding with credential auth):', locErr);
       }
 
       setLoadingMessage('Connecting to portal...');
@@ -127,7 +128,7 @@ const Login: React.FC = () => {
   };
 
   const isLocationDenied = permissionStatus === 'denied';
-  const isLocationGranted = permissionStatus === 'granted' || (latitude !== null && longitude !== null);
+  const hasRealCoords = isVerified && latitude !== null && longitude !== null;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden select-none">
@@ -153,14 +154,24 @@ const Login: React.FC = () => {
         {/* Login Glass Card */}
         <div className="bg-slate-900/80 backdrop-blur-2xl border border-white/10 p-7 sm:p-8 rounded-3xl shadow-2xl space-y-5">
           {/* Location Status Notice */}
-          {isLocationDenied ? (
+          {geoLoading ? (
+            <div className="flex items-center justify-between rounded-2xl border border-indigo-500/30 bg-indigo-500/10 px-3.5 py-2.5 text-xs text-indigo-300 animate-pulse">
+              <div className="flex items-center gap-2">
+                <RefreshCw className="h-4 w-4 animate-spin text-indigo-400 shrink-0" />
+                <span className="font-semibold text-[11px]">Acquiring Device GPS Location...</span>
+              </div>
+              <span className="text-[10px] bg-indigo-500/20 text-indigo-300 font-bold px-2 py-0.5 rounded-lg">
+                Tracking...
+              </span>
+            </div>
+          ) : isLocationDenied || (geoError && !hasRealCoords) ? (
             <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs text-rose-300 space-y-2 animate-fade-in">
               <div className="flex items-center gap-2 font-bold text-rose-400">
                 <MapPinOff className="h-4 w-4 shrink-0" />
-                <span>Location Access Required</span>
+                <span>Device Location / GPS Required</span>
               </div>
               <p className="text-[11px] leading-relaxed text-rose-200/90">
-                Browser location is required for office geo-fence verification. Please click the site settings/lock icon in your browser URL bar, allow Location access, and click retry.
+                {geoError || 'Please ensure Location/GPS is turned ON in your phone settings and allowed in browser site permissions.'}
               </p>
               <button
                 type="button"
@@ -168,37 +179,51 @@ const Login: React.FC = () => {
                 className="mt-1 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-rose-600 text-white text-[11px] font-bold hover:bg-rose-500 transition-colors shadow-sm cursor-pointer"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
-                Retry Location Access
+                Turn On / Retry GPS Location
               </button>
             </div>
-          ) : isLocationGranted ? (
+          ) : hasRealCoords ? (
             <div className="flex items-center justify-between rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-3.5 py-2.5 text-xs text-emerald-300">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0">
                 <MapPin className="h-4 w-4 text-emerald-400 shrink-0" />
-                <span className="font-semibold text-[11px]">GPS Geo-Location Verified</span>
+                <div className="truncate">
+                  <span className="font-semibold text-[11px] block">GPS Geo-Location Verified</span>
+                  <span className="text-[10px] text-emerald-400/80 block font-mono">
+                    {latitude?.toFixed(4)}, {longitude?.toFixed(4)} (±{Math.round(accuracy || 0)}m)
+                  </span>
+                </div>
               </div>
-              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-lg border border-emerald-500/30">
-                Ready ✓
+              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-lg border border-emerald-500/30 shrink-0">
+                Verified ✓
               </span>
             </div>
           ) : (
-            <div className="flex items-start gap-2.5 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-300">
-              <Info className="h-4 w-4 shrink-0 text-amber-400 mt-0.5" />
-              <div className="flex-1 space-y-0.5">
-                <p className="font-bold text-amber-300 text-[11px]">Location Verification Required</p>
-                <p className="text-[10px] text-amber-200/80 leading-tight">
-                  Your device will request location coordinates during check-in.
-                </p>
+            <div className="flex items-center justify-between rounded-2xl border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-300">
+              <div className="flex items-start gap-2.5">
+                <Info className="h-4 w-4 shrink-0 text-amber-400 mt-0.5" />
+                <div className="space-y-0.5">
+                  <p className="font-bold text-amber-300 text-[11px]">Device GPS Location</p>
+                  <p className="text-[10px] text-amber-200/80 leading-tight">
+                    Tap to verify GPS coordinates for attendance check-in.
+                  </p>
+                </div>
               </div>
+              <button
+                type="button"
+                onClick={handleRequestLocation}
+                className="shrink-0 px-2.5 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[10px] font-bold border border-amber-500/40 transition-colors cursor-pointer"
+              >
+                Acquire GPS
+              </button>
             </div>
           )}
 
           <form noValidate className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
             {/* Error Message */}
-            {(error || geoError) && (
+            {error && (
               <div className="flex items-center gap-2.5 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-3.5 text-xs font-semibold text-rose-300 animate-fade-in">
                 <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
-                <span>{error || geoError}</span>
+                <span>{error}</span>
               </div>
             )}
 

@@ -54,7 +54,7 @@ class ErrorBoundary extends Component<Props, State> {
             <button
               onClick={() => {
                 this.setState({ hasError: false, error: null });
-                window.location.href = '/admin/dashboard';
+                window.location.href = '/dashboard';
               }}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all cursor-pointer"
             >

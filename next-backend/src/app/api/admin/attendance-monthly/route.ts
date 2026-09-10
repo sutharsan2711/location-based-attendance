@@ -372,7 +372,6 @@ export async function POST(req: NextRequest) {
             leaveType: leaveType as any,
             fromDate: targetDate,
             toDate: targetDate,
-            totalDays: 1,
             reason: "Admin manual register override",
             status: "APPROVED",
             isHalfDay: false,

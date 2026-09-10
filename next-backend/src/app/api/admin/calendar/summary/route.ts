@@ -187,7 +187,7 @@ export async function GET(req: NextRequest) {
           logoutTime: a.logoutTime ? a.logoutTime.toISOString() : null,
           status: a.status,
           timingStatus: a.timingStatus,
-          workMode: a.workMode || "OFFICE",
+          workMode: a.status === "WORK_FROM_HOME" ? "WFH" : "OFFICE",
         })),
         leaveEmployees: dayLeaves.map((l) => ({
           id: Number(l.employee.id),

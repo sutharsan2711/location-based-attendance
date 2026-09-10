@@ -7,8 +7,6 @@ interface ProtectedRouteProps {
   allowedRoles?: ('ADMIN' | 'EMPLOYEE' | 'TRAINEE' | 'INTERN' | string)[];
 }
 
-import { getAdminPanelUrl } from './AppRoutes';
-
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
   const { user, loading } = useAuth();
 
@@ -21,11 +19,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // If an ADMIN tries to access an employee route, redirect them to admin panel
-    if (user.role === 'ADMIN') {
-      window.location.href = getAdminPanelUrl();
-      return null;
-    }
     return <Navigate to="/employee/dashboard" replace />;
   }
 

@@ -4,9 +4,19 @@ export const getApiBaseUrl = (): string => {
   if (import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL as string;
   }
-  if (typeof window !== 'undefined' && window.location && window.location.hostname) {
-    const protocol = window.location.protocol || 'http:';
+  if (typeof window !== 'undefined' && window.location) {
     const hostname = window.location.hostname || 'localhost';
+    const isLocalDev =
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname.startsWith('192.168.') ||
+      hostname.startsWith('10.') ||
+      hostname.startsWith('172.');
+    if (!isLocalDev) {
+      // In cloud / Vercel deployment, route to the same origin /api
+      return `${window.location.origin}/api`;
+    }
+    const protocol = window.location.protocol || 'http:';
     return `${protocol}//${hostname}:8090/api`;
   }
   return 'http://localhost:8090/api';

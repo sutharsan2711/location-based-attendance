@@ -40,11 +40,6 @@ const HomeRedirect: React.FC = () => {
   if (loading) return <Loading fullScreen message="Loading..." />;
   if (!user) return <Navigate to="/login" replace />;
 
-  if (user.role === 'ADMIN') {
-    window.location.href = getAdminPanelUrl();
-    return null;
-  }
-
   return <Navigate to="/employee/dashboard" replace />;
 };
 
@@ -52,10 +47,6 @@ const LoginRoute: React.FC = () => {
   const { user, loading } = useAuth();
   if (loading) return <Loading fullScreen message="Signing in..." />;
   if (user) {
-    if (user.role === 'ADMIN') {
-      window.location.href = getAdminPanelUrl();
-      return null;
-    }
     return <Navigate to="/employee/dashboard" replace />;
   }
   return <Login />;
@@ -71,8 +62,8 @@ const AppRoutes: React.FC = () => {
       <Route element={<DashboardLayout />}>
         <Route path="/" element={<HomeRedirect />} />
 
-        {/* Employee, Trainee, Intern and OJT Staff Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['EMPLOYEE', 'TRAINEE', 'INTERN', 'OJT']} />}>
+        {/* Employee, Admin, Trainee, Intern and OJT Staff Routes */}
+        <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'EMPLOYEE', 'TRAINEE', 'INTERN', 'OJT']} />}>
           <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
           <Route path="/employee/announcements" element={<EmployeeAnnouncements />} />
           <Route path="/employee/tasks" element={<EmployeeTasks />} />

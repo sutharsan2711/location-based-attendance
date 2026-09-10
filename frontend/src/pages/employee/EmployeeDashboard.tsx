@@ -100,7 +100,7 @@ const EmployeeDashboard: React.FC = () => {
     workHoursFormatted: '--',
   });
   const [notesText, setNotesText] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
@@ -255,13 +255,15 @@ const EmployeeDashboard: React.FC = () => {
       if (!isSilent) setLoading(true);
       else setRefreshing(true);
 
-      const [res, attRes, tasksRes, annRes, teamLeavesRes] = await Promise.all([
+      const fetchAll = Promise.all([
         workPlanService.getTodayDashboard().catch(() => null),
         attendanceService.getTodayAttendance().catch(() => null),
         taskService.getMyTasks().catch(() => []),
         announcementService.getActive().catch(() => []),
         requestService.getTeamLeaves().catch(() => []),
       ]);
+      const timeoutFallback = new Promise<any[]>((resolve) => setTimeout(() => resolve([null, null, [], [], []]), 5000));
+      const [res, attRes, tasksRes, annRes, teamLeavesRes] = await Promise.race([fetchAll, timeoutFallback]);
 
       if (res) {
         setDashboardData(res);
@@ -512,10 +514,6 @@ const EmployeeDashboard: React.FC = () => {
     attendance?.status === 'COMPLETED' ||
     Boolean(attendance?.loginTime);
   const hasCheckedOut = attendance?.status === 'COMPLETED' || Boolean(attendance?.logoutTime);
-
-  if (loading && !dashboardData && plans.length === 0) {
-    return <Loading message="Loading Eclearnix EDTECH Portal..." />;
-  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12 font-sans w-full min-h-screen">

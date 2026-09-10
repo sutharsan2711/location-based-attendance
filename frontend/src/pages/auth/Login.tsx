@@ -48,7 +48,7 @@ const Login: React.FC = () => {
   // If already logged in, redirect
   useEffect(() => {
     if (user) {
-      navigate(user.role === 'ADMIN' ? '/admin/dashboard' : '/employee/dashboard');
+      navigate('/employee/dashboard');
     }
   }, [user, navigate]);
 
@@ -123,7 +123,7 @@ const Login: React.FC = () => {
       );
 
       login(response.token, response.user);
-      navigate(response.user.role === 'ADMIN' ? '/admin/dashboard' : '/employee/dashboard');
+      navigate('/employee/dashboard');
     } catch (err: any) {
       console.error('Login error:', err);
       if (err.response && err.response.data && err.response.data.message) {

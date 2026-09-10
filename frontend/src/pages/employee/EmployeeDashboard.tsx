@@ -506,12 +506,12 @@ const EmployeeDashboard: React.FC = () => {
     Boolean(attendance?.loginTime);
   const hasCheckedOut = attendance?.status === 'COMPLETED' || Boolean(attendance?.logoutTime);
 
-  if (loading) {
+  if (loading && !dashboardData && plans.length === 0) {
     return <Loading message="Loading Eclearnix EDTECH Portal..." />;
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12 animate-fade-in font-sans">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12 font-sans w-full min-h-screen">
       {/* ── 1. Top Greeting & Motivational Banner ── */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 p-6 md:p-8 text-white shadow-xl shadow-blue-900/15">
         <div className="absolute right-0 top-0 -mt-8 -mr-8 h-48 w-48 rounded-full bg-white/10 blur-2xl pointer-events-none" />

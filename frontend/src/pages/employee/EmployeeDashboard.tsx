@@ -475,6 +475,17 @@ const EmployeeDashboard: React.FC = () => {
           accuracy: acc,
         });
         setSwipeSuccess(res?.message || 'Checked in successfully! Have a great productive day.');
+        const updatedAtt = (res as any)?.attendance
+          ? { ...(res as any).attendance, isWfhApproved: attendance?.isWfhApproved, wfhRequest: attendance?.wfhRequest }
+          : {
+              ...(attendance || {}),
+              status: (res as any)?.status || 'LOGGED_IN',
+              loginTime: (res as any)?.timestamp || new Date().toISOString(),
+              loginDistance: (res as any)?.distance,
+              timingStatus: (res as any)?.timingStatus || 'PRESENT',
+            };
+        setAttendance(updatedAtt as any);
+        updateLocalSummary(plans, updatedAtt as any);
       } else if (!hasCheckedOut) {
         const res = await attendanceService.logoutAttendance({
           latitude: lat ?? undefined,
@@ -482,13 +493,24 @@ const EmployeeDashboard: React.FC = () => {
           accuracy: acc,
         });
         setSwipeSuccess(res?.message || 'Checked out successfully! Have a wonderful evening.');
+        const updatedAtt = (res as any)?.attendance
+          ? { ...(res as any).attendance, isWfhApproved: attendance?.isWfhApproved, wfhRequest: attendance?.wfhRequest }
+          : {
+              ...(attendance || {}),
+              status: 'COMPLETED',
+              logoutTime: (res as any)?.timestamp || new Date().toISOString(),
+              logoutDistance: (res as any)?.distance,
+            };
+        setAttendance(updatedAtt as any);
+        updateLocalSummary(plans, updatedAtt as any);
       } else {
         setSwipeError('You have already completed attendance for today.');
         setActionLoading(false);
         return;
       }
 
-      await fetchDashboard(true);
+      // Sync fresh data from all endpoints in background
+      fetchDashboard(true).catch(() => {});
     } catch (err: any) {
       setSwipeError(err?.response?.data?.error || err.message || 'Failed to record attendance swipe.');
     } finally {

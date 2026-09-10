@@ -31,6 +31,13 @@ import {
   Check,
 } from 'lucide-react';
 
+const formatDistance = (val: any): string => {
+  if (val === null || val === undefined || val === '') return '--';
+  const num = typeof val === 'number' ? val : Number(val);
+  if (isNaN(num)) return '--';
+  return `${num.toFixed(1)}m`;
+};
+
 const Attendance: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'daily' | 'monthly'>('daily');
@@ -288,14 +295,8 @@ const Attendance: React.FC = () => {
     {
       header: 'Distance (In / Out)',
       render: (row: Attendance) => (
-        <span className="text-xs text-slate-500">
-          {row.loginDistance !== null && row.loginDistance !== undefined
-            ? `${row.loginDistance.toFixed(1)}m`
-            : '--'}{' '}
-          /{' '}
-          {row.logoutDistance !== null && row.logoutDistance !== undefined
-            ? `${row.logoutDistance.toFixed(1)}m`
-            : '--'}
+        <span className="text-xs text-slate-500 font-mono">
+          {formatDistance(row.loginDistance)} / {formatDistance(row.logoutDistance)}
         </span>
       ),
     },

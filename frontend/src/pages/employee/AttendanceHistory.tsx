@@ -17,6 +17,13 @@ import {
   Search,
 } from 'lucide-react';
 
+const formatDistance = (val: any): string => {
+  if (val === null || val === undefined || val === '') return '--';
+  const num = typeof val === 'number' ? val : Number(val);
+  if (isNaN(num)) return '--';
+  return `${num.toFixed(1)}m`;
+};
+
 const AttendanceHistory: React.FC = () => {
   const [history, setHistory] = useState<Attendance[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -76,8 +83,8 @@ const AttendanceHistory: React.FC = () => {
         r.loginTime ? formatTime(r.loginTime) : '--',
         r.logoutTime ? formatTime(r.logoutTime) : '--',
         calculateWorkingHours(r.loginTime, r.logoutTime),
-        r.loginDistance !== null && r.loginDistance !== undefined ? r.loginDistance.toFixed(1) : '--',
-        r.logoutDistance !== null && r.logoutDistance !== undefined ? r.logoutDistance.toFixed(1) : '--',
+        formatDistance(r.loginDistance),
+        formatDistance(r.logoutDistance),
         r.status,
         r.timingStatus || 'PRESENT',
       ]),
@@ -182,13 +189,7 @@ const AttendanceHistory: React.FC = () => {
       header: 'Distance (In / Out)',
       render: (row: Attendance) => (
         <span className="text-xs text-slate-600 font-mono font-medium">
-          {row.loginDistance !== null && row.loginDistance !== undefined
-            ? `${row.loginDistance.toFixed(1)}m`
-            : '--'}{' '}
-          /{' '}
-          {row.logoutDistance !== null && row.logoutDistance !== undefined
-            ? `${row.logoutDistance.toFixed(1)}m`
-            : '--'}
+          {formatDistance(row.loginDistance)} / {formatDistance(row.logoutDistance)}
         </span>
       ),
     },
@@ -343,8 +344,8 @@ const AttendanceHistory: React.FC = () => {
                     const loginT = row.loginTime ? formatTime(row.loginTime) : '--';
                     const logoutT = row.logoutTime ? formatTime(row.logoutTime) : '--';
                     const hrs = calculateWorkingHours(row.loginTime, row.logoutTime);
-                    const distIn = row.loginDistance !== null && row.loginDistance !== undefined ? `${row.loginDistance.toFixed(1)}m` : '--';
-                    const distOut = row.logoutDistance !== null && row.logoutDistance !== undefined ? `${row.logoutDistance.toFixed(1)}m` : '--';
+                    const distIn = formatDistance(row.loginDistance);
+                    const distOut = formatDistance(row.logoutDistance);
                     const dist = `${distIn} / ${distOut}`;
 
                     return (

@@ -68,6 +68,13 @@ const STATUS_BADGES: Record<WorkPlanStatus, { label: string; bg: string; text: s
   NOT_STARTED: { label: 'Not Started', bg: 'bg-blue-50 border-blue-200/80', text: 'text-blue-700 font-bold', icon: '⚪' },
 };
 
+const formatDistance = (val: any): string => {
+  if (val === null || val === undefined || val === '') return '--';
+  const num = typeof val === 'number' ? val : Number(val);
+  if (isNaN(num)) return '--';
+  return `${num.toFixed(1)}m`;
+};
+
 const EmployeeDashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -869,10 +876,8 @@ const EmployeeDashboard: React.FC = () => {
                 <span className="font-mono text-xs font-semibold text-slate-700 whitespace-nowrap">
                   {Boolean(attendance?.isWfhApproved || attendance?.status === 'WORK_FROM_HOME') ? (
                     <span className="text-purple-600 font-sans font-bold text-[11px]">🏡 Work From Home</span>
-                  ) : attendance?.loginDistance !== null && attendance?.loginDistance !== undefined ? (
-                    `${attendance.loginDistance.toFixed(1)}m / ${attendance?.logoutDistance !== null && attendance?.logoutDistance !== undefined ? `${attendance.logoutDistance.toFixed(1)}m` : '--'}`
                   ) : (
-                    '--'
+                    `${formatDistance(attendance?.loginDistance)} / ${formatDistance(attendance?.logoutDistance)}`
                   )}
                 </span>
               </div>
@@ -1564,9 +1569,7 @@ const EmployeeDashboard: React.FC = () => {
                               <td className="py-2.5 px-3 font-mono text-slate-700">{inTime}</td>
                               <td className="py-2.5 px-3 font-mono text-slate-700">{outTime}</td>
                               <td className="py-2.5 px-3 font-mono text-slate-600 text-[11px]">
-                                {sw.loginDistance !== null && sw.loginDistance !== undefined ? `${sw.loginDistance.toFixed(1)}m` : '--'}{' '}
-                                /{' '}
-                                {sw.logoutDistance !== null && sw.logoutDistance !== undefined ? `${sw.logoutDistance.toFixed(1)}m` : '--'}
+                                {formatDistance(sw.loginDistance)} / {formatDistance(sw.logoutDistance)}
                               </td>
                               <td className="py-2.5 px-3">
                                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${

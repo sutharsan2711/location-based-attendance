@@ -69,7 +69,7 @@ const MyPayroll: React.FC = () => {
       </div>
 
       {/* ── 3 Big Metric Cards: Gross, Deductions, Net Salary ── */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
           <div className="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
             <TrendingUp className="h-6 w-6" />

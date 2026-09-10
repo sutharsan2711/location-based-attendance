@@ -91,7 +91,7 @@ const MyPayslip: React.FC = () => {
       </div>
 
       {/* ── Official Printable Payslip ── */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-8 sm:p-10 space-y-8 text-slate-800 print:border-none print:shadow-none print:p-0 print:m-0">
+      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 sm:p-8 md:p-10 space-y-8 text-slate-800 print:border-none print:shadow-none print:p-0 print:m-0">
         {/* Company Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-6 gap-4">
           <div className="flex items-center gap-3.5">

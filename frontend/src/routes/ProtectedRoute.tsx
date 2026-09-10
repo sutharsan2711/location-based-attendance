@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import Loading from '../components/Loading';
 
 interface ProtectedRouteProps {
-  allowedRoles?: ('ADMIN' | 'EMPLOYEE' | 'TRAINEE' | 'INTERN' | string)[];
+  allowedRoles?: string[];
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
@@ -18,8 +18,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/employee/dashboard" replace />;
+  if (allowedRoles && allowedRoles.length > 0 && user.role) {
+    const userRole = user.role.trim().toUpperCase();
+    const isAllowed = allowedRoles.some((r) => r.trim().toUpperCase() === userRole);
+    if (!isAllowed) {
+      return <Navigate to="/login" replace />;
+    }
   }
 
   return <Outlet />;

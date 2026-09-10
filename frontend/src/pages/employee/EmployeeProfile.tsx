@@ -324,12 +324,12 @@ const EmployeeProfile: React.FC = () => {
       {/* ── Main Layout: Inner Sidebar + Content Area ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pt-2">
         {/* ── 1. Left Sub-Tabs Menu ── */}
-        <div className="lg:col-span-3 bg-white rounded-xl border border-slate-200/80 p-3 shadow-xs space-y-1">
+        <div className="lg:col-span-3 bg-white rounded-xl border border-slate-200/80 p-2 sm:p-3 shadow-xs flex lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible scrollbar-none">
           <button
             onClick={() => setActiveTab('personal')}
-            className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium rounded-lg transition-colors text-left ${
+            className={`w-auto lg:w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium rounded-lg transition-colors text-left shrink-0 whitespace-nowrap lg:whitespace-normal ${
               activeTab === 'personal'
-                ? 'bg-slate-100/90 text-slate-900 font-bold border-l-4 border-slate-800'
+                ? 'bg-slate-100/90 text-slate-900 font-bold border-l-2 lg:border-l-4 border-slate-800'
                 : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
             }`}
           >
@@ -338,9 +338,9 @@ const EmployeeProfile: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('accounts')}
-            className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium rounded-lg transition-colors text-left ${
+            className={`w-auto lg:w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium rounded-lg transition-colors text-left shrink-0 whitespace-nowrap lg:whitespace-normal ${
               activeTab === 'accounts'
-                ? 'bg-slate-100/90 text-slate-900 font-bold border-l-4 border-slate-800'
+                ? 'bg-slate-100/90 text-slate-900 font-bold border-l-2 lg:border-l-4 border-slate-800'
                 : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
             }`}
           >
@@ -349,9 +349,9 @@ const EmployeeProfile: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('family')}
-            className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium rounded-lg transition-colors text-left ${
+            className={`w-auto lg:w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium rounded-lg transition-colors text-left shrink-0 whitespace-nowrap lg:whitespace-normal ${
               activeTab === 'family'
-                ? 'bg-slate-100/90 text-slate-900 font-bold border-l-4 border-slate-800'
+                ? 'bg-slate-100/90 text-slate-900 font-bold border-l-2 lg:border-l-4 border-slate-800'
                 : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
             }`}
           >
@@ -360,9 +360,9 @@ const EmployeeProfile: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('employment')}
-            className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium rounded-lg transition-colors text-left ${
+            className={`w-auto lg:w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium rounded-lg transition-colors text-left shrink-0 whitespace-nowrap lg:whitespace-normal ${
               activeTab === 'employment'
-                ? 'bg-slate-100/90 text-slate-900 font-bold border-l-4 border-slate-800'
+                ? 'bg-slate-100/90 text-slate-900 font-bold border-l-2 lg:border-l-4 border-slate-800'
                 : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
             }`}
           >
@@ -371,9 +371,9 @@ const EmployeeProfile: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('assets')}
-            className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium rounded-lg transition-colors text-left ${
+            className={`w-auto lg:w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium rounded-lg transition-colors text-left shrink-0 whitespace-nowrap lg:whitespace-normal ${
               activeTab === 'assets'
-                ? 'bg-slate-100/90 text-slate-900 font-bold border-l-4 border-slate-800'
+                ? 'bg-slate-100/90 text-slate-900 font-bold border-l-2 lg:border-l-4 border-slate-800'
                 : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
             }`}
           >

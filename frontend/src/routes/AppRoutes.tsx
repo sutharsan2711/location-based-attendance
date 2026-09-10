@@ -62,8 +62,8 @@ const AppRoutes: React.FC = () => {
       <Route element={<DashboardLayout />}>
         <Route path="/" element={<HomeRedirect />} />
 
-        {/* Employee, Admin, Trainee, Intern and OJT Staff Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'EMPLOYEE', 'TRAINEE', 'INTERN', 'OJT']} />}>
+        {/* Employee Portal Authenticated Routes */}
+        <Route element={<ProtectedRoute />}>
           <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
           <Route path="/employee/announcements" element={<EmployeeAnnouncements />} />
           <Route path="/employee/tasks" element={<EmployeeTasks />} />

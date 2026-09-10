@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
     const locations = await prisma.companyLocation.findMany();
     let minDistance = 0;
     let nearestLocation = locations[0];
+    let matchedLocation: typeof locations[0] | null = null;
 
     if (!isNaN(lat) && !isNaN(lng) && (lat !== 0 || lng !== 0) && locations.length > 0) {
       minDistance = Infinity;
@@ -55,12 +56,20 @@ export async function POST(req: NextRequest) {
           minDistance = dist;
           nearestLocation = loc;
         }
+        if (dist <= loc.allowedRadius) {
+          matchedLocation = loc;
+          minDistance = dist;
+          break;
+        }
       }
     } else if (locations.length > 0) {
       lat = nearestLocation.latitude;
       lng = nearestLocation.longitude;
       minDistance = 0;
+      matchedLocation = nearestLocation;
     }
+
+    const activeLocation = matchedLocation || nearestLocation;
 
     // Check approved Work From Home (WFH) request for today
     const approvedWfh = await prisma.leaveRequest.findFirst({
@@ -75,12 +84,12 @@ export async function POST(req: NextRequest) {
     const isWfh = Boolean(approvedWfh) || attendance.status === "WORK_FROM_HOME";
 
     // Enforce geofence boundary if not Work From Home
-    if (!isWfh && nearestLocation) {
+    if (!isWfh && activeLocation) {
       if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) {
         return errorResponse("Location coordinates are required to check out. Please turn on device GPS and allow location access in your browser.", 400);
       }
 
-      if (minDistance > nearestLocation.allowedRadius) {
+      if (!matchedLocation) {
         const distFormatted = minDistance < 1000 ? `${minDistance.toFixed(1)}m` : `${(minDistance / 1000).toFixed(2)}km`;
         return errorResponse(
           `Out of range! You are ${distFormatted} away from ${nearestLocation.companyName} (Allowed Radius: ${nearestLocation.allowedRadius}m). Please move closer to the office to check out.`,

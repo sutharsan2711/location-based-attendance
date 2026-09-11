@@ -800,7 +800,7 @@ const Employees: React.FC = () => {
             setViewingProfileEmp(row);
             setViewProfileActiveTab('overview');
           }}
-          className="font-bold text-indigo-600 hover:text-indigo-900 hover:underline cursor-pointer flex items-center gap-1 text-left"
+          className="font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 hover:underline cursor-pointer flex items-center gap-1 text-left"
           title="Click to view full employee profile"
         >
           <span>{row.employeeCode}</span>
@@ -817,7 +817,7 @@ const Employees: React.FC = () => {
             setViewingProfileEmp(row);
             setViewProfileActiveTab('overview');
           }}
-          className="font-semibold text-slate-800 hover:text-indigo-600 cursor-pointer text-left block transition-colors"
+          className="font-bold text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer text-left block transition-colors"
           title="Click to view full employee profile"
         >
           {row.name}
@@ -827,12 +827,12 @@ const Employees: React.FC = () => {
     {
       key: 'email',
       header: 'Email',
-      render: (row: Employee) => <span className="text-slate-500">{row.email}</span>,
+      render: (row: Employee) => <span className="text-slate-600 dark:text-slate-300 font-medium">{row.email}</span>,
     },
     {
       key: 'phone',
       header: 'Phone',
-      render: (row: Employee) => <span className="text-slate-500">{row.phone || '--'}</span>,
+      render: (row: Employee) => <span className="text-slate-600 dark:text-slate-300 font-medium">{row.phone || '--'}</span>,
     },
     {
       key: 'team',
@@ -848,24 +848,24 @@ const Employees: React.FC = () => {
 
         if (dept.toUpperCase() === 'EDTECH') {
           return (
-            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold bg-teal-50 text-teal-700 border border-teal-200">
-              <GraduationCap className="h-3.5 w-3.5" />
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800/50">
+              <GraduationCap className="h-3.5 w-3.5 shrink-0" />
               <span>EdTech (8:45-5:45)</span>
             </span>
           );
         }
         if (dept.toUpperCase() === 'BUSINESS_SOLUTION' || dept.toUpperCase() === 'BUSINESS') {
           return (
-            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
-              <Briefcase className="h-3.5 w-3.5" />
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50">
+              <Briefcase className="h-3.5 w-3.5 shrink-0" />
               <span>Business (8:45-5:45)</span>
             </span>
           );
         }
         if (dept.toUpperCase() === 'OG' || dept.toUpperCase() === 'OG_TEAM' || dept.toUpperCase() === 'BUSINESS_SOLUTION_2' || dept.toUpperCase().includes('BUSINESS SOLUTION 2') || dept.toUpperCase().includes('BUSINESS_SOLUTION_2')) {
           return (
-            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold bg-violet-50 text-violet-700 border border-violet-200">
-              <Users className="h-3.5 w-3.5" />
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800/50">
+              <Users className="h-3.5 w-3.5 shrink-0" />
               <span>Business Solution 2 (8:45-6:15)</span>
             </span>
           );
@@ -874,15 +874,15 @@ const Employees: React.FC = () => {
         const customT = customTeams.find(t => t.id === dept || t.name === dept);
         if (customT) {
           return (
-            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold bg-cyan-50 text-cyan-700 border border-cyan-200">
-              <Users className="h-3.5 w-3.5" />
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/50">
+              <Users className="h-3.5 w-3.5 shrink-0" />
               <span>{customT.name}</span>
             </span>
           );
         }
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-            <Code2 className="h-3.5 w-3.5" />
+          <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/50">
+            <Code2 className="h-3.5 w-3.5 shrink-0" />
             <span>{dept || 'IT (9:00-6:30)'}</span>
           </span>
         );
@@ -892,7 +892,7 @@ const Employees: React.FC = () => {
       key: 'joined',
       header: 'Joining Month',
       render: (row: Employee) => (
-        <span className="text-xs text-slate-600 font-medium">
+        <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">
           {(row as any).joined_month || (row as any).joinedMonth || '--'}
         </span>
       ),
@@ -904,78 +904,78 @@ const Employees: React.FC = () => {
         const r = (row.role || 'EMPLOYEE').toUpperCase();
         if (r === 'ADMIN') {
           return (
-            <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-              <ShieldAlert className="h-3 w-3" />
+            <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/50">
+              <ShieldAlert className="h-3 w-3 shrink-0" />
               <span>ADMIN</span>
             </span>
           );
         }
         if (r === 'MANAGER') {
           return (
-            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-violet-50 text-violet-700 border border-violet-200">
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800/50">
               MANAGER
             </span>
           );
         }
         if (r === 'DEVELOPER') {
           return (
-            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200">
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/50">
               DEVELOPER
             </span>
           );
         }
         if (r === 'MARKETER') {
           return (
-            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50">
               MARKETER
             </span>
           );
         }
         if (r === 'CONTENT') {
           return (
-            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-pink-50 text-pink-700 border border-pink-200">
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-800/50">
               CONTENT
             </span>
           );
         }
         if (r === 'TELECALLER') {
           return (
-            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-orange-50 text-orange-700 border border-orange-200">
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-orange-50 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800/50">
               TELECALLER
             </span>
           );
         }
         if (r === 'TRAINER') {
           return (
-            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-teal-50 text-teal-700 border border-teal-200">
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800/50">
               TRAINER
             </span>
           );
         }
         if (r === 'TRAINEE') {
           return (
-            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50">
               TRAINEE
             </span>
           );
         }
         if (r === 'INTERN') {
           return (
-            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-teal-50 text-teal-700 border border-teal-200">
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800/50">
               INTERN
             </span>
           );
         }
         if (r === 'OJT') {
           return (
-            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50">
               OJT
             </span>
           );
         }
         const customR = customRoles.find((cr) => cr.id === r);
         return (
-          <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+          <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50">
             {customR ? customR.label : r}
           </span>
         );
@@ -993,56 +993,56 @@ const Employees: React.FC = () => {
 
         if (rawType === 'OJT' || rawType.includes('ON-THE-JOB')) {
           return (
-            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50">
               OJT
             </span>
           );
         }
         if (rawType === 'TRAINEE' || rawType.includes('TRAINEE')) {
           return (
-            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50">
               TRAINEE
             </span>
           );
         }
         if (rawType === 'INTERN' || rawType.includes('INTERN')) {
           return (
-            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-teal-50 text-teal-700 border border-teal-200">
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800/50">
               INTERN
             </span>
           );
         }
         if (rawType === 'FULL_TIME' || rawType === 'PERMANENT' || rawType === 'EMPLOYEE') {
           return (
-            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50">
               Full-Time
             </span>
           );
         }
         if (rawType === 'PROBATION') {
           return (
-            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-orange-50 text-orange-700 border border-orange-200">
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-orange-50 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800/50">
               Probation
             </span>
           );
         }
         if (rawType === 'CONTRACT') {
           return (
-            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
               Contract
             </span>
           );
         }
         if (rawType === 'PART_TIME') {
           return (
-            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200">
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/50">
               Part-Time
             </span>
           );
         }
         const customSt = customStaffTypes.find((st) => st.id === rawType);
         return (
-          <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-slate-50 text-slate-700 border border-slate-200">
+          <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
             {customSt ? customSt.label : rawType}
           </span>
         );
@@ -1338,16 +1338,16 @@ const Employees: React.FC = () => {
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value as any)}
-            className="text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-750 outline-none cursor-pointer w-full sm:w-auto"
+            className="text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-700 outline-none cursor-pointer w-full sm:w-auto"
           >
-            <option value="ALL">All Roles ({totalStaffCount})</option>
-            <option value="EMPLOYEE">Employees Only ({employeesCount})</option>
-            <option value="TRAINEE">Trainees Only ({traineesCount})</option>
-            <option value="INTERN">Interns Only ({internsCount})</option>
-            <option value="OJT">OJT Only ({ojtCount})</option>
-            <option value="ADMIN">Admins Only ({adminCount})</option>
+            <option value="ALL" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">All Roles ({totalStaffCount})</option>
+            <option value="EMPLOYEE" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Employees Only ({employeesCount})</option>
+            <option value="TRAINEE" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Trainees Only ({traineesCount})</option>
+            <option value="INTERN" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Interns Only ({internsCount})</option>
+            <option value="OJT" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">OJT Only ({ojtCount})</option>
+            <option value="ADMIN" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Admins Only ({adminCount})</option>
             {customRoles.map(cr => (
-              <option key={cr.id} value={cr.id}>{cr.label}</option>
+              <option key={cr.id} value={cr.id} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">{cr.label}</option>
             ))}
           </select>
 

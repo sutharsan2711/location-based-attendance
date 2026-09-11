@@ -1363,67 +1363,69 @@ const Employees: React.FC = () => {
               }`}
               title="Select which columns to show or hide in the table"
             >
-              <SlidersHorizontal className="h-3.5 w-3.5" />
+              <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
               <span>Columns ({selectedColumnKeys.length}/{TABLE_COLUMNS_CONFIG.length})</span>
-              <ChevronDown className={`h-3 w-3 transition-transform ${showColumnDropdown ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`h-3 w-3 shrink-0 transition-transform ${showColumnDropdown ? 'rotate-180' : ''}`} />
             </button>
 
             {showColumnDropdown && (
-              <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white border border-slate-200 shadow-xl p-3 z-50 animate-in fade-in zoom-in-95 space-y-2">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                  <span className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
-                    <Eye className="h-3.5 w-3.5 text-indigo-600" />
-                    <span>Table Columns</span>
+              <div className="absolute right-0 mt-2 w-72 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl p-3.5 z-50 animate-in fade-in zoom-in-95 space-y-2.5">
+                <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
+                  <span className="text-xs font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <Eye className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                    <span>Customize Table Columns</span>
                   </span>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={selectAllColumns}
-                      className="text-[10px] font-bold text-indigo-600 hover:underline cursor-pointer"
+                      className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
                     >
                       All
                     </button>
-                    <span className="text-slate-300">•</span>
+                    <span className="text-slate-300 dark:text-slate-700">•</span>
                     <button
                       type="button"
                       onClick={resetDefaultColumns}
-                      className="text-[10px] font-bold text-slate-500 hover:underline cursor-pointer"
+                      className="text-[10px] font-bold text-slate-500 dark:text-slate-400 hover:underline cursor-pointer"
                     >
                       Reset
                     </button>
                   </div>
                 </div>
 
-                <div className="space-y-1 max-h-60 overflow-y-auto pr-1">
+                <div className="space-y-1 max-h-64 overflow-y-auto pr-1">
                   {TABLE_COLUMNS_CONFIG.map((col) => {
                     const isChecked = selectedColumnKeys.includes(col.key);
                     return (
                       <label
                         key={col.key}
-                        className={`flex items-center justify-between p-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
-                          isChecked ? 'bg-indigo-50/70 text-indigo-900' : 'hover:bg-slate-50 text-slate-600'
+                        className={`flex items-center justify-between p-2 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${
+                          isChecked 
+                            ? 'bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-900 dark:text-indigo-200 border border-indigo-100 dark:border-indigo-800/40' 
+                            : 'hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-transparent'
                         }`}
                       >
-                        <span className="flex items-center gap-2">
+                        <span className="flex items-center gap-2.5">
                           <input
                             type="checkbox"
                             checked={isChecked}
                             onChange={() => toggleColumn(col.key)}
-                            className="rounded text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5 accent-indigo-600 cursor-pointer"
+                            className="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4 accent-indigo-600 cursor-pointer"
                           />
                           <span>{col.label}</span>
                         </span>
                         {isChecked ? (
-                          <Eye className="h-3 w-3 text-indigo-600" />
+                          <Eye className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
                         ) : (
-                          <EyeOff className="h-3 w-3 text-slate-300" />
+                          <EyeOff className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 shrink-0" />
                         )}
                       </label>
                     );
                   })}
                 </div>
 
-                <div className="pt-2 border-t border-slate-100 text-[10px] text-slate-400 text-center">
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 dark:text-slate-500 text-center font-medium">
                   Preferences automatically saved
                 </div>
               </div>

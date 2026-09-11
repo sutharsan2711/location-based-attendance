@@ -669,22 +669,22 @@ const Attendance: React.FC = () => {
       {/* Header with Tab Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-800 md:text-3xl">
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-800 dark:text-white md:text-3xl">
             Attendance Matrix & Time Grid
           </h1>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             View employee check-in times across all days of the month with late & leave status
           </p>
         </div>
 
         {/* Tab switcher buttons */}
-        <div className="flex flex-wrap items-center gap-2 bg-slate-100 p-1 rounded-2xl">
+        <div className="flex flex-wrap items-center gap-2 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-transparent dark:border-slate-700">
           <button
             onClick={() => setActiveTab('daily')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'daily'
-                ? 'bg-white text-slate-800 shadow-sm'
-                : 'text-slate-500 hover:text-slate-800'
+                ? 'bg-white dark:bg-slate-900 text-slate-800 dark:text-white shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
             }`}
           >
             <ListFilter className="h-4 w-4" />
@@ -694,8 +694,8 @@ const Attendance: React.FC = () => {
             onClick={() => setActiveTab('monthly')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'monthly'
-                ? 'bg-white text-emerald-700 shadow-sm'
-                : 'text-slate-500 hover:text-slate-800'
+                ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
             }`}
           >
             <Calendar className="h-4 w-4" />
@@ -703,9 +703,9 @@ const Attendance: React.FC = () => {
           </button>
           <button
             onClick={() => navigate('/calendar')}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-primary-700 bg-primary-50 hover:bg-primary-100 hover:text-primary-800 transition-all border border-primary-200/60 shadow-xs cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950/40 hover:bg-primary-100 dark:hover:bg-primary-900/60 hover:text-primary-800 dark:hover:text-primary-200 transition-all border border-primary-200/60 dark:border-primary-800/60 shadow-xs cursor-pointer"
           >
-            <CalendarDays className="h-4 w-4 text-primary-600" />
+            <CalendarDays className="h-4 w-4 text-primary-600 dark:text-primary-400" />
             Monthly Attendance Calendar
           </button>
         </div>
@@ -715,16 +715,16 @@ const Attendance: React.FC = () => {
       {activeTab === 'daily' && (
         <div className="space-y-6 animate-slide">
           {/* Filters Bar */}
-          <Card className="p-4 bg-white border-slate-100">
+          <Card className="p-4 bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800">
             <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
                   Employee
                 </label>
                 <select
                   value={selectedEmployeeId}
                   onChange={(e) => setSelectedEmployeeId(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 p-2.5 text-xs outline-none bg-white text-slate-700"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 p-2.5 text-xs outline-none bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:border-primary-500"
                 >
                   <option value="">All Employees</option>
                   {employees.map((emp) => (
@@ -736,13 +736,13 @@ const Attendance: React.FC = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
                   Status
                 </label>
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 p-2.5 text-xs outline-none bg-white text-slate-700"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 p-2.5 text-xs outline-none bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:border-primary-500"
                 >
                   <option value="">All Statuses</option>
                   <option value="LOGGED_IN">LOGGED_IN</option>
@@ -751,26 +751,26 @@ const Attendance: React.FC = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
                   From Date
                 </label>
                 <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 p-2 text-xs outline-none text-slate-700 bg-white"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 p-2 text-xs outline-none text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 focus:border-primary-500"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
                   To Date
                 </label>
                 <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 p-2 text-xs outline-none text-slate-700 bg-white"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 p-2 text-xs outline-none text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 focus:border-primary-500"
                 />
               </div>
 
@@ -787,16 +787,16 @@ const Attendance: React.FC = () => {
             </div>
 
             {/* Quick Presets & Monthly Export */}
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-bold text-slate-400 mr-1">Quick View:</span>
+                <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 mr-1">Quick View:</span>
                 <button
                   type="button"
                   onClick={() => applyPreset('today')}
                   className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                     startDate === todayStr && endDate === todayStr
                       ? 'bg-blue-600 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                   }`}
                 >
                   Today's Logs
@@ -804,14 +804,14 @@ const Attendance: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => applyPreset('yesterday')}
-                  className="px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer"
+                  className="px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                 >
                   Yesterday
                 </button>
                 <button
                   type="button"
                   onClick={() => applyPreset('this_week')}
-                  className="px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer"
+                  className="px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                 >
                   Last 7 Days
                 </button>
@@ -821,7 +821,7 @@ const Attendance: React.FC = () => {
                   className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                     !startDate && !endDate
                       ? 'bg-blue-600 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                   }`}
                 >
                   All Records
@@ -851,7 +851,7 @@ const Attendance: React.FC = () => {
                 placeholder="Search employee name, code, or email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 pl-9 pr-4 py-2.5 text-xs outline-none focus:border-primary-500 bg-white"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 pl-9 pr-4 py-2.5 text-xs outline-none focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
             </div>
             <Button variant="outline" size="sm" onClick={fetchAttendanceLogs} className="py-2.5 px-4">
@@ -1042,18 +1042,18 @@ const Attendance: React.FC = () => {
           </div>
 
           {/* Controls Bar */}
-          <Card className="p-4 bg-white border-slate-100">
+          <Card className="p-4 bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex flex-wrap items-center gap-3">
                 {/* Month Dropdown */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
                     Month
                   </label>
                   <select
                     value={selectedMonth}
                     onChange={(e) => setSelectedMonth(parseInt(e.target.value, 10))}
-                    className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold outline-none bg-white text-slate-700"
+                    className="rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-semibold outline-none bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200"
                   >
                     {months.map((m) => (
                       <option key={m.value} value={m.value}>
@@ -1065,13 +1065,13 @@ const Attendance: React.FC = () => {
 
                 {/* Year Dropdown */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
                     Year
                   </label>
                   <select
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
-                    className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold outline-none bg-white text-slate-700"
+                    className="rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-semibold outline-none bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200"
                   >
                     {years.map((y) => (
                       <option key={y} value={y}>
@@ -1083,13 +1083,13 @@ const Attendance: React.FC = () => {
 
                 {/* Employee Filter */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
                     Employee Filter
                   </label>
                   <select
                     value={monthlyEmployeeId}
                     onChange={(e) => setMonthlyEmployeeId(e.target.value)}
-                    className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold outline-none bg-white text-slate-700"
+                    className="rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-semibold outline-none bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200"
                   >
                     <option value="">All Employees</option>
                     {employees.map((emp) => (
@@ -1102,16 +1102,16 @@ const Attendance: React.FC = () => {
 
                 {/* Display Value Switcher */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
                     View Format
                   </label>
-                  <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
+                  <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold">
                     <button
                       onClick={() => setGridDisplayMode('excel_register')}
                       className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                         gridDisplayMode === 'excel_register'
                           ? 'bg-[#107c41] text-white shadow-sm'
-                          : 'text-slate-600 hover:text-slate-900'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       📑 Excel Register (P/AB Sheet)
@@ -1121,7 +1121,7 @@ const Attendance: React.FC = () => {
                       className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                         gridDisplayMode === 'time'
                           ? 'bg-indigo-600 text-white shadow-sm'
-                          : 'text-slate-600 hover:text-slate-900'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       🕒 Login Time
@@ -1131,7 +1131,7 @@ const Attendance: React.FC = () => {
                       className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                         gridDisplayMode === 'in_out'
                           ? 'bg-indigo-600 text-white shadow-sm'
-                          : 'text-slate-600 hover:text-slate-900'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       In - Out
@@ -1141,7 +1141,7 @@ const Attendance: React.FC = () => {
                       className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                         gridDisplayMode === 'hours'
                           ? 'bg-indigo-600 text-white shadow-sm'
-                          : 'text-slate-600 hover:text-slate-900'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Hours
@@ -1164,7 +1164,7 @@ const Attendance: React.FC = () => {
                   variant="outline"
                   size="sm"
                   onClick={exportMonthlyTimeMatrixCSV}
-                  className="font-bold py-2.5 px-3.5 rounded-xl border-slate-300 hover:bg-slate-50 text-slate-700 flex items-center gap-1.5 cursor-pointer"
+                  className="font-bold py-2.5 px-3.5 rounded-xl border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center gap-1.5 cursor-pointer"
                 >
                   <Download className="h-4 w-4" /> CSV
                 </Button>
@@ -1184,12 +1184,12 @@ const Attendance: React.FC = () => {
           {monthlyLoading ? (
             <Loading fullScreen={false} message="Loading monthly attendance register..." />
           ) : !monthlyData || monthlyData.employees.length === 0 ? (
-            <Card className="p-8 text-center text-sm text-slate-500">
+            <Card className="p-8 text-center text-sm text-slate-500 dark:text-slate-400">
               No employee records found for {months.find((m) => m.value === selectedMonth)?.name}{' '}
               {selectedYear}.
             </Card>
           ) : (
-            <div className="rounded-2xl border border-slate-300 bg-white overflow-hidden shadow-xl font-sans">
+            <div className="rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden shadow-xl font-sans">
               {/* Top Excel Green Bar */}
               <div className="bg-[#107c41] text-white px-5 py-3 flex items-center justify-between text-xs font-bold">
                 <span className="flex items-center gap-2 text-sm font-extrabold tracking-wide">
@@ -1201,15 +1201,15 @@ const Attendance: React.FC = () => {
               </div>
 
               <div className="overflow-x-auto custom-scrollbar">
-                <table className="w-full text-xs text-left border-collapse border border-slate-400 min-w-[1300px]">
+                <table className="w-full text-xs text-left border-collapse border border-slate-400 dark:border-slate-700 min-w-[1300px]">
                   {/* TWO-TIER HEADER (Exact match to image) */}
                   <thead className="sticky top-0 z-20 select-none">
                     {/* Tier 1: Day of Week (Grey Background) */}
-                    <tr className="bg-[#7f7f7f] text-white text-center text-[11px] font-bold border-b border-slate-400">
-                      <th className="p-2.5 sticky left-0 bg-[#595959] z-30 min-w-[90px] border-r border-slate-400 text-center font-bold">
+                    <tr className="bg-[#7f7f7f] dark:bg-slate-800 text-white text-center text-[11px] font-bold border-b border-slate-400 dark:border-slate-700">
+                      <th className="p-2.5 sticky left-0 bg-[#595959] dark:bg-slate-950 z-30 min-w-[90px] border-r border-slate-400 dark:border-slate-700 text-center font-bold">
                         Login Time
                       </th>
-                      <th className="p-2.5 sticky left-[90px] bg-[#595959] z-30 min-w-[170px] border-r border-slate-400 text-left font-bold pl-3">
+                      <th className="p-2.5 sticky left-[90px] bg-[#595959] dark:bg-slate-950 z-30 min-w-[170px] border-r border-slate-400 dark:border-slate-700 text-left font-bold pl-3">
                         Employee
                       </th>
                       {Array.from({ length: monthlyData.daysInMonth }).map((_, i) => {
@@ -1221,8 +1221,8 @@ const Attendance: React.FC = () => {
                         return (
                           <th
                             key={`dow-${i + 1}`}
-                            className={`p-1.5 text-center border-r border-slate-400 min-w-[48px] font-bold text-[11px] ${
-                              isSunday || isSaturday ? 'bg-[#595959] text-amber-200' : 'bg-[#7f7f7f]'
+                            className={`p-1.5 text-center border-r border-slate-400 dark:border-slate-700 min-w-[48px] font-bold text-[11px] ${
+                              isSunday || isSaturday ? 'bg-[#595959] dark:bg-slate-900 text-amber-200' : 'bg-[#7f7f7f] dark:bg-slate-800'
                             }`}
                           >
                             {dayOfWeek}
@@ -1230,26 +1230,26 @@ const Attendance: React.FC = () => {
                         );
                       })}
                       {/* Summary Headers (Dark Black / Navy) */}
-                      <th className="p-2 text-center bg-[#000000] text-white font-bold min-w-[70px] border-r border-slate-400 text-[10px] leading-tight">
+                      <th className="p-2 text-center bg-[#000000] dark:bg-slate-950 text-white font-bold min-w-[70px] border-r border-slate-400 dark:border-slate-700 text-[10px] leading-tight">
                         No .of<br />Working days
                       </th>
-                      <th className="p-2 text-center bg-[#000000] text-white font-bold min-w-[70px] border-r border-slate-400 text-[10px] leading-tight">
+                      <th className="p-2 text-center bg-[#000000] dark:bg-slate-950 text-white font-bold min-w-[70px] border-r border-slate-400 dark:border-slate-700 text-[10px] leading-tight">
                         No. Of<br />Days Present
                       </th>
-                      <th className="p-2 text-center bg-[#000000] text-white font-bold min-w-[70px] border-r border-slate-400 text-[10px] leading-tight">
+                      <th className="p-2 text-center bg-[#000000] dark:bg-slate-950 text-white font-bold min-w-[70px] border-r border-slate-400 dark:border-slate-700 text-[10px] leading-tight">
                         No of<br />days Leave
                       </th>
-                      <th className="p-2 text-center bg-[#000000] text-white font-bold min-w-[75px] text-[10px] leading-tight">
+                      <th className="p-2 text-center bg-[#000000] dark:bg-slate-950 text-white font-bold min-w-[75px] text-[10px] leading-tight">
                         Attendance<br />%
                       </th>
                     </tr>
 
                     {/* Tier 2: Date Number (Green Background #a9d08e) */}
-                    <tr className="bg-[#a9d08e] text-slate-950 text-center text-[11px] font-extrabold border-b-2 border-slate-500">
-                      <th className="p-2 sticky left-0 bg-[#a9d08e] z-30 border-r border-slate-400 text-center text-[10px] font-mono">
+                    <tr className="bg-[#a9d08e] dark:bg-emerald-900/80 text-slate-950 dark:text-emerald-100 text-center text-[11px] font-extrabold border-b-2 border-slate-500 dark:border-slate-700">
+                      <th className="p-2 sticky left-0 bg-[#a9d08e] dark:bg-emerald-900/90 z-30 border-r border-slate-400 dark:border-slate-700 text-center text-[10px] font-mono">
                         Time
                       </th>
-                      <th className="p-2 sticky left-[90px] bg-[#a9d08e] z-30 border-r border-slate-400 text-left pl-3 text-[10px]">
+                      <th className="p-2 sticky left-[90px] bg-[#a9d08e] dark:bg-emerald-900/90 z-30 border-r border-slate-400 dark:border-slate-700 text-left pl-3 text-[10px]">
                         ID & Name
                       </th>
                       {Array.from({ length: monthlyData.daysInMonth }).map((_, i) => {
@@ -1259,21 +1259,21 @@ const Attendance: React.FC = () => {
                         return (
                           <th
                             key={`date-${i + 1}`}
-                            className="p-1 text-center border-r border-slate-400 min-w-[48px] text-[10px] font-bold font-mono text-slate-950"
+                            className="p-1 text-center border-r border-slate-400 dark:border-slate-700 min-w-[48px] text-[10px] font-bold font-mono text-slate-950 dark:text-emerald-100"
                           >
                             {i + 1}-{monthAbbr}
                           </th>
                         );
                       })}
-                      <th className="p-1 text-center bg-[#1f2937] text-white border-r border-slate-400 text-[9px] font-mono">Total</th>
-                      <th className="p-1 text-center bg-[#1f2937] text-white border-r border-slate-400 text-[9px] font-mono">P</th>
-                      <th className="p-1 text-center bg-[#1f2937] text-white border-r border-slate-400 text-[9px] font-mono">L</th>
-                      <th className="p-1 text-center bg-[#1f2937] text-white text-[9px] font-mono">%</th>
+                      <th className="p-1 text-center bg-[#1f2937] dark:bg-slate-900 text-white border-r border-slate-400 dark:border-slate-700 text-[9px] font-mono">Total</th>
+                      <th className="p-1 text-center bg-[#1f2937] dark:bg-slate-900 text-white border-r border-slate-400 dark:border-slate-700 text-[9px] font-mono">P</th>
+                      <th className="p-1 text-center bg-[#1f2937] dark:bg-slate-900 text-white border-r border-slate-400 dark:border-slate-700 text-[9px] font-mono">L</th>
+                      <th className="p-1 text-center bg-[#1f2937] dark:bg-slate-900 text-white text-[9px] font-mono">%</th>
                     </tr>
                   </thead>
 
                   {/* Table Body (Data Rows with Weekend Peach #f8cbad and Status Badges) */}
-                  <tbody className="divide-y divide-slate-300 bg-white font-mono text-xs">
+                  <tbody className="divide-y divide-slate-300 dark:divide-slate-800 bg-white dark:bg-slate-900 font-mono text-xs">
                     {monthlyData.employees.map((emp: any) => {
                       const workingDays = emp.workingDays || (monthlyData as any).workingDays || 25;
                       const presentDays = emp.presentDays !== undefined ? emp.presentDays : emp.totalPresent;
@@ -1282,18 +1282,18 @@ const Attendance: React.FC = () => {
                       const isLowAttendance = attPct < 75;
 
                       return (
-                        <tr key={emp.employeeId} className="hover:bg-blue-50/70 transition-colors border-b border-slate-300">
+                        <tr key={emp.employeeId} className="hover:bg-blue-50/70 dark:hover:bg-slate-800/60 transition-colors border-b border-slate-300 dark:border-slate-800">
                           {/* Login Time Col (Col 1) */}
-                          <td className="p-2 sticky left-0 bg-white z-10 border-r border-slate-400 text-center font-bold text-slate-800 text-[11px] shadow-[1px_0_3px_rgba(0,0,0,0.05)]">
+                          <td className="p-2 sticky left-0 bg-white dark:bg-slate-900 z-10 border-r border-slate-400 dark:border-slate-700 text-center font-bold text-slate-800 dark:text-slate-200 text-[11px] shadow-[1px_0_3px_rgba(0,0,0,0.05)]">
                             {emp.loginTime || '8.45'}
                           </td>
 
                           {/* Employee Name + Code (Col 2) */}
-                          <td className="p-2.5 sticky left-[90px] bg-white z-10 border-r border-slate-400 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.15)]">
-                            <span className="font-bold text-slate-900 block text-xs truncate max-w-[150px] font-sans">
+                          <td className="p-2.5 sticky left-[90px] bg-white dark:bg-slate-900 z-10 border-r border-slate-400 dark:border-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.15)]">
+                            <span className="font-bold text-slate-900 dark:text-white block text-xs truncate max-w-[150px] font-sans">
                               {emp.employeeName || emp.name || 'Employee'}
                             </span>
-                            <span className="text-[10px] text-slate-400 font-mono font-medium">
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono font-medium">
                               {emp.employeeCode || emp.code}
                             </span>
                           </td>
@@ -1311,46 +1311,46 @@ const Attendance: React.FC = () => {
                             // Determine Background
                             let cellBg = '';
                             if (isWeekend) {
-                              cellBg = 'bg-[#f8cbad] text-slate-800'; // Peach / Orange weekend column
+                              cellBg = 'bg-[#f8cbad] dark:bg-[#7c431d]/40 text-slate-800 dark:text-amber-200'; // Peach / Orange weekend column
                             } else if (isMidMonthRange) {
-                              cellBg = 'bg-[#fff2cc] text-slate-900'; // Soft yellow mid-month highlight
+                              cellBg = 'bg-[#fff2cc] dark:bg-amber-950/40 text-slate-900 dark:text-amber-200'; // Soft yellow mid-month highlight
                             }
 
                             // Render depending on mode
                             let cellDisplay = '--';
-                            let cellColor = 'text-slate-800';
+                            let cellColor = 'text-slate-800 dark:text-slate-200';
 
                             if (gridDisplayMode === 'excel_register') {
                               if (dayDetail) {
                                 if (dayDetail.isHoliday || dayDetail.code === 'HD') {
                                   cellDisplay = 'HD';
-                                  cellColor = 'text-purple-700 font-bold';
+                                  cellColor = 'text-purple-700 dark:text-purple-300 font-bold';
                                 } else if (dayDetail.status === 'Week Off' || isSunday) {
                                   cellDisplay = '';
                                 } else if (dayDetail.code === 'CL') {
                                   cellDisplay = 'CL';
-                                  cellColor = 'text-indigo-800 font-bold';
+                                  cellColor = 'text-indigo-800 dark:text-indigo-300 font-bold';
                                 } else if (dayDetail.code === 'SL') {
                                   cellDisplay = 'SL';
-                                  cellColor = 'text-amber-800 font-bold';
+                                  cellColor = 'text-amber-800 dark:text-amber-300 font-bold';
                                 } else if (dayDetail.code === 'WFH') {
                                   cellDisplay = 'WFH';
-                                  cellColor = 'text-teal-800 font-bold';
+                                  cellColor = 'text-teal-800 dark:text-teal-300 font-bold';
                                 } else if (dayDetail.code === 'Spl Leave') {
                                   cellDisplay = 'Spl Leave';
-                                  cellColor = 'text-rose-800 font-bold text-[10px]';
+                                  cellColor = 'text-rose-800 dark:text-rose-300 font-bold text-[10px]';
                                 } else if (dayDetail.code === 'CO') {
                                   cellDisplay = 'CO';
-                                  cellColor = 'text-blue-800 font-bold';
+                                  cellColor = 'text-blue-800 dark:text-blue-300 font-bold';
                                 } else if (dayDetail.status === 'Leave' || dayDetail.code === 'LV') {
                                   cellDisplay = 'Leave';
-                                  cellColor = 'text-rose-700 font-bold text-[10px]';
+                                  cellColor = 'text-rose-700 dark:text-rose-300 font-bold text-[10px]';
                                 } else if (dayDetail.code === 'P' || dayDetail.status === 'Present' || dayDetail.status === 'Late' || dayDetail.status === 'Permission') {
                                   cellDisplay = 'P';
-                                  cellColor = 'text-slate-900 font-bold';
+                                  cellColor = 'text-slate-900 dark:text-slate-100 font-bold';
                                 } else if (dayDetail.code === 'AB' || dayDetail.status === 'Absent') {
                                   cellDisplay = 'AB';
-                                  cellColor = 'text-red-700 font-extrabold';
+                                  cellColor = 'text-red-700 dark:text-red-400 font-extrabold';
                                 } else if (dayDetail.code === '--') {
                                   cellDisplay = '';
                                 } else {
@@ -1362,7 +1362,7 @@ const Attendance: React.FC = () => {
                               return (
                                 <td
                                   key={dayNum}
-                                  className={`p-1 text-center border-r border-slate-300 ${cellBg}`}
+                                  className={`p-1 text-center border-r border-slate-300 dark:border-slate-700 ${cellBg}`}
                                 >
                                   {renderCellContent(dayDetail)}
                                 </td>
@@ -1372,7 +1372,7 @@ const Attendance: React.FC = () => {
                             return (
                               <td
                                 key={dayNum}
-                                className={`p-1.5 text-center border-r border-slate-300 font-sans text-xs ${cellBg}`}
+                                className={`p-1.5 text-center border-r border-slate-300 dark:border-slate-700 font-sans text-xs ${cellBg}`}
                                 title={`${emp.employeeName} - Day ${dayNum}: ${dayDetail?.status || 'N/A'}`}
                               >
                                 <span className={cellColor}>{cellDisplay}</span>
@@ -1381,16 +1381,16 @@ const Attendance: React.FC = () => {
                           })}
 
                           {/* Summary Counter Columns */}
-                          <td className="p-2 text-center font-bold text-slate-800 bg-slate-50 border-r border-slate-400">
+                          <td className="p-2 text-center font-bold text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-800/80 border-r border-slate-400 dark:border-slate-700">
                             {workingDays}
                           </td>
-                          <td className="p-2 text-center font-bold text-slate-900 bg-emerald-50/50 border-r border-slate-400">
+                          <td className="p-2 text-center font-bold text-slate-900 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/40 border-r border-slate-400 dark:border-slate-700">
                             {presentDays}
                           </td>
-                          <td className="p-2 text-center font-bold text-rose-700 bg-rose-50/50 border-r border-slate-400">
+                          <td className="p-2 text-center font-bold text-rose-700 dark:text-rose-300 bg-rose-50/50 dark:bg-rose-950/40 border-r border-slate-400 dark:border-slate-700">
                             {leaveDays}
                           </td>
-                          <td className={`p-2 text-center font-extrabold ${isLowAttendance ? 'text-red-600 bg-red-50' : 'text-slate-900 bg-slate-50'}`}>
+                          <td className={`p-2 text-center font-extrabold ${isLowAttendance ? 'text-red-600 bg-red-50 dark:bg-red-950/40' : 'text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-800/80'}`}>
                             {attPct}%
                           </td>
                         </tr>
@@ -1401,33 +1401,33 @@ const Attendance: React.FC = () => {
               </div>
 
               {/* Grid Legend Footer */}
-              <div className="bg-slate-100 border-t border-slate-300 p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs font-sans text-slate-700">
+              <div className="bg-slate-100 dark:bg-slate-800 border-t border-slate-300 dark:border-slate-700 p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs font-sans text-slate-700 dark:text-slate-300">
                 <div className="flex flex-wrap items-center gap-4">
-                  <span className="font-extrabold text-slate-900">Sheet Color Legend:</span>
+                  <span className="font-extrabold text-slate-900 dark:text-white">Sheet Color Legend:</span>
                   <span className="flex items-center gap-1.5 font-bold">
-                    <span className="inline-block w-4 h-4 bg-white border border-slate-400 text-center font-bold text-[10px] leading-tight">P</span> Present
+                    <span className="inline-block w-4 h-4 bg-white dark:bg-slate-900 border border-slate-400 dark:border-slate-600 text-center font-bold text-[10px] leading-tight text-slate-900 dark:text-slate-100">P</span> Present
                   </span>
                   <span className="flex items-center gap-1.5 font-bold">
-                    <span className="inline-block w-4 h-4 bg-white border border-slate-400 text-center font-bold text-red-600 text-[10px] leading-tight">AB</span> Absent
+                    <span className="inline-block w-4 h-4 bg-white dark:bg-slate-900 border border-slate-400 dark:border-slate-600 text-center font-bold text-red-600 dark:text-red-400 text-[10px] leading-tight">AB</span> Absent
                   </span>
                   <span className="flex items-center gap-1.5 font-bold">
-                    <span className="inline-block w-4 h-4 bg-[#f8cbad] border border-slate-400 text-center text-[10px]"></span> Weekend (Sat/Sun)
+                    <span className="inline-block w-4 h-4 bg-[#f8cbad] dark:bg-[#7c431d]/60 border border-slate-400 dark:border-slate-600 text-center text-[10px]"></span> Weekend (Sat/Sun)
                   </span>
                   <span className="flex items-center gap-1.5 font-bold">
-                    <span className="inline-block w-4 h-4 bg-[#fff2cc] border border-slate-400 text-center text-[10px]"></span> Special Range
+                    <span className="inline-block w-4 h-4 bg-[#fff2cc] dark:bg-amber-950/50 border border-slate-400 dark:border-slate-600 text-center text-[10px]"></span> Special Range
                   </span>
                   <span className="flex items-center gap-1.5 font-bold">
-                    <span className="inline-block px-1 bg-purple-50 text-purple-700 border border-purple-200 text-[10px] rounded">HD</span> Holiday
+                    <span className="inline-block px-1 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-[10px] rounded">HD</span> Holiday
                   </span>
                   <span className="flex items-center gap-1.5 font-bold">
-                    <span className="inline-block px-1 bg-rose-50 text-rose-700 border border-rose-200 text-[10px] rounded">Spl Leave</span> Special / Leave
+                    <span className="inline-block px-1 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 text-[10px] rounded">Spl Leave</span> Special / Leave
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded border border-red-200">
+                  <span className="text-[11px] font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-950/60 px-2 py-0.5 rounded border border-red-200 dark:border-red-900">
                     &lt; 75% Attendance Alert
                   </span>
-                  <span className="font-mono text-slate-500 text-[11px]">Exact Excel Register Format</span>
+                  <span className="font-mono text-slate-500 dark:text-slate-400 text-[11px]">Exact Excel Register Format</span>
                 </div>
               </div>
             </div>

@@ -704,18 +704,18 @@ const AdminLeaveRequests: React.FC = () => {
       {/* ── KPI Metric Cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Pending Card */}
-        <div className="bg-white rounded-2xl border border-amber-200/80 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-amber-200/80 dark:border-amber-900/50 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-amber-600 uppercase tracking-wider">Pending Action</span>
-            <div className="h-9 w-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+            <span className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Pending Action</span>
+            <div className="h-9 w-9 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
               <Clock className="h-5 w-5" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-slate-900">{stats.pendingTotal}</span>
-            <span className="text-xs font-semibold text-amber-600">needs review</span>
+            <span className="text-3xl font-extrabold text-slate-900 dark:text-white">{stats.pendingTotal}</span>
+            <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">needs review</span>
           </div>
-          <div className="mt-2 text-[11px] text-slate-400 font-medium flex items-center gap-2">
+          <div className="mt-2 text-[11px] text-slate-400 dark:text-slate-500 font-medium flex items-center gap-2">
             <span>{stats.pendingLeaves} Leaves</span>
             <span>•</span>
             <span>{stats.pendingPermissions} Permissions</span>
@@ -723,64 +723,64 @@ const AdminLeaveRequests: React.FC = () => {
         </div>
 
         {/* Leave Requests Card */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Leave Applications</span>
-            <div className="h-9 w-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Leave Applications</span>
+            <div className="h-9 w-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
               <CalendarDays className="h-5 w-5" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-slate-800">{stats.totalLeaves}</span>
-            <span className="text-xs font-semibold text-emerald-600 font-medium">
+            <span className="text-2xl font-extrabold text-slate-800 dark:text-slate-100">{stats.totalLeaves}</span>
+            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 font-medium">
               ({stats.approvedLeaves} approved)
             </span>
           </div>
-          <p className="mt-2 text-[11px] text-slate-400 font-medium">Multi-day & full day leaves</p>
+          <p className="mt-2 text-[11px] text-slate-400 dark:text-slate-500 font-medium">Multi-day & full day leaves</p>
         </div>
 
         {/* Admin Noted / Unapplied Card */}
-        <div className="bg-white rounded-2xl border border-orange-200/80 p-5 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-orange-200/80 dark:border-orange-900/50 p-5 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-orange-600 uppercase tracking-wider">Admin Noted Leaves</span>
-            <div className="h-9 w-9 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
+            <span className="text-xs font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider">Admin Noted Leaves</span>
+            <div className="h-9 w-9 rounded-xl bg-orange-50 dark:bg-orange-950/50 text-orange-600 dark:text-orange-400 flex items-center justify-center">
               <UserX className="h-5 w-5" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-slate-800">{stats.adminNotedLeaves}</span>
-            <span className="text-xs font-semibold text-orange-600 font-medium">unapplied entries</span>
+            <span className="text-2xl font-extrabold text-slate-800 dark:text-slate-100">{stats.adminNotedLeaves}</span>
+            <span className="text-xs font-semibold text-orange-600 dark:text-orange-400 font-medium">unapplied entries</span>
           </div>
-          <p className="mt-2 text-[11px] text-slate-400 font-medium">Direct admin logged leaves</p>
+          <p className="mt-2 text-[11px] text-slate-400 dark:text-slate-500 font-medium">Direct admin logged leaves</p>
         </div>
 
         {/* Permission Requests Card */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Hourly Permissions</span>
-            <div className="h-9 w-9 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center">
+            <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Hourly Permissions</span>
+            <div className="h-9 w-9 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center">
               <Clock3 className="h-5 w-5" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-slate-800">{stats.totalPermissions}</span>
-            <span className="text-xs font-semibold text-teal-600 font-medium">
+            <span className="text-2xl font-extrabold text-slate-800 dark:text-slate-100">{stats.totalPermissions}</span>
+            <span className="text-xs font-semibold text-teal-600 dark:text-teal-400 font-medium">
               ({stats.approvedPermissions} approved)
             </span>
           </div>
-          <p className="mt-2 text-[11px] text-slate-400 font-medium">Short office interval slips</p>
+          <p className="mt-2 text-[11px] text-slate-400 dark:text-slate-500 font-medium">Short office interval slips</p>
         </div>
       </div>
 
       {/* ── Navigation Tabs ── */}
-      <div className="flex items-center justify-between border-b border-slate-200 gap-4 overflow-x-auto">
+      <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 gap-4 overflow-x-auto">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setActiveTab('all')}
             className={`px-5 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
               activeTab === 'all'
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400'
+                : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
             }`}
           >
             <Layers className="h-4 w-4" />
@@ -791,8 +791,8 @@ const AdminLeaveRequests: React.FC = () => {
             onClick={() => setActiveTab('leaves')}
             className={`px-5 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
               activeTab === 'leaves'
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400'
+                : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
             }`}
           >
             <CalendarDays className="h-4 w-4" />
@@ -803,8 +803,8 @@ const AdminLeaveRequests: React.FC = () => {
             onClick={() => setActiveTab('permissions')}
             className={`px-5 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
               activeTab === 'permissions'
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400'
+                : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
             }`}
           >
             <Clock3 className="h-4 w-4" />
@@ -815,8 +815,8 @@ const AdminLeaveRequests: React.FC = () => {
             onClick={() => setActiveTab('balances')}
             className={`px-5 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
               activeTab === 'balances'
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400'
+                : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
             }`}
           >
             <Sliders className="h-4 w-4" />
@@ -827,8 +827,8 @@ const AdminLeaveRequests: React.FC = () => {
             onClick={() => setActiveTab('calendar')}
             className={`px-5 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
               activeTab === 'calendar'
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400'
+                : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
             }`}
           >
             <Calendar className="h-4 w-4" />
@@ -841,7 +841,7 @@ const AdminLeaveRequests: React.FC = () => {
       {activeTab === 'all' || activeTab === 'leaves' || activeTab === 'permissions' ? (
         <div className="space-y-4">
           {/* Controls Bar (Search, Status Filter, Origin Filter) */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
             {/* Search */}
             <div className="relative w-full md:w-80">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -850,12 +850,12 @@ const AdminLeaveRequests: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search employee, code, or reason..."
-                className="w-full pl-10 pr-4 py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                className="w-full pl-10 pr-4 py-2 text-xs font-medium bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -866,11 +866,11 @@ const AdminLeaveRequests: React.FC = () => {
             <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
               {/* Origin Filter (All vs Self vs Admin Noted) */}
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-400">Origin:</span>
+                <span className="text-xs font-bold text-slate-400 dark:text-slate-500">Origin:</span>
                 <select
                   value={selectedOrigin}
                   onChange={(e) => setSelectedOrigin(e.target.value as any)}
-                  className="text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  className="text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                 >
                   <option value="ALL">All Origins</option>
                   <option value="SELF">👤 Employee Applied</option>
@@ -880,11 +880,11 @@ const AdminLeaveRequests: React.FC = () => {
 
               {/* Status Filter */}
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-400">Status:</span>
+                <span className="text-xs font-bold text-slate-400 dark:text-slate-500">Status:</span>
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  className="text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                 >
                   <option value="">All Statuses</option>
                   <option value="PENDING">🟡 Pending</option>
@@ -902,7 +902,7 @@ const AdminLeaveRequests: React.FC = () => {
                     setSelectedOrigin('ALL');
                     setSearchQuery('');
                   }}
-                  className="p-2 text-xs font-bold text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-xl transition-all"
+                  className="p-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all cursor-pointer"
                   title="Reset Filters"
                 >
                   <RefreshCw className="h-4 w-4" />
@@ -913,15 +913,15 @@ const AdminLeaveRequests: React.FC = () => {
 
           {/* Table View */}
           {loading ? (
-            <div className="bg-white rounded-3xl border border-slate-200/80 p-12 text-center shadow-sm">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-12 text-center shadow-sm">
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-r-transparent mb-3" />
-              <p className="text-sm font-semibold text-slate-600">Loading requests...</p>
+              <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">Loading requests...</p>
             </div>
           ) : (
-            <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50/80 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                  <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-[11px] font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider border-b border-slate-100 dark:border-slate-700">
                     <tr>
                       <th className="py-4 px-6">Request Type</th>
                       <th className="py-4 px-6">Employee</th>
@@ -932,25 +932,25 @@ const AdminLeaveRequests: React.FC = () => {
                       <th className="py-4 px-6 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-700">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                     {filteredRequests.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="py-12 text-center text-slate-400">
-                          <FileText className="h-8 w-8 mx-auto text-slate-300 mb-2" />
+                        <td colSpan={7} className="py-12 text-center text-slate-400 dark:text-slate-500">
+                          <FileText className="h-8 w-8 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
                           <p className="font-semibold">No requests found matching your filters.</p>
                         </td>
                       </tr>
                     ) : (
                       filteredRequests.map((req) => (
-                        <tr key={`${req.requestType}-${req.id}`} className="hover:bg-indigo-50/30 transition-colors">
+                        <tr key={`${req.requestType}-${req.id}`} className="hover:bg-indigo-50/30 dark:hover:bg-slate-800/60 transition-colors">
                           {/* Type Column */}
                           <td className="py-4 px-6">
                             <div className="flex items-center gap-2.5">
                               <div
                                 className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 font-bold ${
                                   req.requestType === 'LEAVE'
-                                    ? 'bg-indigo-50 text-indigo-600'
-                                    : 'bg-teal-50 text-teal-600'
+                                    ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400'
+                                    : 'bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400'
                                 }`}
                               >
                                 {req.requestType === 'LEAVE' ? (
@@ -960,19 +960,19 @@ const AdminLeaveRequests: React.FC = () => {
                                 )}
                               </div>
                               <div>
-                                <span className="font-bold text-slate-900 block text-xs">{req.title}</span>
+                                <span className="font-bold text-slate-900 dark:text-white block text-xs">{req.title}</span>
                                 <div className="flex items-center gap-1.5 mt-0.5">
                                   <span
                                     className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full inline-block ${
                                       req.requestType === 'LEAVE'
-                                        ? 'bg-indigo-100/60 text-indigo-700'
-                                        : 'bg-teal-100/60 text-teal-700'
+                                        ? 'bg-indigo-100/60 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300'
+                                        : 'bg-teal-100/60 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300'
                                     }`}
                                   >
                                     {req.requestType}
                                   </span>
                                   {req.isAdminNoted && (
-                                    <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-200">
+                                    <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800">
                                       Admin Noted
                                     </span>
                                   )}
@@ -983,13 +983,13 @@ const AdminLeaveRequests: React.FC = () => {
 
                           {/* Employee */}
                           <td className="py-4 px-6">
-                            <span className="font-bold text-slate-900 block text-sm">{req.employee.name}</span>
-                            <span className="text-[11px] text-slate-400 font-mono font-medium">
+                            <span className="font-bold text-slate-900 dark:text-white block text-sm">{req.employee.name}</span>
+                            <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono font-medium">
                               {req.employee.employeeCode}
                             </span>
                             {req.handoverEmployee && (
-                              <div className="mt-1 flex items-center gap-1 text-[10.5px] text-teal-700 bg-teal-50/90 px-2 py-0.5 rounded-md border border-teal-200 font-medium max-w-xs truncate" title={`Work assigned to ${req.handoverEmployee.name}`}>
-                                <Users className="h-3 w-3 text-teal-600 shrink-0" />
+                              <div className="mt-1 flex items-center gap-1 text-[10.5px] text-teal-700 dark:text-teal-300 bg-teal-50/90 dark:bg-teal-950/50 px-2 py-0.5 rounded-md border border-teal-200 dark:border-teal-800 font-medium max-w-xs truncate" title={`Work assigned to ${req.handoverEmployee.name}`}>
+                                <Users className="h-3 w-3 text-teal-600 dark:text-teal-400 shrink-0" />
                                 <span className="truncate">Handover: <strong className="font-bold">{req.handoverEmployee.name}</strong></span>
                               </div>
                             )}
@@ -997,9 +997,9 @@ const AdminLeaveRequests: React.FC = () => {
 
                           {/* Schedule / Date */}
                           <td className="py-4 px-6">
-                            <span className="font-bold text-slate-800 block text-xs">{req.dateRange}</span>
+                            <span className="font-bold text-slate-800 dark:text-slate-200 block text-xs">{req.dateRange}</span>
                             {req.createdAt && (
-                              <span className="text-[10px] text-slate-400 font-medium">
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
                                 Loged: {formatDate(req.createdAt)}
                               </span>
                             )}
@@ -1007,16 +1007,16 @@ const AdminLeaveRequests: React.FC = () => {
 
                           {/* Duration */}
                           <td className="py-4 px-6">
-                            <span className="inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 font-mono">
+                            <span className="inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-mono">
                               {req.duration}
                             </span>
                           </td>
 
                           {/* Reason & Remarks / Withdrawal details */}
                           <td className="py-4 px-6 min-w-[220px] max-w-sm">
-                            <p className="font-semibold text-slate-800 text-xs">{req.reason}</p>
+                            <p className="font-semibold text-slate-800 dark:text-slate-200 text-xs">{req.reason}</p>
                             {req.handoverNotes && (
-                              <div className="mt-1 text-[11px] text-teal-800 bg-teal-50/70 p-1.5 rounded-lg border border-teal-200/70 flex items-start gap-1">
+                              <div className="mt-1 text-[11px] text-teal-800 dark:text-teal-300 bg-teal-50/70 dark:bg-teal-950/40 p-1.5 rounded-lg border border-teal-200/70 dark:border-teal-800 flex items-start gap-1">
                                 <span className="font-bold shrink-0">Delegation Note:</span>
                                 <span className="italic">{req.handoverNotes}</span>
                               </div>
@@ -1025,12 +1025,12 @@ const AdminLeaveRequests: React.FC = () => {
                               <div
                                 className={`mt-1.5 text-xs p-2 rounded-xl border flex items-start gap-1.5 ${
                                   req.status === 'CANCELLED' || req.status === 'WITHDRAWN'
-                                    ? 'bg-rose-50/90 border-rose-200 text-rose-800'
-                                    : 'bg-slate-50 border-slate-200 text-slate-700'
+                                    ? 'bg-rose-50/90 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300'
+                                    : 'bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                                 }`}
                               >
                                 {req.status === 'CANCELLED' || req.status === 'WITHDRAWN' ? (
-                                  <Undo2 className="h-3.5 w-3.5 text-rose-500 shrink-0 mt-0.5" />
+                                  <Undo2 className="h-3.5 w-3.5 text-rose-500 dark:text-rose-400 shrink-0 mt-0.5" />
                                 ) : (
                                   <Info className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5" />
                                 )}
@@ -1047,8 +1047,8 @@ const AdminLeaveRequests: React.FC = () => {
                               </div>
                             )}
                             {req.adminRemarks && (
-                              <div className="mt-1.5 text-xs p-2 rounded-xl bg-indigo-50/70 border border-indigo-200 text-indigo-900 flex items-start gap-1.5">
-                                <CheckCircle2 className="h-3.5 w-3.5 text-indigo-500 shrink-0 mt-0.5" />
+                              <div className="mt-1.5 text-xs p-2 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200 flex items-start gap-1.5">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400 shrink-0 mt-0.5" />
                                 <div className="leading-snug break-words">
                                   <span className="font-bold">Admin Remarks: </span>
                                   <span>{req.adminRemarks}</span>
@@ -1062,12 +1062,12 @@ const AdminLeaveRequests: React.FC = () => {
                             <span
                               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border ${
                                 req.status === 'APPROVED'
-                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
                                   : req.status === 'REJECTED'
-                                  ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                  ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
                                   : req.status === 'CANCELLED' || req.status === 'WITHDRAWN'
-                                  ? 'bg-slate-100 text-slate-600 border-slate-200'
-                                  : 'bg-amber-50 text-amber-700 border-amber-200 animate-pulse'
+                                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                                  : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800 animate-pulse'
                               }`}
                             >
                               <span
@@ -1091,7 +1091,7 @@ const AdminLeaveRequests: React.FC = () => {
                               <div className="flex items-center justify-end gap-1.5">
                                 <button
                                   onClick={() => setActionModal({ request: req, action: 'APPROVED' })}
-                                  className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-xs"
+                                  className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-xs border border-transparent dark:border-emerald-800"
                                   title="Approve Request"
                                 >
                                   <Check className="h-3.5 w-3.5 stroke-[3]" />
@@ -1099,7 +1099,7 @@ const AdminLeaveRequests: React.FC = () => {
                                 </button>
                                 <button
                                   onClick={() => setActionModal({ request: req, action: 'REJECTED' })}
-                                  className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-xs"
+                                  className="px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-xs border border-transparent dark:border-rose-800"
                                   title="Reject Request"
                                 >
                                   <X className="h-3.5 w-3.5 stroke-[3]" />
@@ -1110,7 +1110,7 @@ const AdminLeaveRequests: React.FC = () => {
                               <div className="flex items-center justify-end gap-1.5">
                                 <button
                                   onClick={() => setActionModal({ request: req, action: 'CANCELLED' })}
-                                  className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 border border-slate-200"
+                                  className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/50 text-slate-600 dark:text-slate-300 hover:text-rose-700 dark:hover:text-rose-300 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 border border-slate-200 dark:border-slate-700"
                                   title="Revoke and cancel this approved leave (restore quota)"
                                 >
                                   <Undo2 className="h-3 w-3" />
@@ -1118,7 +1118,7 @@ const AdminLeaveRequests: React.FC = () => {
                                 </button>
                               </div>
                             ) : (
-                              <span className="text-[11px] text-slate-400 font-medium italic">Reviewed</span>
+                              <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium italic">Reviewed</span>
                             )}
                           </td>
                         </tr>
@@ -1133,7 +1133,7 @@ const AdminLeaveRequests: React.FC = () => {
       ) : activeTab === 'balances' ? (
         /* ── TAB 4: LEAVE BALANCES & QUOTAS MANAGEMENT ── */
         <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
             {/* Search */}
             <div className="relative w-full md:w-80">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -1142,18 +1142,18 @@ const AdminLeaveRequests: React.FC = () => {
                 value={balanceSearchQuery}
                 onChange={(e) => setBalanceSearchQuery(e.target.value)}
                 placeholder="Search employee by name or code..."
-                className="w-full pl-10 pr-4 py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                className="w-full pl-10 pr-4 py-2 text-xs font-medium bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
             </div>
 
             {/* Year Selector & Carry Forward */}
             <div className="flex items-center gap-2.5">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-500">Quota Year:</span>
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Quota Year:</span>
                 <select
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(Number(e.target.value))}
-                  className="text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none"
+                  className="text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-700 dark:text-slate-200 focus:outline-none"
                 >
                   {[currentYear - 1, currentYear, currentYear + 1].map((y) => (
                     <option key={y} value={y}>
@@ -1174,15 +1174,15 @@ const AdminLeaveRequests: React.FC = () => {
           </div>
 
           {balancesLoading ? (
-            <div className="bg-white rounded-3xl border border-slate-200/80 p-12 text-center">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-12 text-center">
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-r-transparent mb-3" />
-              <p className="text-sm font-semibold text-slate-600">Loading leave quotas & balances...</p>
+              <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">Loading leave quotas & balances...</p>
             </div>
           ) : (
-            <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50/80 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                  <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-[11px] font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider border-b border-slate-100 dark:border-slate-700">
                     <tr>
                       <th className="py-4 px-6">Employee</th>
                       <th className="py-4 px-6">Casual Leave (CL)</th>
@@ -1192,10 +1192,10 @@ const AdminLeaveRequests: React.FC = () => {
                       <th className="py-4 px-6 text-right">Edit Quota</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-700">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                     {filteredBalances.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="py-12 text-center text-slate-400">
+                        <td colSpan={6} className="py-12 text-center text-slate-400 dark:text-slate-500">
                           No employee balance records found for {selectedYear}.
                         </td>
                       </tr>
@@ -1207,25 +1207,25 @@ const AdminLeaveRequests: React.FC = () => {
                         const wfh = b.balances.find((x) => x.type === 'WORK_FROM_HOME');
 
                         return (
-                          <tr key={b.employeeId} className="hover:bg-indigo-50/20 transition-colors">
+                          <tr key={b.employeeId} className="hover:bg-indigo-50/20 dark:hover:bg-slate-800/50 transition-colors">
                             <td className="py-4 px-6">
-                              <span className="font-bold text-slate-900 block text-sm">{b.employeeName}</span>
-                              <span className="text-[11px] text-slate-400 font-mono">{b.employeeCode}</span>
+                              <span className="font-bold text-slate-900 dark:text-white block text-sm">{b.employeeName}</span>
+                              <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">{b.employeeCode}</span>
                             </td>
 
                             <td className="py-4 px-6">
                               <div className="space-y-0.5">
                                 <div className="flex items-center gap-1">
-                                  <span className="font-bold text-slate-900">
+                                  <span className="font-bold text-slate-900 dark:text-slate-100">
                                     {cl ? `${cl.balance} / ${cl.granted}` : '--'}
                                   </span>
                                   {cl && (cl.carriedForward ?? 0) > 0 && (
-                                    <span className="text-[9px] font-black px-1 py-0.2 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                    <span className="text-[9px] font-black px-1 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
                                       +{cl.carriedForward} C/F
                                     </span>
                                   )}
                                 </div>
-                                <span className="text-[10px] text-slate-400 block font-medium">
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500 block font-medium">
                                   Consumed: {cl?.consumed || 0}
                                 </span>
                               </div>
@@ -1234,16 +1234,16 @@ const AdminLeaveRequests: React.FC = () => {
                             <td className="py-4 px-6">
                               <div className="space-y-0.5">
                                 <div className="flex items-center gap-1">
-                                  <span className="font-bold text-slate-900">
+                                  <span className="font-bold text-slate-900 dark:text-slate-100">
                                     {sl ? `${sl.balance} / ${sl.granted}` : '--'}
                                   </span>
                                   {sl && (sl.carriedForward ?? 0) > 0 && (
-                                    <span className="text-[9px] font-black px-1 py-0.2 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                    <span className="text-[9px] font-black px-1 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
                                       +{sl.carriedForward} C/F
                                     </span>
                                   )}
                                 </div>
-                                <span className="text-[10px] text-slate-400 block font-medium">
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500 block font-medium">
                                   Consumed: {sl?.consumed || 0}
                                 </span>
                               </div>
@@ -1252,16 +1252,16 @@ const AdminLeaveRequests: React.FC = () => {
                             <td className="py-4 px-6">
                               <div className="space-y-0.5">
                                 <div className="flex items-center gap-1">
-                                  <span className="font-bold text-slate-900">
+                                  <span className="font-bold text-slate-900 dark:text-slate-100">
                                     {co ? `${co.balance} / ${co.granted}` : '--'}
                                   </span>
                                   {co && (co.carriedForward ?? 0) > 0 && (
-                                    <span className="text-[9px] font-black px-1 py-0.2 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                    <span className="text-[9px] font-black px-1 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
                                       +{co.carriedForward} C/F
                                     </span>
                                   )}
                                 </div>
-                                <span className="text-[10px] text-slate-400 block font-medium">
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500 block font-medium">
                                   Consumed: {co?.consumed || 0}
                                 </span>
                               </div>
@@ -1269,10 +1269,10 @@ const AdminLeaveRequests: React.FC = () => {
 
                             <td className="py-4 px-6">
                               <div className="space-y-0.5">
-                                <span className="font-bold text-slate-900">
+                                <span className="font-bold text-slate-900 dark:text-slate-100">
                                   {wfh ? `${wfh.balance} / ${wfh.granted}` : '--'}
                                 </span>
-                                <span className="text-[10px] text-slate-400 block font-medium">
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500 block font-medium">
                                   Consumed: {wfh?.consumed || 0}
                                 </span>
                               </div>
@@ -1281,7 +1281,7 @@ const AdminLeaveRequests: React.FC = () => {
                             <td className="py-4 px-6 text-right">
                               <button
                                 onClick={() => handleOpenEditQuota(b)}
-                                className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1 font-bold"
+                                className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-slate-800 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1 font-bold"
                               >
                                 <Edit3 className="h-4 w-4" />
                                 <span>Edit</span>
@@ -1301,7 +1301,7 @@ const AdminLeaveRequests: React.FC = () => {
         /* ── TAB 5: LEAVE & ATTENDANCE CALENDAR (DAILY STATS) ── */
         <div className="space-y-4 animate-fade-in">
           {/* Calendar Controls & Legend */}
-          <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-4">
             {/* Month & Year Navigation */}
             <div className="flex items-center gap-3">
               <button
@@ -1314,14 +1314,14 @@ const AdminLeaveRequests: React.FC = () => {
                     setCalMonth((m) => m - 1);
                   }
                 }}
-                className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all cursor-pointer"
+                className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-all cursor-pointer"
                 title="Previous Month"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
 
               <div className="flex items-center gap-2">
-                <span className="text-base font-extrabold text-slate-900">
+                <span className="text-base font-extrabold text-slate-900 dark:text-white">
                   {new Date(calYear, calMonth - 1, 1).toLocaleString('default', { month: 'long' })} {calYear}
                 </span>
                 <button
@@ -1331,7 +1331,7 @@ const AdminLeaveRequests: React.FC = () => {
                     setCalYear(now.getFullYear());
                     setCalMonth(now.getMonth() + 1);
                   }}
-                  className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-all cursor-pointer"
+                  className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-all cursor-pointer"
                 >
                   Current Month
                 </button>
@@ -1347,7 +1347,7 @@ const AdminLeaveRequests: React.FC = () => {
                     setCalMonth((m) => m + 1);
                   }
                 }}
-                className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all cursor-pointer"
+                className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-all cursor-pointer"
                 title="Next Month"
               >
                 <ChevronRight className="h-4 w-4" />
@@ -1356,19 +1356,19 @@ const AdminLeaveRequests: React.FC = () => {
 
             {/* Legend Pills */}
             <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
-              <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5">
+              <span className="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-emerald-500"></span> Presents
               </span>
-              <span className="px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1.5">
+              <span className="px-2.5 py-1 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-rose-500"></span> Leaves
               </span>
-              <span className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1.5">
+              <span className="px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-blue-500"></span> WFH
               </span>
-              <span className="px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1.5">
+              <span className="px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-amber-500"></span> Permissions
               </span>
-              <span className="px-2.5 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-200 flex items-center gap-1.5">
+              <span className="px-2.5 py-1 rounded-full bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800 flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-orange-500"></span> Late Check-ins
               </span>
             </div>
@@ -1376,14 +1376,14 @@ const AdminLeaveRequests: React.FC = () => {
 
           {/* Calendar Grid */}
           {calendarLoading ? (
-            <div className="bg-white rounded-3xl border border-slate-200/80 p-16 text-center shadow-sm">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-16 text-center shadow-sm">
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-r-transparent mb-3" />
-              <p className="text-sm font-semibold text-slate-600">Loading daily attendance & leave breakdown...</p>
+              <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">Loading daily attendance & leave breakdown...</p>
             </div>
           ) : (
-            <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-4 overflow-x-auto">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 overflow-x-auto">
               {/* Day Name Headers */}
-              <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold uppercase tracking-wider text-slate-400 pb-3 border-b border-slate-100 min-w-[700px]">
+              <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 pb-3 border-b border-slate-100 dark:border-slate-800 min-w-[700px]">
                 <span>Sun</span>
                 <span>Mon</span>
                 <span>Tue</span>
@@ -1404,7 +1404,7 @@ const AdminLeaveRequests: React.FC = () => {
                   // Empty padding days before 1st
                   for (let i = 0; i < firstDay; i++) {
                     cells.push(
-                      <div key={`empty-${i}`} className="min-h-[100px] p-2 bg-slate-50/40 rounded-2xl border border-transparent opacity-30" />
+                      <div key={`empty-${i}`} className="min-h-[100px] p-2 bg-slate-50/40 dark:bg-slate-800/30 rounded-2xl border border-transparent opacity-30" />
                     );
                   }
 
@@ -1458,12 +1458,12 @@ const AdminLeaveRequests: React.FC = () => {
                       <div
                         key={dateStr}
                         onClick={() => setSelectedCalendarDay(dayData)}
-                        className={`min-h-[105px] p-2.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between hover:shadow-md hover:border-indigo-300 hover:scale-[1.01] ${
+                        className={`min-h-[105px] p-2.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between hover:shadow-md hover:border-indigo-300 dark:hover:border-indigo-600 hover:scale-[1.01] ${
                           isToday
-                            ? 'bg-indigo-50/50 border-indigo-300 ring-2 ring-indigo-500/20 shadow-xs'
+                            ? 'bg-indigo-50/50 dark:bg-indigo-950/40 border-indigo-300 dark:border-indigo-700 ring-2 ring-indigo-500/20 shadow-xs'
                             : hasData
-                            ? 'bg-white border-slate-200'
-                            : 'bg-slate-50/60 border-slate-150 hover:bg-white'
+                            ? 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200'
+                            : 'bg-slate-50/60 dark:bg-slate-800/40 border-slate-150 dark:border-slate-700/60 hover:bg-white dark:hover:bg-slate-800'
                         }`}
                       >
                         <div className="flex items-center justify-between">
@@ -1471,7 +1471,7 @@ const AdminLeaveRequests: React.FC = () => {
                             className={`text-xs font-black h-6 w-6 rounded-full flex items-center justify-center ${
                               isToday
                                 ? 'bg-indigo-600 text-white'
-                                : 'text-slate-700 bg-slate-100'
+                                : 'text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700'
                             }`}
                           >
                             {d}
@@ -1486,37 +1486,37 @@ const AdminLeaveRequests: React.FC = () => {
                         {/* Counts Badges */}
                         <div className="mt-2 space-y-1">
                           {presentsCount > 0 && (
-                            <div className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100/80 text-emerald-800 flex items-center justify-between">
+                            <div className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 flex items-center justify-between">
                               <span>🟢 Presents</span>
                               <span className="font-black">{presentsCount}</span>
                             </div>
                           )}
                           {leavesCount > 0 && (
-                            <div className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-rose-100/80 text-rose-800 flex items-center justify-between">
+                            <div className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-rose-100/80 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 flex items-center justify-between">
                               <span>🔴 Leaves</span>
                               <span className="font-black">{leavesCount}</span>
                             </div>
                           )}
                           {wfhCount > 0 && (
-                            <div className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-blue-100/80 text-blue-800 flex items-center justify-between">
+                            <div className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-blue-100/80 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 flex items-center justify-between">
                               <span>🔵 WFH</span>
                               <span className="font-black">{wfhCount}</span>
                             </div>
                           )}
                           {permissionsCount > 0 && (
-                            <div className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100/80 text-amber-800 flex items-center justify-between">
+                            <div className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100/80 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 flex items-center justify-between">
                               <span>🟡 Perms</span>
                               <span className="font-black">{permissionsCount}</span>
                             </div>
                           )}
                           {lateCount > 0 && (
-                            <div className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-orange-100/80 text-orange-800 flex items-center justify-between">
+                            <div className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-orange-100/80 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300 flex items-center justify-between">
                               <span>🟠 Late</span>
                               <span className="font-black">{lateCount}</span>
                             </div>
                           )}
                           {!hasData && (
-                            <span className="text-[10px] text-slate-300 block text-center py-2 font-medium">
+                            <span className="text-[10px] text-slate-300 dark:text-slate-600 block text-center py-2 font-medium">
                               No records
                             </span>
                           )}
@@ -1534,23 +1534,23 @@ const AdminLeaveRequests: React.FC = () => {
           {/* Day Click Breakdown Modal */}
           {selectedCalendarDay && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-              <div className="relative w-full max-w-2xl max-h-[85vh] flex flex-col rounded-3xl bg-white shadow-2xl border border-slate-100 animate-scale-up overflow-hidden">
+              <div className="relative w-full max-w-2xl max-h-[85vh] flex flex-col rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-100 dark:border-slate-800 animate-scale-up overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/50 shrink-0">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4 bg-slate-50/50 dark:bg-slate-800/50 shrink-0">
                   <div className="flex items-center gap-2.5">
-                    <div className="h-9 w-9 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                    <div className="h-9 w-9 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
                       <CalendarDays className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="text-base font-bold text-slate-900">
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white">
                         Attendance & Leave Roster • {formatDate(selectedCalendarDay.date)}
                       </h3>
-                      <p className="text-xs text-slate-400">Complete employee status breakdown for this day</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">Complete employee status breakdown for this day</p>
                     </div>
                   </div>
                   <button
                     onClick={() => setSelectedCalendarDay(null)}
-                    className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 rounded-xl"
+                    className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -1560,32 +1560,32 @@ const AdminLeaveRequests: React.FC = () => {
                 <div className="p-6 overflow-y-auto space-y-5">
                   {/* Summary Metric Badges */}
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                    <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
-                      <span className="block text-[10px] font-bold text-emerald-700 uppercase">Presents</span>
-                      <span className="text-lg font-black text-emerald-900">{selectedCalendarDay.presents}</span>
+                    <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-center">
+                      <span className="block text-[10px] font-bold text-emerald-700 dark:text-emerald-300 uppercase">Presents</span>
+                      <span className="text-lg font-black text-emerald-900 dark:text-emerald-100">{selectedCalendarDay.presents}</span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-center">
-                      <span className="block text-[10px] font-bold text-rose-700 uppercase">Leaves</span>
-                      <span className="text-lg font-black text-rose-900">{selectedCalendarDay.leaves}</span>
+                    <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-center">
+                      <span className="block text-[10px] font-bold text-rose-700 dark:text-rose-300 uppercase">Leaves</span>
+                      <span className="text-lg font-black text-rose-900 dark:text-rose-100">{selectedCalendarDay.leaves}</span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-center">
-                      <span className="block text-[10px] font-bold text-blue-700 uppercase">WFH</span>
-                      <span className="text-lg font-black text-blue-900">{selectedCalendarDay.wfh}</span>
+                    <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-center">
+                      <span className="block text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase">WFH</span>
+                      <span className="text-lg font-black text-blue-900 dark:text-blue-100">{selectedCalendarDay.wfh}</span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-center">
-                      <span className="block text-[10px] font-bold text-amber-700 uppercase">Permissions</span>
-                      <span className="text-lg font-black text-amber-900">{selectedCalendarDay.permissions}</span>
+                    <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-center">
+                      <span className="block text-[10px] font-bold text-amber-700 dark:text-amber-300 uppercase">Permissions</span>
+                      <span className="text-lg font-black text-amber-900 dark:text-amber-100">{selectedCalendarDay.permissions}</span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-orange-50 border border-orange-200 text-center">
-                      <span className="block text-[10px] font-bold text-orange-700 uppercase">Late Check-in</span>
-                      <span className="text-lg font-black text-orange-900">{selectedCalendarDay.late}</span>
+                    <div className="p-2.5 rounded-xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 text-center">
+                      <span className="block text-[10px] font-bold text-orange-700 dark:text-orange-300 uppercase">Late Check-in</span>
+                      <span className="text-lg font-black text-orange-900 dark:text-orange-100">{selectedCalendarDay.late}</span>
                     </div>
                   </div>
 
                   {/* On Leave Breakdown */}
                   <div className="space-y-2">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                      <UserMinus className="h-4 w-4 text-rose-600" />
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <UserMinus className="h-4 w-4 text-rose-600 dark:text-rose-400" />
                       Employees on Leave ({selectedCalendarDay.details?.leavesList?.length || 0})
                     </h4>
                     {selectedCalendarDay.details?.leavesList && selectedCalendarDay.details.leavesList.length > 0 ? (
@@ -1593,20 +1593,20 @@ const AdminLeaveRequests: React.FC = () => {
                         {selectedCalendarDay.details.leavesList.map((emp: any, idx: number) => (
                           <div
                             key={idx}
-                            className="p-3 rounded-2xl bg-rose-50/50 border border-rose-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                            className="p-3 rounded-2xl bg-rose-50/50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2"
                           >
                             <div>
                               <div className="flex items-center gap-2">
-                                <span className="font-bold text-slate-900">{emp.name}</span>
-                                <span className="font-mono text-slate-500 font-medium">({emp.employeeCode})</span>
+                                <span className="font-bold text-slate-900 dark:text-white">{emp.name}</span>
+                                <span className="font-mono text-slate-500 dark:text-slate-400 font-medium">({emp.employeeCode})</span>
                               </div>
-                              <span className="text-[11px] text-rose-700 font-bold mt-0.5 block">
+                              <span className="text-[11px] text-rose-700 dark:text-rose-300 font-bold mt-0.5 block">
                                 {formatLeaveType(emp.leaveType)}
                               </span>
                             </div>
                             {emp.handoverEmployee && (
-                              <div className="text-[11px] bg-white px-2.5 py-1 rounded-xl border border-teal-200 text-teal-800 font-medium flex items-center gap-1">
-                                <Users className="h-3 w-3 text-teal-600 shrink-0" />
+                              <div className="text-[11px] bg-white dark:bg-slate-800 px-2.5 py-1 rounded-xl border border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-300 font-medium flex items-center gap-1">
+                                <Users className="h-3 w-3 text-teal-600 dark:text-teal-400 shrink-0" />
                                 <span>Delegated To: <strong>{emp.handoverEmployee}</strong></span>
                               </div>
                             )}
@@ -1614,7 +1614,7 @@ const AdminLeaveRequests: React.FC = () => {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-400 italic bg-slate-50 p-3 rounded-xl border border-slate-100">
+                      <p className="text-xs text-slate-400 dark:text-slate-500 italic bg-slate-50 dark:bg-slate-800/80 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
                         No approved leaves recorded for this date.
                       </p>
                     )}
@@ -1622,8 +1622,8 @@ const AdminLeaveRequests: React.FC = () => {
 
                   {/* Present Employees Breakdown */}
                   <div className="space-y-2">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                      <UserCheck className="h-4 w-4 text-emerald-600" />
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <UserCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                       Present Employees ({selectedCalendarDay.details?.presentsList?.length || 0})
                     </h4>
                     {selectedCalendarDay.details?.presentsList && selectedCalendarDay.details.presentsList.length > 0 ? (
@@ -1631,22 +1631,22 @@ const AdminLeaveRequests: React.FC = () => {
                         {selectedCalendarDay.details.presentsList.map((emp: any, idx: number) => (
                           <div
                             key={idx}
-                            className="p-2.5 rounded-xl bg-emerald-50/50 border border-emerald-200 text-xs flex items-center justify-between"
+                            className="p-2.5 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs flex items-center justify-between"
                           >
                             <div>
-                              <span className="font-bold text-slate-900 block">{emp.name}</span>
-                              <span className="font-mono text-[11px] text-slate-400 font-medium">
+                              <span className="font-bold text-slate-900 dark:text-white block">{emp.name}</span>
+                              <span className="font-mono text-[11px] text-slate-400 dark:text-slate-500 font-medium">
                                 {emp.employeeCode} {emp.department ? `• ${emp.department}` : ''}
                               </span>
                             </div>
-                            <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                            <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 text-[10px] font-bold">
                               Present
                             </span>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-400 italic bg-slate-50 p-3 rounded-xl border border-slate-100">
+                      <p className="text-xs text-slate-400 dark:text-slate-500 italic bg-slate-50 dark:bg-slate-800/80 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
                         No present records recorded for this date.
                       </p>
                     )}
@@ -1656,8 +1656,8 @@ const AdminLeaveRequests: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* WFH */}
                     <div className="space-y-2">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                        <Building className="h-4 w-4 text-blue-600" />
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <Building className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         WFH ({selectedCalendarDay.details?.wfhList?.length || 0})
                       </h4>
                       {selectedCalendarDay.details?.wfhList && selectedCalendarDay.details.wfhList.length > 0 ? (
@@ -1665,22 +1665,22 @@ const AdminLeaveRequests: React.FC = () => {
                           {selectedCalendarDay.details.wfhList.map((emp: any, idx: number) => (
                             <div
                               key={idx}
-                              className="p-2 rounded-xl bg-blue-50/60 border border-blue-200 text-xs flex items-center justify-between"
+                              className="p-2 rounded-xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-xs flex items-center justify-between"
                             >
-                              <span className="font-bold text-slate-900">{emp.name}</span>
-                              <span className="font-mono text-slate-500 font-medium">{emp.employeeCode}</span>
+                              <span className="font-bold text-slate-900 dark:text-white">{emp.name}</span>
+                              <span className="font-mono text-slate-500 dark:text-slate-400 font-medium">{emp.employeeCode}</span>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <p className="text-xs text-slate-400 italic bg-slate-50 p-2.5 rounded-xl">None</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500 italic bg-slate-50 dark:bg-slate-800/80 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">None</p>
                       )}
                     </div>
 
                     {/* Permissions */}
                     <div className="space-y-2">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                        <Clock3 className="h-4 w-4 text-amber-600" />
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <Clock3 className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                         Permissions ({selectedCalendarDay.details?.permissionsList?.length || 0})
                       </h4>
                       {selectedCalendarDay.details?.permissionsList && selectedCalendarDay.details.permissionsList.length > 0 ? (
@@ -1688,25 +1688,25 @@ const AdminLeaveRequests: React.FC = () => {
                           {selectedCalendarDay.details.permissionsList.map((emp: any, idx: number) => (
                             <div
                               key={idx}
-                              className="p-2 rounded-xl bg-amber-50/60 border border-amber-200 text-xs flex items-center justify-between"
+                              className="p-2 rounded-xl bg-amber-50/60 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs flex items-center justify-between"
                             >
-                              <span className="font-bold text-slate-900">{emp.name}</span>
-                              <span className="font-mono text-amber-800 font-bold">{emp.time}</span>
+                              <span className="font-bold text-slate-900 dark:text-white">{emp.name}</span>
+                              <span className="font-mono text-amber-800 dark:text-amber-300 font-bold">{emp.time}</span>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <p className="text-xs text-slate-400 italic bg-slate-50 p-2.5 rounded-xl">None</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500 italic bg-slate-50 dark:bg-slate-800/80 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">None</p>
                       )}
                     </div>
                   </div>
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-end px-6 py-3 bg-slate-50 border-t border-slate-100 shrink-0">
+                <div className="flex items-center justify-end px-6 py-3 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-800 shrink-0">
                   <button
                     onClick={() => setSelectedCalendarDay(null)}
-                    className="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs transition-all cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 font-bold text-xs transition-all cursor-pointer"
                   >
                     Close
                   </button>
@@ -1720,28 +1720,28 @@ const AdminLeaveRequests: React.FC = () => {
       {/* ── MODAL: RECORD DIRECT / UNAPPLIED LEAVE BY ADMIN ── */}
       {showUnappliedModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-xl max-h-[92vh] flex flex-col rounded-3xl bg-white shadow-2xl border border-slate-100 animate-scale-up overflow-hidden">
+          <div className="relative w-full max-w-xl max-h-[92vh] flex flex-col rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-100 dark:border-slate-800 animate-scale-up overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/50 shrink-0">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4 bg-slate-50/50 dark:bg-slate-800/50 shrink-0">
               <div className="flex items-center gap-2.5">
-                <div className="h-9 w-9 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center font-bold shrink-0">
+                <div className="h-9 w-9 rounded-2xl bg-orange-50 dark:bg-orange-950/50 text-orange-600 dark:text-orange-400 flex items-center justify-center font-bold shrink-0">
                   <UserX className="h-4.5 w-4.5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 leading-tight">Record Unapplied Leave</h3>
-                  <p className="text-[11px] text-slate-400">Log unannounced absence or direct leave for employee</p>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white leading-tight">Record Unapplied Leave</h3>
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500">Log unannounced absence or direct leave for employee</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowUnappliedModal(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition"
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             {unappliedError && (
-              <div className="mx-6 mt-3 flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
+              <div className="mx-6 mt-3 flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-semibold">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 {unappliedError}
               </div>
@@ -1751,14 +1751,14 @@ const AdminLeaveRequests: React.FC = () => {
               {/* Row 1: Employee & Leave Category */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
                     Select Employee *
                   </label>
                   <select
                     required
                     value={unappliedEmployeeId}
                     onChange={(e) => setUnappliedEmployeeId(Number(e.target.value))}
-                    className="w-full px-3 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                    className="w-full px-3 py-2 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 text-slate-800 dark:text-slate-100"
                   >
                     <option value="">-- Choose Employee --</option>
                     {employees.map((emp) => (
@@ -1770,13 +1770,13 @@ const AdminLeaveRequests: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
                     Leave Category *
                   </label>
                   <select
                     value={unappliedLeaveType}
                     onChange={(e) => setUnappliedLeaveType(e.target.value as LeaveType)}
-                    className="w-full px-3 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                    className="w-full px-3 py-2 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 text-slate-800 dark:text-slate-100"
                   >
                     <option value="CASUAL_LEAVE">Casual Leave (CL)</option>
                     <option value="SICK_LEAVE">Sick Leave (SL)</option>
@@ -1790,11 +1790,11 @@ const AdminLeaveRequests: React.FC = () => {
               </div>
 
               {/* Row 2: Duration Type & Dates */}
-              <div className="p-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2.5">
+              <div className="p-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 rounded-2xl space-y-2.5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Duration:</span>
+                  <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Duration:</span>
                   <div className="flex items-center gap-3">
-                    <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700">
+                    <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300">
                       <input
                         type="radio"
                         name="unappliedIsHalfDayRadio"
@@ -1804,7 +1804,7 @@ const AdminLeaveRequests: React.FC = () => {
                       />
                       Full / Multi Day
                     </label>
-                    <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-orange-700">
+                    <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-orange-700 dark:text-orange-400">
                       <input
                         type="radio"
                         name="unappliedIsHalfDayRadio"
@@ -1820,9 +1820,9 @@ const AdminLeaveRequests: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5 pt-2 border-t border-slate-200/60">
+                <div className="grid grid-cols-2 gap-2.5 pt-2 border-t border-slate-200/60 dark:border-slate-700">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">
+                    <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">
                       {unappliedIsHalfDay ? 'Leave Date *' : 'From Date *'}
                     </label>
                     <input
@@ -1833,19 +1833,19 @@ const AdminLeaveRequests: React.FC = () => {
                         setUnappliedFromDate(e.target.value);
                         if (unappliedIsHalfDay) setUnappliedToDate(e.target.value);
                       }}
-                      className="w-full px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                      className="w-full px-3 py-1.5 text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 text-slate-800 dark:text-slate-100"
                     />
                   </div>
 
                   {unappliedIsHalfDay ? (
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">
+                      <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">
                         Shift Half *
                       </label>
                       <select
                         value={unappliedHalfDaySession}
                         onChange={(e) => setUnappliedHalfDaySession(e.target.value as 'FIRST_HALF' | 'SECOND_HALF')}
-                        className="w-full px-3 py-1.5 text-xs font-bold bg-white border border-orange-200 text-orange-800 rounded-xl focus:outline-none"
+                        className="w-full px-3 py-1.5 text-xs font-bold bg-white dark:bg-slate-900 border border-orange-200 dark:border-orange-800 text-orange-800 dark:text-orange-300 rounded-xl focus:outline-none"
                       >
                         <option value="FIRST_HALF">1st Half (Morning)</option>
                         <option value="SECOND_HALF">2nd Half (Afternoon)</option>
@@ -1853,7 +1853,7 @@ const AdminLeaveRequests: React.FC = () => {
                     </div>
                   ) : (
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">
+                      <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">
                         To Date *
                       </label>
                       <input
@@ -1861,7 +1861,7 @@ const AdminLeaveRequests: React.FC = () => {
                         required
                         value={unappliedToDate}
                         onChange={(e) => setUnappliedToDate(e.target.value)}
-                        className="w-full px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                        className="w-full px-3 py-1.5 text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 text-slate-800 dark:text-slate-100"
                       />
                     </div>
                   )}
@@ -1870,7 +1870,7 @@ const AdminLeaveRequests: React.FC = () => {
 
               {/* Row 3: Quick Presets & Reason */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
                   Reason / Absence Note *
                 </label>
                 <div className="grid grid-cols-2 gap-1.5 mb-1.5">
@@ -1884,10 +1884,10 @@ const AdminLeaveRequests: React.FC = () => {
                       type="button"
                       key={preset}
                       onClick={() => setUnappliedReason(preset)}
-                      className={`text-left px-2.5 py-1 text-[10.5px] rounded-lg border transition-all truncate ${
+                      className={`text-left px-2.5 py-1 text-[10.5px] rounded-lg border transition-all truncate cursor-pointer ${
                         unappliedReason === preset
-                          ? 'bg-orange-50 border-orange-300 text-orange-900 font-bold'
-                          : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 font-medium'
+                          ? 'bg-orange-50 dark:bg-orange-950/60 border-orange-300 dark:border-orange-700 text-orange-900 dark:text-orange-200 font-bold'
+                          : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium'
                       }`}
                     >
                       {preset}
@@ -1900,13 +1900,13 @@ const AdminLeaveRequests: React.FC = () => {
                   value={unappliedReason}
                   onChange={(e) => setUnappliedReason(e.target.value)}
                   placeholder="Describe reason for unapplied leave..."
-                  className="w-full px-3 py-1.5 text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 resize-none"
+                  className="w-full px-3 py-1.5 text-xs font-medium bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 text-slate-800 dark:text-slate-100 resize-none"
                 />
               </div>
 
               {/* Row 4: Admin Internal Note */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
                   Admin Internal Note / Action
                 </label>
                 <input
@@ -1914,24 +1914,24 @@ const AdminLeaveRequests: React.FC = () => {
                   value={unappliedAdminRemarks}
                   onChange={(e) => setUnappliedAdminRemarks(e.target.value)}
                   placeholder="e.g. Noted by HR on morning check-in / Adjusted against CL"
-                  className="w-full px-3 py-1.5 text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                  className="w-full px-3 py-1.5 text-xs font-medium bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 text-slate-800 dark:text-slate-100"
                 />
               </div>
 
               {/* Info Notice */}
-              <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-[10.5px] text-amber-800 flex items-start gap-2">
-                <Info className="h-3.5 w-3.5 shrink-0 text-amber-600 mt-0.5" />
+              <div className="p-2.5 bg-amber-50 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-800 text-[10.5px] text-amber-800 dark:text-amber-300 flex items-start gap-2">
+                <Info className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
                 <span>
                   Records leave as <strong>Approved (Admin Noted)</strong> and updates attendance status to <strong>LEAVE</strong>.
                 </span>
               </div>
 
               {/* Actions Footer */}
-              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setShowUnappliedModal(false)}
-                  className="px-3.5 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl"
+                  className="px-3.5 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1952,30 +1952,30 @@ const AdminLeaveRequests: React.FC = () => {
       {/* ── APPROVE / REJECT MODAL ── */}
       {actionModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-md rounded-3xl bg-white p-7 shadow-2xl border border-slate-100 animate-scale-up">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+          <div className="relative w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 p-7 shadow-2xl border border-slate-100 dark:border-slate-800 animate-scale-up">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
               <div className="flex items-center gap-3">
                 <div
                   className={`h-10 w-10 rounded-2xl flex items-center justify-center font-bold ${
                     actionModal.action === 'APPROVED'
-                      ? 'bg-emerald-50 text-emerald-600'
-                      : 'bg-rose-50 text-rose-600'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400'
+                      : 'bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400'
                   }`}
                 >
                   {actionModal.action === 'APPROVED' ? <Check className="h-5 w-5" /> : <X className="h-5 w-5" />}
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
                     {actionModal.action === 'APPROVED' ? 'Approve Request' : 'Reject Request'}
                   </h3>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
                     {actionModal.request.requestType} • {actionModal.request.employee.name}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setActionModal(null)}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl"
+                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -1983,33 +1983,33 @@ const AdminLeaveRequests: React.FC = () => {
 
             <form onSubmit={handleActionSubmit} className="mt-5 space-y-4">
               {/* Request Summary */}
-              <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 text-xs space-y-1.5">
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700 text-xs space-y-1.5">
                 <div className="flex justify-between">
-                  <span className="text-slate-500 font-medium">Type:</span>
-                  <span className="font-bold text-slate-800">{actionModal.request.title}</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Type:</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{actionModal.request.title}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500 font-medium">Schedule:</span>
-                  <span className="font-bold text-slate-800">{actionModal.request.dateRange}</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Schedule:</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{actionModal.request.dateRange}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500 font-medium">Duration:</span>
-                  <span className="font-bold text-slate-800">{actionModal.request.duration}</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Duration:</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{actionModal.request.duration}</span>
                 </div>
-                <div className="pt-1 text-slate-600">
-                  <span className="font-bold block text-slate-700">Reason:</span>
+                <div className="pt-1 text-slate-600 dark:text-slate-300">
+                  <span className="font-bold block text-slate-700 dark:text-slate-300">Reason:</span>
                   <span>{actionModal.request.reason}</span>
                 </div>
                 {actionModal.request.handoverEmployee && (
-                  <div className="pt-1.5 border-t border-slate-200/80">
-                    <span className="font-bold block text-teal-800 text-[11px]">
+                  <div className="pt-1.5 border-t border-slate-200/80 dark:border-slate-700">
+                    <span className="font-bold block text-teal-800 dark:text-teal-300 text-[11px]">
                       Delegated Work Coverage (Handover):
                     </span>
-                    <span className="font-semibold text-slate-800">
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">
                       {actionModal.request.handoverEmployee.name} ({actionModal.request.handoverEmployee.employeeCode})
                     </span>
                     {actionModal.request.handoverNotes && (
-                      <p className="text-[10.5px] text-slate-500 italic mt-0.5">
+                      <p className="text-[10.5px] text-slate-500 dark:text-slate-400 italic mt-0.5">
                         "{actionModal.request.handoverNotes}"
                       </p>
                     )}
@@ -2019,7 +2019,7 @@ const AdminLeaveRequests: React.FC = () => {
 
               {/* Admin Remarks */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                   Admin Remarks / Feedback (Optional)
                 </label>
                 <textarea
@@ -2027,23 +2027,23 @@ const AdminLeaveRequests: React.FC = () => {
                   value={adminRemarks}
                   onChange={(e) => setAdminRemarks(e.target.value)}
                   placeholder="e.g., Approved as per discussion, or Reschedule to next week..."
-                  className="w-full px-4 py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none"
+                  className="w-full px-4 py-2 text-xs font-medium bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800 dark:text-slate-100 resize-none"
                 />
               </div>
 
               {/* Submit Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setActionModal(null)}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl"
+                  className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className={`px-5 py-2.5 rounded-xl font-bold text-xs text-white shadow-md transition-all flex items-center gap-1.5 ${
+                  className={`px-5 py-2.5 rounded-xl font-bold text-xs text-white shadow-md transition-all flex items-center gap-1.5 cursor-pointer ${
                     actionModal.action === 'APPROVED'
                       ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/20'
                       : 'bg-rose-600 hover:bg-rose-500 shadow-rose-600/20'
@@ -2061,22 +2061,22 @@ const AdminLeaveRequests: React.FC = () => {
       {/* ── EDIT QUOTA MODAL ── */}
       {editQuotaModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-md rounded-3xl bg-white p-7 shadow-2xl border border-slate-100 animate-scale-up">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+          <div className="relative w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 p-7 shadow-2xl border border-slate-100 dark:border-slate-800 animate-scale-up">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                <div className="h-10 w-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
                   <Sliders className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">Edit Leave Quota</h3>
-                  <p className="text-xs text-slate-400">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Edit Leave Quota</h3>
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
                     {editQuotaModal.employeeName} ({editQuotaModal.employeeCode}) • {editQuotaModal.year}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setEditQuotaModal(null)}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl"
+                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -2085,7 +2085,7 @@ const AdminLeaveRequests: React.FC = () => {
             <form onSubmit={handleSaveQuota} className="mt-5 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Casual Leave (CL)</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Casual Leave (CL)</label>
                   <input
                     type="number"
                     step="any"
@@ -2095,12 +2095,12 @@ const AdminLeaveRequests: React.FC = () => {
                     onChange={(e) =>
                       setQuotaForm({ ...quotaForm, casualLeaveGranted: e.target.value === '' ? ('' as any) : Number(e.target.value) })
                     }
-                    className="w-full px-3 py-2 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:border-indigo-500 text-slate-800 dark:text-slate-100"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Sick Leave (SL)</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Sick Leave (SL)</label>
                   <input
                     type="number"
                     step="any"
@@ -2110,12 +2110,12 @@ const AdminLeaveRequests: React.FC = () => {
                     onChange={(e) =>
                       setQuotaForm({ ...quotaForm, sickLeaveGranted: e.target.value === '' ? ('' as any) : Number(e.target.value) })
                     }
-                    className="w-full px-3 py-2 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:border-indigo-500 text-slate-800 dark:text-slate-100"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Comp Off</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Comp Off</label>
                   <input
                     type="number"
                     step="any"
@@ -2125,12 +2125,12 @@ const AdminLeaveRequests: React.FC = () => {
                     onChange={(e) =>
                       setQuotaForm({ ...quotaForm, compOffGranted: e.target.value === '' ? ('' as any) : Number(e.target.value) })
                     }
-                    className="w-full px-3 py-2 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:border-indigo-500 text-slate-800 dark:text-slate-100"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Work From Home</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Work From Home</label>
                   <input
                     type="number"
                     step="any"
@@ -2140,23 +2140,23 @@ const AdminLeaveRequests: React.FC = () => {
                     onChange={(e) =>
                       setQuotaForm({ ...quotaForm, workFromHomeGranted: e.target.value === '' ? ('' as any) : Number(e.target.value) })
                     }
-                    className="w-full px-3 py-2 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:border-indigo-500 text-slate-800 dark:text-slate-100"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setEditQuotaModal(null)}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl"
+                  className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={quotaSaving}
-                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md"
+                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md cursor-pointer"
                 >
                   {quotaSaving ? 'Saving...' : 'Save Quotas'}
                 </button>

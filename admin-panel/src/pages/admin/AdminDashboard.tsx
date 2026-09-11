@@ -133,13 +133,20 @@ const AdminDashboard: React.FC = () => {
       if (p > peakPresent) peakPresent = p;
     });
 
-    const totalSlots = totalPresent + totalAbsent;
-    const avgRate = totalSlots > 0 ? Math.round((totalPresent / totalSlots) * 100) : 0;
+    const totalAttendance = totalPresent + totalAbsent;
+    const avg = totalAttendance > 0 ? Math.round((totalPresent / totalAttendance) * 100) : 0;
 
-    return { totalPresent, totalAbsent, totalLogins, totalLogouts, avgRate, peakPresent };
+    return {
+      totalPresent,
+      totalAbsent,
+      avgRate: avg,
+      peakPresent,
+      totalLogins,
+      totalLogouts,
+    };
   }, [chartData]);
 
-  // Custom Glassmorphic Tooltip for Attendance Analysis
+  // Custom Glassmorphic Tooltip for Attendance
   const CustomAttendanceTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const presentItem = payload.find((p: any) => p.dataKey === 'present')?.value || 0;
@@ -148,10 +155,10 @@ const AdminDashboard: React.FC = () => {
       const rate = total > 0 ? Math.round((presentItem / total) * 100) : 0;
 
       return (
-        <div className="bg-white/95 backdrop-blur-md p-3.5 rounded-2xl shadow-xl border border-slate-200/90 min-w-[200px] text-xs">
-          <p className="font-extrabold text-slate-800 border-b border-slate-100 pb-2 mb-2 flex items-center justify-between">
+        <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-md p-3.5 rounded-2xl shadow-xl border border-slate-200/90 dark:border-slate-700 min-w-[200px] text-xs">
+          <p className="font-extrabold text-slate-800 dark:text-white border-b border-slate-100 dark:border-slate-700 pb-2 mb-2 flex items-center justify-between">
             <span>{formatTooltipDate(label)}</span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">
               {rate}% Rate
             </span>
           </p>
@@ -159,18 +166,18 @@ const AdminDashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-xs" />
-                <span className="font-semibold text-slate-600">Present</span>
+                <span className="font-semibold text-slate-600 dark:text-slate-300">Present</span>
               </div>
-              <span className="font-extrabold text-slate-900 bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-lg">
+              <span className="font-extrabold text-slate-900 dark:text-white bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-lg">
                 {presentItem}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-rose-500 shadow-xs" />
-                <span className="font-semibold text-slate-600">Absent</span>
+                <span className="font-semibold text-slate-600 dark:text-slate-300">Absent</span>
               </div>
-              <span className="font-extrabold text-slate-900 bg-rose-50 text-rose-700 px-2 py-0.5 rounded-lg">
+              <span className="font-extrabold text-slate-900 dark:text-white bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded-lg">
                 {absentItem}
               </span>
             </div>
@@ -188,10 +195,10 @@ const AdminDashboard: React.FC = () => {
       const logouts = payload.find((p: any) => p.dataKey === 'logout')?.value || 0;
 
       return (
-        <div className="bg-white/95 backdrop-blur-md p-3.5 rounded-2xl shadow-xl border border-slate-200/90 min-w-[200px] text-xs">
-          <p className="font-extrabold text-slate-800 border-b border-slate-100 pb-2 mb-2 flex items-center justify-between">
+        <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-md p-3.5 rounded-2xl shadow-xl border border-slate-200/90 dark:border-slate-700 min-w-[200px] text-xs">
+          <p className="font-extrabold text-slate-800 dark:text-white border-b border-slate-100 dark:border-slate-700 pb-2 mb-2 flex items-center justify-between">
             <span>{formatTooltipDate(label)}</span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">
               {logins + logouts} Punches
             </span>
           </p>
@@ -199,18 +206,18 @@ const AdminDashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-indigo-600 shadow-xs" />
-                <span className="font-semibold text-slate-600">Check-ins</span>
+                <span className="font-semibold text-slate-600 dark:text-slate-300">Check-ins</span>
               </div>
-              <span className="font-extrabold text-slate-900 bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-lg">
+              <span className="font-extrabold text-slate-900 dark:text-white bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-lg">
                 {logins}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-violet-500 shadow-xs" />
-                <span className="font-semibold text-slate-600">Check-outs</span>
+                <span className="font-semibold text-slate-600 dark:text-slate-300">Check-outs</span>
               </div>
-              <span className="font-extrabold text-slate-900 bg-violet-50 text-violet-700 px-2 py-0.5 rounded-lg">
+              <span className="font-extrabold text-slate-900 dark:text-white bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 px-2 py-0.5 rounded-lg">
                 {logouts}
               </span>
             </div>
@@ -260,10 +267,11 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleSelectLast7Days = () => {
+    const today = getTodayISO();
     const d = new Date();
     d.setDate(d.getDate() - 6);
     setStartDate(formatLocalDateISO(d));
-    setEndDate(getTodayISO());
+    setEndDate(today);
   };
 
   const handleSelectThisMonth = () => {
@@ -274,27 +282,30 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleSelectLast30Days = () => {
+    const today = getTodayISO();
     const d = new Date();
     d.setDate(d.getDate() - 29);
     setStartDate(formatLocalDateISO(d));
-    setEndDate(getTodayISO());
+    setEndDate(today);
   };
 
-  const fetchDashboardData = async (start: string, end: string, isManualRefresh: boolean = false) => {
+  // Fetch Dashboard Stats and Trends for Selected Date Range
+  const fetchDashboardData = async (start: string, end: string, isManualRefresh = false) => {
     try {
       if (isManualRefresh) setRefreshing(true);
       else setLoading(true);
-
-      const [statsRes, chartsRes] = await Promise.all([
-        adminService.getStats(start, end),
-        adminService.getSummaryCharts(start, end),
-      ]);
-      setStats(statsRes);
-      setChartData(chartsRes);
       setError(null);
-    } catch (err) {
-      console.error('Failed to load dashboard metrics for range:', start, end, err);
-      setError('Failed to load dashboard metrics for selected date range.');
+
+      const [statsRes, trendsRes] = await Promise.all([
+        adminService.getDashboardStatsRange(start, end),
+        adminService.getAttendanceTrends(start, end),
+      ]);
+
+      setStats(statsRes);
+      setChartData(trendsRes);
+    } catch (err: any) {
+      console.error('Failed to load dashboard data:', err);
+      setError(err?.response?.data?.message || 'Failed to load dashboard data. Please try again.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -305,60 +316,63 @@ const AdminDashboard: React.FC = () => {
     fetchDashboardData(startDate, endDate);
   }, [startDate, endDate]);
 
-  if (loading && !stats) return <Loading message="Loading dashboard insights..." />;
+  const rangeLabel = useMemo(() => {
+    if (isSingleDay) {
+      return formatFullDate(startDate);
+    }
+    return `${formatShortDate(startDate)} – ${formatShortDate(endDate)}`;
+  }, [startDate, endDate, isSingleDay]);
 
-  const rangeLabel = isSingleDay
-    ? formatShortDate(startDate)
-    : `${formatShortDate(startDate)} – ${formatShortDate(endDate)}`;
+  const headerDateDescription = useMemo(() => {
+    if (isToday) return `Today, ${formatFullDate(startDate)}`;
+    if (isSingleDay) return formatFullDate(startDate);
+    return `${formatFullDate(startDate)} to ${formatFullDate(endDate)}`;
+  }, [startDate, endDate, isToday, isSingleDay]);
 
-  const headerDateDescription = isSingleDay
-    ? isToday
-      ? `Today (${formatFullDate(startDate)})`
-      : formatFullDate(startDate)
-    : `${formatFullDate(startDate)} to ${formatFullDate(endDate)}`;
+  if (loading && !refreshing && !stats) return <Loading message="Loading dashboard insights..." />;
 
   const kpis = [
     {
       title: 'Total Employees',
       value: stats?.totalEmployees ?? 0,
       icon: Users,
-      color: 'bg-blue-500/10 text-blue-600',
+      color: 'bg-primary-500/10 text-primary-600 dark:text-primary-400',
       link: '/employees',
     },
     {
       title: isToday ? 'Present Today' : `Present (${rangeLabel})`,
       value: stats?.presentToday ?? 0,
       icon: UserCheck,
-      color: 'bg-emerald-500/10 text-emerald-600',
+      color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
       link: '/attendance',
     },
     {
-      title: isToday ? 'Late Today' : `Late (${rangeLabel})`,
+      title: 'Late Logins',
       value: stats?.lateToday ?? 0,
       icon: AlertTriangle,
-      color: 'bg-amber-500/15 text-amber-700 border border-amber-300',
-      badge: (stats?.lateToday ?? 0) > 0 ? 'Warning' : undefined,
+      color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+      badge: (stats?.lateToday ?? 0) > 0,
       link: '/attendance',
     },
     {
-      title: isToday ? 'Currently Working' : `Logged In (${rangeLabel})`,
-      value: stats?.currentlyWorking ?? 0,
+      title: 'Work From Home',
+      value: stats?.wfhToday ?? 0,
       icon: Briefcase,
-      color: 'bg-violet-500/10 text-violet-600',
+      color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
       link: '/attendance',
     },
     {
       title: isToday ? 'On Leave Today' : `On Leave (${rangeLabel})`,
       value: stats?.onLeaveToday ?? 0,
       icon: Calendar,
-      color: 'bg-rose-500/10 text-rose-600',
+      color: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
       link: '/requests/leaves',
     },
     {
       title: 'Permission Requests',
       value: stats?.pendingPermissionRequests ?? 0,
       icon: Clock,
-      color: 'bg-indigo-500/10 text-indigo-600',
+      color: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
       subtitle: `${stats?.pendingPermissionRequests ?? 0} Pending`,
       link: '/requests/permissions',
     },
@@ -366,7 +380,7 @@ const AdminDashboard: React.FC = () => {
       title: 'Leave Requests',
       value: stats?.pendingLeaveRequests ?? 0,
       icon: FileCheck,
-      color: 'bg-sky-500/10 text-sky-600',
+      color: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
       subtitle: `${stats?.pendingLeaveRequests ?? 0} Pending`,
       link: '/requests/leaves',
     },
@@ -374,48 +388,48 @@ const AdminDashboard: React.FC = () => {
       title: isToday ? 'Absent Today' : `Absent (${rangeLabel})`,
       value: stats?.absent ?? 0,
       icon: UserX,
-      color: 'bg-slate-500/10 text-slate-600',
+      color: 'bg-slate-500/10 text-slate-600 dark:text-slate-400',
       link: '/attendance',
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12 text-slate-800 dark:text-slate-200">
       {/* ── Header & Customized Date Range Filter Toolbar ── */}
-      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 bg-white p-5 rounded-3xl border border-slate-200/90 shadow-xs">
+      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xs">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black tracking-tight text-slate-900 md:text-3xl">
+            <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white md:text-3xl">
               Admin Dashboard
             </h1>
             {isToday ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-extrabold text-emerald-700 border border-emerald-200">
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Live (Today)
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-0.5 text-[11px] font-extrabold text-indigo-700 border border-indigo-200">
-                <CalendarDays className="h-3 w-3 text-indigo-600" />
+              <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-0.5 text-[11px] font-extrabold text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/50">
+                <CalendarDays className="h-3 w-3 text-indigo-600 dark:text-indigo-400" />
                 {isSingleDay ? 'Selected Date' : 'Date Range'}
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-500 mt-1 font-medium">
-            Viewing metrics for: <strong className="text-slate-800">{headerDateDescription}</strong>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+            Viewing metrics for: <strong className="text-slate-800 dark:text-slate-200">{headerDateDescription}</strong>
           </p>
         </div>
 
         {/* Customized Date Selection Range Controls */}
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Quick Presets */}
-          <div className="inline-flex flex-wrap bg-slate-100 p-1 rounded-2xl border border-slate-200/80 text-xs">
+          <div className="inline-flex flex-wrap bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl border border-slate-200/80 dark:border-slate-700 text-xs">
             <button
               type="button"
               onClick={handleSelectToday}
               className={`px-2.5 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
                 isToday
-                  ? 'bg-white text-indigo-700 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                  ? 'bg-white dark:bg-indigo-600 text-indigo-700 dark:text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700'
               }`}
             >
               Today
@@ -429,8 +443,8 @@ const AdminDashboard: React.FC = () => {
                   d.setDate(d.getDate() - 1);
                   return formatLocalDateISO(d);
                 })()
-                  ? 'bg-white text-indigo-700 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                  ? 'bg-white dark:bg-indigo-600 text-indigo-700 dark:text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700'
               }`}
             >
               Yesterday
@@ -444,8 +458,8 @@ const AdminDashboard: React.FC = () => {
                   d.setDate(d.getDate() - 6);
                   return formatLocalDateISO(d);
                 })() && endDate === getTodayISO()
-                  ? 'bg-white text-indigo-700 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                  ? 'bg-white dark:bg-indigo-600 text-indigo-700 dark:text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700'
               }`}
             >
               7 Days
@@ -458,8 +472,8 @@ const AdminDashboard: React.FC = () => {
                   const now = new Date();
                   return formatLocalDateISO(new Date(now.getFullYear(), now.getMonth(), 1));
                 })() && endDate === getTodayISO()
-                  ? 'bg-white text-indigo-700 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                  ? 'bg-white dark:bg-indigo-600 text-indigo-700 dark:text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700'
               }`}
             >
               This Month
@@ -473,8 +487,8 @@ const AdminDashboard: React.FC = () => {
                   d.setDate(d.getDate() - 29);
                   return formatLocalDateISO(d);
                 })() && endDate === getTodayISO()
-                  ? 'bg-white text-indigo-700 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                  ? 'bg-white dark:bg-indigo-600 text-indigo-700 dark:text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700'
               }`}
             >
               30 Days
@@ -482,9 +496,9 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Start Date to End Date Range Picker */}
-          <div className="flex items-center gap-1.5 bg-slate-50 p-1.5 rounded-2xl border border-slate-200">
+          <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700">
             <div className="flex items-center gap-1">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">From</span>
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider pl-1">From</span>
               <input
                 type="date"
                 value={startDate}
@@ -493,14 +507,14 @@ const AdminDashboard: React.FC = () => {
                   setStartDate(newStart);
                   if (newStart > endDate) setEndDate(newStart);
                 }}
-                className="px-2 py-1 text-xs font-bold text-slate-800 bg-white border border-slate-200 rounded-xl outline-none focus:border-indigo-600 cursor-pointer shadow-2xs"
+                className="px-2 py-1 text-xs font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:border-indigo-600 cursor-pointer shadow-2xs"
               />
             </div>
 
-            <ArrowRight className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+            <ArrowRight className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
 
             <div className="flex items-center gap-1">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">To</span>
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">To</span>
               <input
                 type="date"
                 value={endDate}
@@ -509,7 +523,7 @@ const AdminDashboard: React.FC = () => {
                   setEndDate(newEnd);
                   if (newEnd < startDate) setStartDate(newEnd);
                 }}
-                className="px-2 py-1 text-xs font-bold text-slate-800 bg-white border border-slate-200 rounded-xl outline-none focus:border-indigo-600 cursor-pointer shadow-2xs"
+                className="px-2 py-1 text-xs font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:border-indigo-600 cursor-pointer shadow-2xs"
               />
             </div>
           </div>
@@ -519,16 +533,16 @@ const AdminDashboard: React.FC = () => {
             type="button"
             onClick={() => fetchDashboardData(startDate, endDate, true)}
             disabled={refreshing}
-            className="p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all cursor-pointer shadow-xs"
+            className="p-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold transition-all cursor-pointer shadow-xs"
             title="Refresh Metrics"
           >
-            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin text-indigo-600' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin text-indigo-600 dark:text-indigo-400' : ''}`} />
           </button>
         </div>
       </div>
 
       {error && (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-800">
+        <div className="rounded-2xl border border-rose-200 dark:border-rose-800/50 bg-rose-50 dark:bg-rose-950/40 p-4 text-sm font-semibold text-rose-800 dark:text-rose-300">
           {error}
         </div>
       )}
@@ -541,24 +555,24 @@ const AdminDashboard: React.FC = () => {
             <Card
               key={idx}
               className={`hover:-translate-y-1 transition-all cursor-pointer ${
-                kpi.badge ? 'border-amber-200 bg-amber-50/20 shadow-sm' : ''
+                kpi.badge ? 'border-amber-200 dark:border-amber-800/40 bg-amber-50/20 dark:bg-amber-950/20 shadow-sm' : ''
               }`}
               onClick={() => kpi.link && navigate(kpi.link)}
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  <p className="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
                     {kpi.title}
                   </p>
-                  <p className="text-3xl font-extrabold text-slate-800 mt-2">{kpi.value}</p>
+                  <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">{kpi.value}</p>
                   {kpi.subtitle && (
-                    <span className="inline-block mt-1.5 text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
+                    <span className="inline-block mt-1.5 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-full">
                       {kpi.subtitle}
                     </span>
                   )}
                 </div>
                 <div className={`h-11 w-11 rounded-2xl flex items-center justify-center ${kpi.color}`}>
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-5 w-5 shrink-0" />
                 </div>
               </div>
             </Card>
@@ -569,38 +583,38 @@ const AdminDashboard: React.FC = () => {
       {/* ── Customized Charts Section ── */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Attendance Analysis Chart Card */}
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-5 sm:p-6 flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xs p-5 sm:p-6 flex flex-col justify-between">
           <div>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-slate-100">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-base font-extrabold text-slate-900">
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
                     Attendance Analysis
                   </h3>
-                  <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-lg">
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg">
                     {rangeLabel}
                   </span>
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
                   Present vs Absent trends across the selected date range
                 </p>
               </div>
 
               {/* Chart Mode & Stat Badges */}
               <div className="flex items-center gap-2 shrink-0">
-                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200/60">
+                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-xl border border-emerald-200/60 dark:border-emerald-800/50">
                   Avg: {chartSummary.avgRate}% Present
                 </span>
 
                 {/* Switch View Buttons */}
-                <div className="inline-flex bg-slate-100 p-0.5 rounded-xl border border-slate-200/70 text-xs">
+                <div className="inline-flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200/70 dark:border-slate-700 text-xs">
                   <button
                     type="button"
                     onClick={() => setAttendanceViewMode('area')}
                     className={`px-2 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
                       attendanceViewMode === 'area'
-                        ? 'bg-white text-indigo-700 shadow-2xs'
-                        : 'text-slate-500 hover:text-slate-900'
+                        ? 'bg-white dark:bg-indigo-600 text-indigo-700 dark:text-white shadow-2xs'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     Area
@@ -610,8 +624,8 @@ const AdminDashboard: React.FC = () => {
                     onClick={() => setAttendanceViewMode('bar')}
                     className={`px-2 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
                       attendanceViewMode === 'bar'
-                        ? 'bg-white text-indigo-700 shadow-2xs'
-                        : 'text-slate-500 hover:text-slate-900'
+                        ? 'bg-white dark:bg-indigo-600 text-indigo-700 dark:text-white shadow-2xs'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     Bar
@@ -621,8 +635,8 @@ const AdminDashboard: React.FC = () => {
                     onClick={() => setAttendanceViewMode('line')}
                     className={`px-2 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
                       attendanceViewMode === 'line'
-                        ? 'bg-white text-indigo-700 shadow-2xs'
-                        : 'text-slate-500 hover:text-slate-900'
+                        ? 'bg-white dark:bg-indigo-600 text-indigo-700 dark:text-white shadow-2xs'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     Line
@@ -636,7 +650,7 @@ const AdminDashboard: React.FC = () => {
               <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={260}>
                 {attendanceViewMode === 'bar' ? (
                   <BarChart data={chartData} margin={{ top: 15, right: 10, left: -20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
                     <XAxis
                       dataKey="date"
                       tickFormatter={formatChartDateTick}
@@ -685,7 +699,7 @@ const AdminDashboard: React.FC = () => {
                         <stop offset="95%" stopColor="#f43f5e" stopOpacity={0.0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
                     <XAxis
                       dataKey="date"
                       tickFormatter={formatChartDateTick}
@@ -736,53 +750,53 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Bottom Metric Badges */}
-          <div className="flex items-center justify-between pt-3 mt-2 border-t border-slate-100 text-xs text-slate-500">
+          <div className="flex items-center justify-between pt-3 mt-2 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                <span className="font-bold text-slate-700">Total Present:</span>
-                <span className="font-extrabold text-emerald-600">{chartSummary.totalPresent}</span>
+                <span className="font-bold text-slate-700 dark:text-slate-300">Total Present:</span>
+                <span className="font-extrabold text-emerald-600 dark:text-emerald-400">{chartSummary.totalPresent}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-rose-500" />
-                <span className="font-bold text-slate-700">Total Absent:</span>
-                <span className="font-extrabold text-rose-600">{chartSummary.totalAbsent}</span>
+                <span className="font-bold text-slate-700 dark:text-slate-300">Total Absent:</span>
+                <span className="font-extrabold text-rose-600 dark:text-rose-400">{chartSummary.totalAbsent}</span>
               </div>
             </div>
-            <span className="text-[11px] font-semibold text-slate-400">
-              Peak: <strong className="text-slate-700">{chartSummary.peakPresent} present</strong>
+            <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
+              Peak: <strong className="text-slate-700 dark:text-slate-300">{chartSummary.peakPresent} present</strong>
             </span>
           </div>
         </div>
 
         {/* Punch Trends Chart Card */}
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-5 sm:p-6 flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xs p-5 sm:p-6 flex flex-col justify-between">
           <div>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-slate-100">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-base font-extrabold text-slate-900">
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
                     Punch Trends
                   </h3>
-                  <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-lg">
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg">
                     {rangeLabel}
                   </span>
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
                   Check-in vs check-out volume across the selected date range
                 </p>
               </div>
 
               {/* Punch View Buttons */}
               <div className="flex items-center gap-2 shrink-0">
-                <div className="inline-flex bg-slate-100 p-0.5 rounded-xl border border-slate-200/70 text-xs">
+                <div className="inline-flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200/70 dark:border-slate-700 text-xs">
                   <button
                     type="button"
                     onClick={() => setPunchViewMode('bar')}
                     className={`px-2 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
                       punchViewMode === 'bar'
-                        ? 'bg-white text-indigo-700 shadow-2xs'
-                        : 'text-slate-500 hover:text-slate-900'
+                        ? 'bg-white dark:bg-indigo-600 text-indigo-700 dark:text-white shadow-2xs'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     Grouped
@@ -792,8 +806,8 @@ const AdminDashboard: React.FC = () => {
                     onClick={() => setPunchViewMode('stacked')}
                     className={`px-2 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
                       punchViewMode === 'stacked'
-                        ? 'bg-white text-indigo-700 shadow-2xs'
-                        : 'text-slate-500 hover:text-slate-900'
+                        ? 'bg-white dark:bg-indigo-600 text-indigo-700 dark:text-white shadow-2xs'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     Stacked
@@ -803,8 +817,8 @@ const AdminDashboard: React.FC = () => {
                     onClick={() => setPunchViewMode('area')}
                     className={`px-2 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
                       punchViewMode === 'area'
-                        ? 'bg-white text-indigo-700 shadow-2xs'
-                        : 'text-slate-500 hover:text-slate-900'
+                        ? 'bg-white dark:bg-indigo-600 text-indigo-700 dark:text-white shadow-2xs'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     Area
@@ -828,7 +842,7 @@ const AdminDashboard: React.FC = () => {
                         <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
                     <XAxis
                       dataKey="date"
                       tickFormatter={formatChartDateTick}
@@ -875,7 +889,7 @@ const AdminDashboard: React.FC = () => {
                   </AreaChart>
                 ) : (
                   <BarChart data={chartData} margin={{ top: 15, right: 10, left: -20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
                     <XAxis
                       dataKey="date"
                       tickFormatter={formatChartDateTick}
@@ -920,21 +934,21 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Bottom Metric Badges */}
-          <div className="flex items-center justify-between pt-3 mt-2 border-t border-slate-100 text-xs text-slate-500">
+          <div className="flex items-center justify-between pt-3 mt-2 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-indigo-600" />
-                <span className="font-bold text-slate-700">Total Check-ins:</span>
-                <span className="font-extrabold text-indigo-600">{chartSummary.totalLogins}</span>
+                <span className="font-bold text-slate-700 dark:text-slate-300">Total Check-ins:</span>
+                <span className="font-extrabold text-indigo-600 dark:text-indigo-400">{chartSummary.totalLogins}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-violet-500" />
-                <span className="font-bold text-slate-700">Total Check-outs:</span>
-                <span className="font-extrabold text-violet-600">{chartSummary.totalLogouts}</span>
+                <span className="font-bold text-slate-700 dark:text-slate-300">Total Check-outs:</span>
+                <span className="font-extrabold text-violet-600 dark:text-violet-400">{chartSummary.totalLogouts}</span>
               </div>
             </div>
-            <span className="text-[11px] font-semibold text-slate-400">
-              Total Volume: <strong className="text-slate-700">{chartSummary.totalLogins + chartSummary.totalLogouts} punches</strong>
+            <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
+              Total Volume: <strong className="text-slate-700 dark:text-slate-300">{chartSummary.totalLogins + chartSummary.totalLogouts} punches</strong>
             </span>
           </div>
         </div>

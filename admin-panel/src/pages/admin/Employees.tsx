@@ -133,7 +133,7 @@ const DeletableDropdown: React.FC<{
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2 text-slate-800 bg-white text-xs font-semibold hover:border-slate-300 focus:border-blue-600 focus:outline-none transition-colors cursor-pointer shadow-2xs"
+        className="w-full flex items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800 text-xs font-semibold hover:border-slate-300 dark:hover:border-slate-600 focus:border-blue-600 focus:outline-none transition-colors cursor-pointer shadow-2xs"
       >
         <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
         <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -141,7 +141,7 @@ const DeletableDropdown: React.FC<{
 
       {/* Dropdown Menu with interactive delete buttons */}
       {isOpen && (
-        <div className="absolute left-0 right-0 top-full mt-1 z-50 rounded-xl bg-white border border-slate-200 shadow-xl overflow-hidden py-1 max-h-56 overflow-y-auto">
+        <div className="absolute left-0 right-0 top-full mt-1 z-50 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden py-1 max-h-56 overflow-y-auto">
           {options.length === 0 ? (
             <div className="px-3 py-2 text-xs text-slate-400 italic">No options available</div>
           ) : (
@@ -155,7 +155,7 @@ const DeletableDropdown: React.FC<{
                     setIsOpen(false);
                   }}
                   className={`group flex items-center justify-between px-3 py-2 text-xs font-medium cursor-pointer transition-colors ${
-                    isSelected ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-700 hover:bg-slate-50'
+                    isSelected ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60'
                   }`}
                 >
                   <span className="truncate pr-2">{opt.label}</span>
@@ -168,7 +168,7 @@ const DeletableDropdown: React.FC<{
                       onDelete(opt.id);
                     }}
                     title={`Delete ${opt.label}`}
-                    className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer shrink-0"
+                    className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all cursor-pointer shrink-0"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -178,14 +178,14 @@ const DeletableDropdown: React.FC<{
           )}
 
           {onAddNew && (
-            <div className="border-t border-slate-100 mt-1 pt-1 px-1">
+            <div className="border-t border-slate-100 dark:border-slate-700 mt-1 pt-1 px-1">
               <button
                 type="button"
                 onClick={() => {
                   setIsOpen(false);
                   onAddNew();
                 }}
-                className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
+                className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-lg transition-colors cursor-pointer"
               >
                 <Plus className="h-3.5 w-3.5" />
                 <span>{addNewLabel || 'Add New'}</span>
@@ -1464,7 +1464,7 @@ const Employees: React.FC = () => {
 
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto animate-in fade-in">
-            <div className="w-full max-w-4xl rounded-3xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-6 max-h-[92vh]">
+            <div className="w-full max-w-4xl rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col my-6 max-h-[92vh]">
               {/* Profile Top Banner / Header */}
               <div className="bg-gradient-to-r from-indigo-700 via-indigo-600 to-blue-600 p-6 text-white relative">
                 <button
@@ -1523,14 +1523,14 @@ const Employees: React.FC = () => {
               </div>
 
               {/* Profile Navigation Tabs */}
-              <div className="flex items-center gap-1 px-6 border-b border-slate-100 bg-slate-50/80 overflow-x-auto text-xs font-bold">
+              <div className="flex items-center gap-1 px-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/80 overflow-x-auto text-xs font-bold">
                 <button
                   type="button"
                   onClick={() => setViewProfileActiveTab('overview')}
                   className={`py-3 px-3.5 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                     viewProfileActiveTab === 'overview'
-                      ? 'border-indigo-600 text-indigo-600 bg-white shadow-2xs'
-                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                      ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400 bg-white dark:bg-slate-900 shadow-2xs'
+                      : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
                 >
                   <Briefcase className="h-4 w-4" />
@@ -1542,8 +1542,8 @@ const Employees: React.FC = () => {
                   onClick={() => setViewProfileActiveTab('personal')}
                   className={`py-3 px-3.5 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                     viewProfileActiveTab === 'personal'
-                      ? 'border-indigo-600 text-indigo-600 bg-white shadow-2xs'
-                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                      ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400 bg-white dark:bg-slate-900 shadow-2xs'
+                      : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
                 >
                   <UserIcon className="h-4 w-4" />
@@ -1555,8 +1555,8 @@ const Employees: React.FC = () => {
                   onClick={() => setViewProfileActiveTab('address')}
                   className={`py-3 px-3.5 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                     viewProfileActiveTab === 'address'
-                      ? 'border-indigo-600 text-indigo-600 bg-white shadow-2xs'
-                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                      ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400 bg-white dark:bg-slate-900 shadow-2xs'
+                      : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
                 >
                   <MapPin className="h-4 w-4" />
@@ -1568,8 +1568,8 @@ const Employees: React.FC = () => {
                   onClick={() => setViewProfileActiveTab('education')}
                   className={`py-3 px-3.5 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                     viewProfileActiveTab === 'education'
-                      ? 'border-indigo-600 text-indigo-600 bg-white shadow-2xs'
-                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                      ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400 bg-white dark:bg-slate-900 shadow-2xs'
+                      : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
                 >
                   <GraduationCap className="h-4 w-4" />
@@ -1581,8 +1581,8 @@ const Employees: React.FC = () => {
                   onClick={() => setViewProfileActiveTab('accounts')}
                   className={`py-3 px-3.5 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                     viewProfileActiveTab === 'accounts'
-                      ? 'border-indigo-600 text-indigo-600 bg-white shadow-2xs'
-                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                      ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400 bg-white dark:bg-slate-900 shadow-2xs'
+                      : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
                 >
                   <CreditCard className="h-4 w-4" />
@@ -1594,8 +1594,8 @@ const Employees: React.FC = () => {
                   onClick={() => setViewProfileActiveTab('family')}
                   className={`py-3 px-3.5 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                     viewProfileActiveTab === 'family'
-                      ? 'border-indigo-600 text-indigo-600 bg-white shadow-2xs'
-                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                      ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400 bg-white dark:bg-slate-900 shadow-2xs'
+                      : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
                 >
                   <UsersIcon className="h-4 w-4" />
@@ -1607,8 +1607,8 @@ const Employees: React.FC = () => {
                   onClick={() => setViewProfileActiveTab('assets')}
                   className={`py-3 px-3.5 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                     viewProfileActiveTab === 'assets'
-                      ? 'border-indigo-600 text-indigo-600 bg-white shadow-2xs'
-                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                      ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400 bg-white dark:bg-slate-900 shadow-2xs'
+                      : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
                 >
                   <Laptop className="h-4 w-4" />
@@ -1621,31 +1621,31 @@ const Employees: React.FC = () => {
                 {/* 1. OVERVIEW & JOB */}
                 {viewProfileActiveTab === 'overview' && (
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-800 space-y-2">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Position & Role</span>
-                      <p className="font-extrabold text-sm text-slate-800">{role}</p>
-                      <p className="text-[11px] text-slate-500">Employment Type: <span className="font-bold text-slate-700">{staffType}</span></p>
+                      <p className="font-extrabold text-sm text-slate-800 dark:text-white">{role}</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">Employment Type: <span className="font-bold text-slate-700 dark:text-slate-200">{staffType}</span></p>
                     </div>
 
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-800 space-y-2">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Assigned Team / Shift</span>
-                      <p className="font-extrabold text-sm text-indigo-700">{dept}</p>
-                      <p className="text-[11px] text-slate-500">Joining Month: <span className="font-bold text-slate-700">{pEmp.joined_month || pEmp.joinedMonth || pData.joinedMonth || '--'}</span></p>
+                      <p className="font-extrabold text-sm text-indigo-700 dark:text-indigo-400">{dept}</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">Joining Month: <span className="font-bold text-slate-700 dark:text-slate-200">{pEmp.joined_month || pEmp.joinedMonth || pData.joinedMonth || '--'}</span></p>
                     </div>
 
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-800 space-y-2">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Account Status</span>
-                      <p className="font-extrabold text-sm text-emerald-700 flex items-center gap-1">
+                      <p className="font-extrabold text-sm text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
                         <CheckCircle className="h-4 w-4" />
                         <span>{viewingProfileEmp.status}</span>
                       </p>
-                      <p className="text-[11px] text-slate-500">Employee ID: <span className="font-mono font-bold text-slate-700">#{viewingProfileEmp.id}</span></p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">Employee ID: <span className="font-mono font-bold text-slate-700 dark:text-slate-200">#{viewingProfileEmp.id}</span></p>
                     </div>
 
-                    <div className="sm:col-span-3 p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 flex flex-wrap items-center justify-between gap-3">
+                    <div className="sm:col-span-3 p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <p className="font-bold text-indigo-900">Attendance & Leave Actions</p>
-                        <p className="text-[11px] text-indigo-700">View complete punch history and logs for this employee.</p>
+                        <p className="font-bold text-indigo-900 dark:text-indigo-200">Attendance & Leave Actions</p>
+                        <p className="text-[11px] text-indigo-700 dark:text-indigo-300">View complete punch history and logs for this employee.</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <Button
@@ -1656,7 +1656,7 @@ const Employees: React.FC = () => {
                             setViewingProfileEmp(null);
                             openHistoryModal(emp);
                           }}
-                          className="bg-white font-bold"
+                          className="bg-white dark:bg-slate-800 font-bold"
                         >
                           <CalendarDays className="h-3.5 w-3.5 mr-1" />
                           <span>View Punch History</span>
@@ -1669,29 +1669,29 @@ const Employees: React.FC = () => {
                 {/* 2. PERSONAL DETAILS */}
                 {viewProfileActiveTab === 'personal' && (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="p-3 bg-slate-50 dark:bg-slate-800/70 rounded-xl border border-slate-100 dark:border-slate-800">
                       <span className="text-[10px] font-bold text-slate-400 uppercase block">Date of Birth</span>
-                      <span className="font-bold text-slate-800">{pData.dob || '--'}</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-100">{pData.dob || '--'}</span>
                     </div>
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="p-3 bg-slate-50 dark:bg-slate-800/70 rounded-xl border border-slate-100 dark:border-slate-800">
                       <span className="text-[10px] font-bold text-slate-400 uppercase block">Blood Group</span>
-                      <span className="font-bold text-slate-800">{pData.bloodGroup || '--'}</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-100">{pData.bloodGroup || '--'}</span>
                     </div>
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="p-3 bg-slate-50 dark:bg-slate-800/70 rounded-xl border border-slate-100 dark:border-slate-800">
                       <span className="text-[10px] font-bold text-slate-400 uppercase block">Father's Name</span>
-                      <span className="font-bold text-slate-800">{pData.fatherName || '--'}</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-100">{pData.fatherName || '--'}</span>
                     </div>
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="p-3 bg-slate-50 dark:bg-slate-800/70 rounded-xl border border-slate-100 dark:border-slate-800">
                       <span className="text-[10px] font-bold text-slate-400 uppercase block">Marital Status</span>
-                      <span className="font-bold text-slate-800">{pData.maritalStatus || '--'}</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-100">{pData.maritalStatus || '--'}</span>
                     </div>
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="p-3 bg-slate-50 dark:bg-slate-800/70 rounded-xl border border-slate-100 dark:border-slate-800">
                       <span className="text-[10px] font-bold text-slate-400 uppercase block">Nationality</span>
-                      <span className="font-bold text-slate-800">{pData.nationality || 'Indian'}</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-100">{pData.nationality || 'Indian'}</span>
                     </div>
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="p-3 bg-slate-50 dark:bg-slate-800/70 rounded-xl border border-slate-100 dark:border-slate-800">
                       <span className="text-[10px] font-bold text-slate-400 uppercase block">Religion</span>
-                      <span className="font-bold text-slate-800">{pData.religion || '--'}</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-100">{pData.religion || '--'}</span>
                     </div>
                   </div>
                 )}
@@ -1699,44 +1699,44 @@ const Employees: React.FC = () => {
                 {/* 3. ADDRESS */}
                 {viewProfileActiveTab === 'address' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800/70 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-1">
                       <span className="text-[10px] font-bold text-slate-400 uppercase block flex items-center gap-1">
-                        <MapPin className="h-3.5 w-3.5 text-indigo-600" /> Present Address
+                        <MapPin className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" /> Present Address
                       </span>
-                      <p className="font-semibold text-slate-700 leading-relaxed whitespace-pre-wrap">{pData.presentAddress || 'No present address recorded.'}</p>
+                      <p className="font-semibold text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{pData.presentAddress || 'No present address recorded.'}</p>
                     </div>
 
-                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800/70 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-1">
                       <span className="text-[10px] font-bold text-slate-400 uppercase block flex items-center gap-1">
                         <MapPin className="h-3.5 w-3.5 text-slate-400" /> Permanent Address
                       </span>
-                      <p className="font-semibold text-slate-700 leading-relaxed whitespace-pre-wrap">{pData.permanentAddress || 'No permanent address recorded.'}</p>
+                      <p className="font-semibold text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{pData.permanentAddress || 'No permanent address recorded.'}</p>
                     </div>
                   </div>
                 )}
 
                 {/* 4. EDUCATION */}
                 {viewProfileActiveTab === 'education' && (
-                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
+                  <div className="p-4 bg-slate-50 dark:bg-slate-800/70 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-3">
                     <span className="text-[10px] font-bold text-slate-400 uppercase block flex items-center gap-1">
-                      <GraduationCap className="h-3.5 w-3.5 text-indigo-600" /> Highest Qualification
+                      <GraduationCap className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" /> Highest Qualification
                     </span>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div>
                         <span className="text-[10px] text-slate-400 font-bold block">Degree / Course</span>
-                        <span className="font-bold text-slate-800">{pData.educationDegree || '--'}</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-100">{pData.educationDegree || '--'}</span>
                       </div>
                       <div>
                         <span className="text-[10px] text-slate-400 font-bold block">Institution / University</span>
-                        <span className="font-bold text-slate-800">{pData.educationInstitution || '--'}</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-100">{pData.educationInstitution || '--'}</span>
                       </div>
                       <div>
                         <span className="text-[10px] text-slate-400 font-bold block">Year of Passing</span>
-                        <span className="font-bold text-slate-800">{pData.educationYear || '--'}</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-100">{pData.educationYear || '--'}</span>
                       </div>
                       <div>
                         <span className="text-[10px] text-slate-400 font-bold block">Percentage / CGPA</span>
-                        <span className="font-bold text-slate-800">{pData.educationGrade || '--'}</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-100">{pData.educationGrade || '--'}</span>
                       </div>
                     </div>
                   </div>
@@ -1745,50 +1745,50 @@ const Employees: React.FC = () => {
                 {/* 5. BANKING & STATUTORY */}
                 {viewProfileActiveTab === 'accounts' && (
                   <div className="space-y-4">
-                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800/70 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2">
                       <span className="text-[10px] font-bold text-slate-400 uppercase block flex items-center gap-1">
-                        <Landmark className="h-3.5 w-3.5 text-emerald-600" /> Bank Account Details
+                        <Landmark className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" /> Bank Account Details
                       </span>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <div>
                           <span className="text-[10px] text-slate-400 font-bold block">Bank Name</span>
-                          <span className="font-bold text-slate-800">{pData.bankName || '--'}</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-100">{pData.bankName || '--'}</span>
                         </div>
                         <div>
                           <span className="text-[10px] text-slate-400 font-bold block">Account Number</span>
-                          <span className="font-mono font-bold text-slate-800">{pData.bankAccountNumber || '--'}</span>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-100">{pData.bankAccountNumber || '--'}</span>
                         </div>
                         <div>
                           <span className="text-[10px] text-slate-400 font-bold block">IFSC Code</span>
-                          <span className="font-mono font-bold text-slate-800">{pData.bankIfscCode || '--'}</span>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-100">{pData.bankIfscCode || '--'}</span>
                         </div>
                         <div>
                           <span className="text-[10px] text-slate-400 font-bold block">Branch</span>
-                          <span className="font-bold text-slate-800">{pData.bankBranch || '--'}</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-100">{pData.bankBranch || '--'}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800/70 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2">
                       <span className="text-[10px] font-bold text-slate-400 uppercase block flex items-center gap-1">
-                        <CreditCard className="h-3.5 w-3.5 text-blue-600" /> Statutory & Identification Numbers
+                        <CreditCard className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" /> Statutory & Identification Numbers
                       </span>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <div>
                           <span className="text-[10px] text-slate-400 font-bold block">PAN Card</span>
-                          <span className="font-mono font-bold text-slate-800">{pData.panNumber || '--'}</span>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-100">{pData.panNumber || '--'}</span>
                         </div>
                         <div>
                           <span className="text-[10px] text-slate-400 font-bold block">Aadhaar Card</span>
-                          <span className="font-mono font-bold text-slate-800">{pData.aadhaarNumber || '--'}</span>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-100">{pData.aadhaarNumber || '--'}</span>
                         </div>
                         <div>
                           <span className="text-[10px] text-slate-400 font-bold block">UAN Number</span>
-                          <span className="font-mono font-bold text-slate-800">{pData.uanNumber || '--'}</span>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-100">{pData.uanNumber || '--'}</span>
                         </div>
                         <div>
                           <span className="text-[10px] text-slate-400 font-bold block">PF Number</span>
-                          <span className="font-mono font-bold text-slate-800">{pData.pfNumber || '--'}</span>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-100">{pData.pfNumber || '--'}</span>
                         </div>
                       </div>
                     </div>
@@ -1798,23 +1798,23 @@ const Employees: React.FC = () => {
                 {/* 6. FAMILY & EMERGENCY */}
                 {viewProfileActiveTab === 'family' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800/70 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2">
                       <span className="text-[10px] font-bold text-slate-400 uppercase block">Family Info</span>
                       <div className="space-y-1.5">
-                        <div className="flex justify-between"><span className="text-slate-400 font-medium">Father's Name:</span> <span className="font-bold text-slate-800">{pData.fatherName || '--'}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-400 font-medium">Spouse Name:</span> <span className="font-bold text-slate-800">{pData.spouse || '--'}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-400 font-medium">Marriage Date:</span> <span className="font-bold text-slate-800">{pData.marriageDate || '--'}</span></div>
+                        <div className="flex justify-between"><span className="text-slate-400 font-medium">Father's Name:</span> <span className="font-bold text-slate-800 dark:text-slate-100">{pData.fatherName || '--'}</span></div>
+                        <div className="flex justify-between"><span className="text-slate-400 font-medium">Spouse Name:</span> <span className="font-bold text-slate-800 dark:text-slate-100">{pData.spouse || '--'}</span></div>
+                        <div className="flex justify-between"><span className="text-slate-400 font-medium">Marriage Date:</span> <span className="font-bold text-slate-800 dark:text-slate-100">{pData.marriageDate || '--'}</span></div>
                       </div>
                     </div>
 
-                    <div className="p-4 bg-rose-50/50 rounded-2xl border border-rose-100 space-y-2">
-                      <span className="text-[10px] font-bold text-rose-600 uppercase block flex items-center gap-1">
+                    <div className="p-4 bg-rose-50/50 dark:bg-rose-950/30 rounded-2xl border border-rose-100 dark:border-rose-900/40 space-y-2">
+                      <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase block flex items-center gap-1">
                         <ShieldAlert className="h-3.5 w-3.5" /> Emergency Contact
                       </span>
                       <div className="space-y-1.5">
-                        <div className="flex justify-between"><span className="text-slate-500 font-medium">Contact Person:</span> <span className="font-bold text-slate-800">{pData.emergencyContactName || '--'}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-500 font-medium">Relationship:</span> <span className="font-bold text-slate-800">{pData.emergencyContactRelation || '--'}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-500 font-medium">Phone Number:</span> <span className="font-bold text-slate-800">{pData.emergencyContactPhone || '--'}</span></div>
+                        <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-medium">Contact Person:</span> <span className="font-bold text-slate-800 dark:text-slate-100">{pData.emergencyContactName || '--'}</span></div>
+                        <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-medium">Relationship:</span> <span className="font-bold text-slate-800 dark:text-slate-100">{pData.emergencyContactRelation || '--'}</span></div>
+                        <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-medium">Phone Number:</span> <span className="font-bold text-slate-800 dark:text-slate-100">{pData.emergencyContactPhone || '--'}</span></div>
                       </div>
                     </div>
                   </div>
@@ -1824,27 +1824,27 @@ const Employees: React.FC = () => {
                 {viewProfileActiveTab === 'assets' && (
                   <div>
                     {(!pData.allocatedAssets || pData.allocatedAssets.length === 0) ? (
-                      <div className="p-8 text-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50">
-                        <Package className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                        <p className="font-bold text-slate-600">No equipment currently allocated</p>
+                      <div className="p-8 text-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40">
+                        <Package className="h-8 w-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                        <p className="font-bold text-slate-600 dark:text-slate-300">No equipment currently allocated</p>
                         <p className="text-[11px] text-slate-400 mt-0.5">Edit full profile info or use Asset Management to assign laptops, mice, etc.</p>
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {pData.allocatedAssets.map((ast: AssetItem, idx: number) => (
-                          <div key={ast.id || idx} className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-1.5">
+                          <div key={ast.id || idx} className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/70 space-y-1.5">
                             <div className="flex items-center justify-between">
-                              <span className="font-extrabold text-slate-800 flex items-center gap-1.5">
-                                <Laptop className="h-3.5 w-3.5 text-indigo-600" />
+                              <span className="font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5">
+                                <Laptop className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
                                 {ast.name}
                               </span>
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                                 {ast.status || 'Assigned'}
                               </span>
                             </div>
-                            <div className="text-[11px] text-slate-500 space-y-0.5">
-                              {ast.model && <div>Model: <span className="font-medium text-slate-700">{ast.model}</span></div>}
-                              {ast.assetTag && <div>Tag / Serial: <span className="font-mono font-medium text-slate-700">{ast.assetTag}</span></div>}
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 space-y-0.5">
+                              {ast.model && <div>Model: <span className="font-medium text-slate-700 dark:text-slate-200">{ast.model}</span></div>}
+                              {ast.assetTag && <div>Tag / Serial: <span className="font-mono font-medium text-slate-700 dark:text-slate-200">{ast.assetTag}</span></div>}
                             </div>
                           </div>
                         ))}
@@ -1855,7 +1855,7 @@ const Employees: React.FC = () => {
               </div>
 
               {/* Modal Footer */}
-              <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/80">
+              <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/80">
                 <span className="text-[11px] text-slate-400 font-medium">
                   GreytHR Profile System • ID #{viewingProfileEmp.id}
                 </span>
@@ -1875,26 +1875,26 @@ const Employees: React.FC = () => {
       {/* ───────────────────────────────────────────────────────────── */}
       {showProfileEditor && editingEmp && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="w-full max-w-5xl rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-6 max-h-[90vh]">
+          <div className="w-full max-w-5xl rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col my-6 max-h-[90vh]">
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/80">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/80">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                <div className="h-10 w-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold">
                   <FileSpreadsheet className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-extrabold text-slate-800">
+                  <h2 className="text-base font-extrabold text-slate-800 dark:text-white">
                     Edit Employee Information — {editingEmp.name}
                   </h2>
-                  <p className="text-xs text-slate-500 font-medium">
-                    Code: <span className="font-bold text-slate-700">{editingEmp.employeeCode}</span> • Email: {editingEmp.email}
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    Code: <span className="font-bold text-slate-700 dark:text-slate-200">{editingEmp.employeeCode}</span> • Email: {editingEmp.email}
                   </p>
                 </div>
               </div>
 
               <button
                 onClick={() => setShowProfileEditor(false)}
-                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1902,7 +1902,7 @@ const Employees: React.FC = () => {
 
             {/* Notification alert */}
             {profileSaveSuccess && (
-              <div className="mx-6 mt-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-semibold text-emerald-800 animate-slide">
+              <div className="mx-6 mt-4 flex items-center gap-2 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 p-3 text-xs font-semibold text-emerald-800 dark:text-emerald-200 animate-slide">
                 <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
                 <span>Employee information updated successfully! Changes are live on the employee portal.</span>
               </div>
@@ -1911,14 +1911,14 @@ const Employees: React.FC = () => {
             {/* Modal Body with Left Tabs and Right Form */}
             <div className="flex-1 grid grid-cols-1 md:grid-cols-12 overflow-hidden">
               {/* Section Tabs */}
-              <div className="md:col-span-3 border-r border-slate-100 bg-slate-50/50 p-3 space-y-1 overflow-y-auto">
+              <div className="md:col-span-3 border-r border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 p-3 space-y-1 overflow-y-auto">
                 <button
                   type="button"
                   onClick={() => setProfileActiveTab('employment')}
                   className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold rounded-xl text-left transition-colors ${
                     profileActiveTab === 'employment'
-                      ? 'bg-white text-blue-600 shadow-xs border border-slate-200/80'
-                      : 'text-slate-600 hover:bg-slate-100'
+                      ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs border border-slate-200/80 dark:border-slate-700 font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/60'
                   }`}
                 >
                   <Briefcase className="h-4 w-4 shrink-0" />
@@ -1930,8 +1930,8 @@ const Employees: React.FC = () => {
                   onClick={() => setProfileActiveTab('personal')}
                   className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold rounded-xl text-left transition-colors ${
                     profileActiveTab === 'personal'
-                      ? 'bg-white text-blue-600 shadow-xs border border-slate-200/80'
-                      : 'text-slate-600 hover:bg-slate-100'
+                      ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs border border-slate-200/80 dark:border-slate-700 font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/60'
                   }`}
                 >
                   <UserIcon className="h-4 w-4 shrink-0" />
@@ -1943,8 +1943,8 @@ const Employees: React.FC = () => {
                   onClick={() => setProfileActiveTab('address')}
                   className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold rounded-xl text-left transition-colors ${
                     profileActiveTab === 'address'
-                      ? 'bg-white text-blue-600 shadow-xs border border-slate-200/80'
-                      : 'text-slate-600 hover:bg-slate-100'
+                      ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs border border-slate-200/80 dark:border-slate-700 font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/60'
                   }`}
                 >
                   <MapPin className="h-4 w-4 shrink-0" />
@@ -1956,8 +1956,8 @@ const Employees: React.FC = () => {
                   onClick={() => setProfileActiveTab('education')}
                   className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold rounded-xl text-left transition-colors ${
                     profileActiveTab === 'education'
-                      ? 'bg-white text-blue-600 shadow-xs border border-slate-200/80'
-                      : 'text-slate-600 hover:bg-slate-100'
+                      ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs border border-slate-200/80 dark:border-slate-700 font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/60'
                   }`}
                 >
                   <GraduationCap className="h-4 w-4 shrink-0" />
@@ -1969,8 +1969,8 @@ const Employees: React.FC = () => {
                   onClick={() => setProfileActiveTab('accounts')}
                   className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold rounded-xl text-left transition-colors ${
                     profileActiveTab === 'accounts'
-                      ? 'bg-white text-blue-600 shadow-xs border border-slate-200/80'
-                      : 'text-slate-600 hover:bg-slate-100'
+                      ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs border border-slate-200/80 dark:border-slate-700 font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/60'
                   }`}
                 >
                   <Landmark className="h-4 w-4 shrink-0" />
@@ -1982,8 +1982,8 @@ const Employees: React.FC = () => {
                   onClick={() => setProfileActiveTab('family')}
                   className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold rounded-xl text-left transition-colors ${
                     profileActiveTab === 'family'
-                      ? 'bg-white text-blue-600 shadow-xs border border-slate-200/80'
-                      : 'text-slate-600 hover:bg-slate-100'
+                      ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs border border-slate-200/80 dark:border-slate-700 font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/60'
                   }`}
                 >
                   <UsersIcon className="h-4 w-4 shrink-0" />
@@ -1995,8 +1995,8 @@ const Employees: React.FC = () => {
                   onClick={() => setProfileActiveTab('assets')}
                   className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold rounded-xl text-left transition-colors ${
                     profileActiveTab === 'assets'
-                      ? 'bg-white text-blue-600 shadow-xs border border-slate-200/80'
-                      : 'text-slate-600 hover:bg-slate-100'
+                      ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs border border-slate-200/80 dark:border-slate-700 font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/60'
                   }`}
                 >
                   <Laptop className="h-4 w-4 shrink-0" />
@@ -2005,99 +2005,99 @@ const Employees: React.FC = () => {
               </div>
 
               {/* Form Input Fields */}
-              <div className="md:col-span-9 p-6 overflow-y-auto max-h-[60vh]">
+              <div className="md:col-span-9 p-6 overflow-y-auto max-h-[60vh] dark:bg-slate-900">
                 <form id="profileForm" onSubmit={handleSaveProfileData} className="space-y-4">
                   {/* 1. EMPLOYMENT & JOB */}
                   {profileActiveTab === 'employment' && (
                     <div className="space-y-4 animate-slide">
-                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                         Current Position & Department
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Designation</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Designation</label>
                           <input
                             type="text"
                             value={profileForm.designation || ''}
                             onChange={(e) => handleProfileFormChange('designation', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. Intern / Software Engineer"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Department</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Department</label>
                           <input
                             type="text"
                             value={profileForm.department || ''}
                             onChange={(e) => handleProfileFormChange('department', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. IT Divisions"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Division</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Division</label>
                           <input
                             type="text"
                             value={profileForm.division || ''}
                             onChange={(e) => handleProfileFormChange('division', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. Coimbatore"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Location</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Location</label>
                           <input
                             type="text"
                             value={profileForm.location || ''}
                             onChange={(e) => handleProfileFormChange('location', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. Coimbatore"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Cost Center</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Cost Center</label>
                           <input
                             type="text"
                             value={profileForm.costCenter || ''}
                             onChange={(e) => handleProfileFormChange('costCenter', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. NA / CC-01"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Grade</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Grade</label>
                           <input
                             type="text"
                             value={profileForm.grade || ''}
                             onChange={(e) => handleProfileFormChange('grade', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. NA / L1 / L2"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Reporting To</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Reporting To</label>
                           <input
                             type="text"
                             value={profileForm.reportingTo || ''}
                             onChange={(e) => handleProfileFormChange('reportingTo', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. Engineering Manager"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Extension</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Extension</label>
                           <input
                             type="text"
                             value={profileForm.extension || ''}
                             onChange={(e) => handleProfileFormChange('extension', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. 104"
                           />
                         </div>
@@ -2108,93 +2108,93 @@ const Employees: React.FC = () => {
                   {/* 2. PERSONAL */}
                   {profileActiveTab === 'personal' && (
                     <div className="space-y-4 animate-slide">
-                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                         Personal Background Details
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Blood Group</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Blood Group</label>
                           <input
                             type="text"
                             value={profileForm.bloodGroup || ''}
                             onChange={(e) => handleProfileFormChange('bloodGroup', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. O +ve"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Date of Birth</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Date of Birth</label>
                           <input
                             type="text"
                             value={profileForm.dob || ''}
                             onChange={(e) => handleProfileFormChange('dob', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. 15 Nov 2003"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Father Name</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Father Name</label>
                           <input
                             type="text"
                             value={profileForm.fatherName || ''}
                             onChange={(e) => handleProfileFormChange('fatherName', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. Vanarajan R"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Nationality</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Nationality</label>
                           <input
                             type="text"
                             value={profileForm.nationality || ''}
                             onChange={(e) => handleProfileFormChange('nationality', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. Indian"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Marital Status</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Marital Status</label>
                           <input
                             type="text"
                             value={profileForm.maritalStatus || ''}
                             onChange={(e) => handleProfileFormChange('maritalStatus', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. Single / Married"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Place of Birth</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Place of Birth</label>
                           <input
                             type="text"
                             value={profileForm.placeOfBirth || ''}
                             onChange={(e) => handleProfileFormChange('placeOfBirth', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. Coimbatore"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Residential Status</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Residential Status</label>
                           <input
                             type="text"
                             value={profileForm.residentialStatus || ''}
                             onChange={(e) => handleProfileFormChange('residentialStatus', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. Resident Indian"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Physically Challenged</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Physically Challenged</label>
                           <select
                             value={profileForm.physicallyChallenged || 'No'}
                             onChange={(e) => handleProfileFormChange('physicallyChallenged', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500 bg-white dark:bg-slate-800"
                           >
                             <option value="No">No</option>
                             <option value="Yes">Yes</option>
@@ -2202,11 +2202,11 @@ const Employees: React.FC = () => {
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">International Employee</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">International Employee</label>
                           <select
                             value={profileForm.internationalEmployee || 'No'}
                             onChange={(e) => handleProfileFormChange('internationalEmployee', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500 bg-white dark:bg-slate-800"
                           >
                             <option value="No">No</option>
                             <option value="Yes">Yes</option>
@@ -2214,34 +2214,34 @@ const Employees: React.FC = () => {
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Height</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Height</label>
                           <input
                             type="text"
                             value={profileForm.height || ''}
                             onChange={(e) => handleProfileFormChange('height', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. 175 cm"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Weight</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Weight</label>
                           <input
                             type="text"
                             value={profileForm.weight || ''}
                             onChange={(e) => handleProfileFormChange('weight', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. 68 kg"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Identification Mark</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Identification Mark</label>
                           <input
                             type="text"
                             value={profileForm.identificationMark || ''}
                             onChange={(e) => handleProfileFormChange('identificationMark', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. Mole on right forearm"
                           />
                         </div>
@@ -2252,28 +2252,28 @@ const Employees: React.FC = () => {
                   {/* 3. ADDRESS */}
                   {profileActiveTab === 'address' && (
                     <div className="space-y-4 animate-slide">
-                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                         Address Coordinates
                       </h3>
                       <div className="space-y-3 text-xs">
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Present Address</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Present Address</label>
                           <textarea
                             rows={3}
                             value={profileForm.presentAddress || ''}
                             onChange={(e) => handleProfileFormChange('presentAddress', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 p-2.5 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2.5 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="Door No, Street, Locality, City, State, PIN"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Permanent Address</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Permanent Address</label>
                           <textarea
                             rows={3}
                             value={profileForm.permanentAddress || ''}
                             onChange={(e) => handleProfileFormChange('permanentAddress', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 p-2.5 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2.5 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="Door No, Street, Locality, City, State, PIN"
                           />
                         </div>
@@ -2284,50 +2284,50 @@ const Employees: React.FC = () => {
                   {/* 4. EDUCATION */}
                   {profileActiveTab === 'education' && (
                     <div className="space-y-4 animate-slide">
-                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                         Education & Qualifications
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Degree / Qualification</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Degree / Qualification</label>
                           <input
                             type="text"
                             value={profileForm.educationDegree || ''}
                             onChange={(e) => handleProfileFormChange('educationDegree', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. B.E. Computer Science and Engineering"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Institution / University</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Institution / University</label>
                           <input
                             type="text"
                             value={profileForm.educationInstitution || ''}
                             onChange={(e) => handleProfileFormChange('educationInstitution', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. Anna University Affiliated Institution"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Year of Graduation</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Year of Graduation</label>
                           <input
                             type="text"
                             value={profileForm.educationYear || ''}
                             onChange={(e) => handleProfileFormChange('educationYear', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. 2024"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Status</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Status</label>
                           <input
                             type="text"
                             value={profileForm.educationStatus || 'Verified'}
                             onChange={(e) => handleProfileFormChange('educationStatus', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. Verified"
                           />
                         </div>
@@ -2338,94 +2338,94 @@ const Employees: React.FC = () => {
                   {/* 5. ACCOUNTS & STATUTORY */}
                   {profileActiveTab === 'accounts' && (
                     <div className="space-y-4 animate-slide">
-                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                         Banking & Statutory Details
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Bank Name</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Bank Name</label>
                           <input
                             type="text"
                             value={profileForm.bankName || ''}
                             onChange={(e) => handleProfileFormChange('bankName', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. State Bank of India"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Account Number</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Account Number</label>
                           <input
                             type="text"
                             value={profileForm.accountNumber || ''}
                             onChange={(e) => handleProfileFormChange('accountNumber', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. 987654321098"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">IFSC Code</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">IFSC Code</label>
                           <input
                             type="text"
                             value={profileForm.ifscCode || ''}
                             onChange={(e) => handleProfileFormChange('ifscCode', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. SBIN0001234"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Branch</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Branch</label>
                           <input
                             type="text"
                             value={profileForm.branch || ''}
                             onChange={(e) => handleProfileFormChange('branch', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. Peelamedu, Coimbatore"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">PAN Number</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">PAN Number</label>
                           <input
                             type="text"
                             value={profileForm.panNumber || ''}
                             onChange={(e) => handleProfileFormChange('panNumber', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. ABCDE1234F"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">PF Number</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">PF Number</label>
                           <input
                             type="text"
                             value={profileForm.pfNumber || ''}
                             onChange={(e) => handleProfileFormChange('pfNumber', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. TN/CBE/1029384/000"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">UAN Number</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">UAN Number</label>
                           <input
                             type="text"
                             value={profileForm.uanNumber || ''}
                             onChange={(e) => handleProfileFormChange('uanNumber', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. 101293847561"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">ESI Number</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">ESI Number</label>
                           <input
                             type="text"
                             value={profileForm.esiNumber || ''}
                             onChange={(e) => handleProfileFormChange('esiNumber', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. N/A"
                           />
                         </div>
@@ -2436,61 +2436,61 @@ const Employees: React.FC = () => {
                   {/* 6. FAMILY */}
                   {profileActiveTab === 'family' && (
                     <div className="space-y-4 animate-slide">
-                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                         Family & Nomination
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Father's Name</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Father's Name</label>
                           <input
                             type="text"
                             value={profileForm.fatherName || ''}
                             onChange={(e) => handleProfileFormChange('fatherName', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. Vanarajan R"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Father's DOB</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Father's DOB</label>
                           <input
                             type="text"
                             value={profileForm.fatherDob || ''}
                             onChange={(e) => handleProfileFormChange('fatherDob', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. 1975-06-12"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Father's Blood Group</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Father's Blood Group</label>
                           <input
                             type="text"
                             value={profileForm.fatherBloodGroup || ''}
                             onChange={(e) => handleProfileFormChange('fatherBloodGroup', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. B +ve"
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-700 block mb-1">Father's Gender</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Father's Gender</label>
                           <input
                             type="text"
                             value={profileForm.fatherGender || 'Male'}
                             onChange={(e) => handleProfileFormChange('fatherGender', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. Male"
                           />
                         </div>
 
                         <div className="sm:col-span-2">
-                          <label className="font-semibold text-slate-700 block mb-1">Nomination Share & Details</label>
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Nomination Share & Details</label>
                           <input
                             type="text"
                             value={profileForm.nominationDetails || ''}
                             onChange={(e) => handleProfileFormChange('nominationDetails', e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                             placeholder="e.g. 100% Share - Primary Nominee"
                           />
                         </div>
@@ -2504,50 +2504,50 @@ const Employees: React.FC = () => {
                       {/* Core Assets */}
                       <div>
                         <div className="flex items-center justify-between mb-3">
-                          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                            <Laptop className="h-4 w-4 text-blue-600" /> Primary Hardware & Security
+                          <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <Laptop className="h-4 w-4 text-blue-600 dark:text-blue-400" /> Primary Hardware & Security
                           </h3>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs bg-slate-50/50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
                           <div>
-                            <label className="font-semibold text-slate-700 block mb-1">Laptop Model</label>
+                            <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Laptop Model</label>
                             <input
                               type="text"
                               value={profileForm.laptopModel || ''}
                               onChange={(e) => handleProfileFormChange('laptopModel', e.target.value)}
-                              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white"
+                              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500 bg-white dark:bg-slate-800"
                               placeholder="e.g. Dell Latitude 5420 / MacBook Pro"
                             />
                           </div>
 
                           <div>
-                            <label className="font-semibold text-slate-700 block mb-1">Laptop Asset Tag</label>
+                            <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Laptop Asset Tag</label>
                             <input
                               type="text"
                               value={profileForm.laptopTag || ''}
                               onChange={(e) => handleProfileFormChange('laptopTag', e.target.value)}
-                              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white"
+                              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500 bg-white dark:bg-slate-800"
                               placeholder="e.g. EC-LAP-2024-4018"
                             />
                           </div>
 
                           <div>
-                            <label className="font-semibold text-slate-700 block mb-1">Smart RFID Access Card ID</label>
+                            <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Smart RFID Access Card ID</label>
                             <input
                               type="text"
                               value={profileForm.rfidCardId || ''}
                               onChange={(e) => handleProfileFormChange('rfidCardId', e.target.value)}
-                              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white"
+                              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500 bg-white dark:bg-slate-800"
                               placeholder="e.g. AC-CBE-0418"
                             />
                           </div>
 
                           <div>
-                            <label className="font-semibold text-slate-700 block mb-1">Primary Asset Status</label>
+                            <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Primary Asset Status</label>
                             <select
                               value={profileForm.assetStatus || 'Active'}
                               onChange={(e) => handleProfileFormChange('assetStatus', e.target.value)}
-                              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white"
+                              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500 bg-white dark:bg-slate-800"
                             >
                               <option value="Active">Active</option>
                               <option value="Assigned">Assigned</option>
@@ -2562,8 +2562,8 @@ const Employees: React.FC = () => {
                       <div>
                         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                           <div>
-                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                              <Package className="h-4 w-4 text-indigo-600" /> Additional Devices & Accessories
+                            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                              <Package className="h-4 w-4 text-indigo-600 dark:text-indigo-400" /> Additional Devices & Accessories
                             </h3>
                             <p className="text-[11px] text-slate-400 mt-0.5">
                               Mouse, Laptop Stand, Company Mobile, Headset, Keyboard, Monitors, etc.
@@ -2573,56 +2573,56 @@ const Employees: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handleAddAsset('Mouse')}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
                           >
                             <Plus className="h-3.5 w-3.5" /> Add Asset
                           </button>
                         </div>
 
                         {/* Quick Presets Bar */}
-                        <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-xl bg-slate-100/70 mb-3 text-[11px]">
-                          <span className="text-slate-500 font-medium px-1 flex items-center gap-1">
+                        <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-xl bg-slate-100/70 dark:bg-slate-800/80 mb-3 text-[11px] border border-slate-200/60 dark:border-slate-700/60">
+                          <span className="text-slate-500 dark:text-slate-400 font-medium px-1 flex items-center gap-1">
                             <Sparkles className="h-3 w-3 text-amber-500" /> Quick Add:
                           </span>
                           <button
                             type="button"
                             onClick={() => handleAddAsset('Mouse')}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-blue-400 hover:text-blue-600 font-medium text-slate-700 transition-colors shadow-2xs"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium text-slate-700 dark:text-slate-200 transition-colors shadow-2xs cursor-pointer"
                           >
                             <MousePointer className="h-3 w-3 text-blue-500" /> Mouse
                           </button>
                           <button
                             type="button"
                             onClick={() => handleAddAsset('Laptop Stand')}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-blue-400 hover:text-blue-600 font-medium text-slate-700 transition-colors shadow-2xs"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium text-slate-700 dark:text-slate-200 transition-colors shadow-2xs cursor-pointer"
                           >
                             <Laptop className="h-3 w-3 text-amber-500" /> Laptop Stand
                           </button>
                           <button
                             type="button"
                             onClick={() => handleAddAsset('Company Mobile')}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-blue-400 hover:text-blue-600 font-medium text-slate-700 transition-colors shadow-2xs"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium text-slate-700 dark:text-slate-200 transition-colors shadow-2xs cursor-pointer"
                           >
                             <Smartphone className="h-3 w-3 text-emerald-500" /> Company Mobile
                           </button>
                           <button
                             type="button"
                             onClick={() => handleAddAsset('Headset')}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-blue-400 hover:text-blue-600 font-medium text-slate-700 transition-colors shadow-2xs"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium text-slate-700 dark:text-slate-200 transition-colors shadow-2xs cursor-pointer"
                           >
                             <Headphones className="h-3 w-3 text-purple-500" /> Headset
                           </button>
                           <button
                             type="button"
                             onClick={() => handleAddAsset('Keyboard')}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-blue-400 hover:text-blue-600 font-medium text-slate-700 transition-colors shadow-2xs"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium text-slate-700 dark:text-slate-200 transition-colors shadow-2xs cursor-pointer"
                           >
                             <Keyboard className="h-3 w-3 text-cyan-500" /> Keyboard
                           </button>
                           <button
                             type="button"
                             onClick={() => handleAddAsset('Monitor')}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-blue-400 hover:text-blue-600 font-medium text-slate-700 transition-colors shadow-2xs"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium text-slate-700 dark:text-slate-200 transition-colors shadow-2xs cursor-pointer"
                           >
                             <Monitor className="h-3 w-3 text-rose-500" /> Monitor
                           </button>
@@ -2630,11 +2630,11 @@ const Employees: React.FC = () => {
 
                         {/* Allocated Assets List */}
                         {(!profileForm.allocatedAssets || profileForm.allocatedAssets.length === 0) ? (
-                          <div className="p-6 text-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50">
-                            <Package className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                            <p className="text-xs font-semibold text-slate-600">No additional equipment allocated yet</p>
+                          <div className="p-6 text-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40">
+                            <Package className="h-8 w-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                            <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">No additional equipment allocated yet</p>
                             <p className="text-[11px] text-slate-400 mt-0.5">
-                              Click <span className="font-semibold text-blue-600">"+ Add Asset"</span> or select a quick preset above to allocate Mouse, Lapstand, Mobile, etc.
+                              Click <span className="font-semibold text-blue-600 dark:text-blue-400">"+ Add Asset"</span> or select a quick preset above to allocate Mouse, Lapstand, Mobile, etc.
                             </p>
                           </div>
                         ) : (
@@ -2642,58 +2642,58 @@ const Employees: React.FC = () => {
                             {profileForm.allocatedAssets.map((asset, index) => (
                               <div
                                 key={asset.id || index}
-                                className="p-3.5 rounded-2xl border border-slate-200 bg-white shadow-2xs relative group hover:border-blue-300 transition-colors text-xs"
+                                className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xs relative group hover:border-blue-300 dark:hover:border-blue-500 transition-colors text-xs"
                               >
                                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
                                   {/* Asset Category / Name */}
                                   <div className="sm:col-span-3">
-                                    <label className="font-semibold text-slate-700 block mb-1">
+                                    <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                                       Asset Item / Name
                                     </label>
                                     <input
                                       type="text"
                                       value={asset.name || ''}
                                       onChange={(e) => handleUpdateAssetItem(asset.id, 'name', e.target.value)}
-                                      className="w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-slate-800 outline-none focus:border-blue-600 font-medium"
+                                      className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-750 px-2.5 py-1.5 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500 font-medium"
                                       placeholder="e.g. Mouse / Laptop Stand"
                                     />
                                   </div>
 
                                   {/* Model / Brand */}
                                   <div className="sm:col-span-3">
-                                    <label className="font-semibold text-slate-700 block mb-1">
+                                    <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                                       Model / Specification
                                     </label>
                                     <input
                                       type="text"
                                       value={asset.model || ''}
                                       onChange={(e) => handleUpdateAssetItem(asset.id, 'model', e.target.value)}
-                                      className="w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-slate-800 outline-none focus:border-blue-600"
+                                      className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-750 px-2.5 py-1.5 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                                       placeholder="e.g. Logitech M331 Silent"
                                     />
                                   </div>
 
                                   {/* Asset Tag / Serial */}
                                   <div className="sm:col-span-3">
-                                    <label className="font-semibold text-slate-700 block mb-1">
+                                    <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                                       Asset Tag / Serial No
                                     </label>
                                     <input
                                       type="text"
                                       value={asset.assetTag || ''}
                                       onChange={(e) => handleUpdateAssetItem(asset.id, 'assetTag', e.target.value)}
-                                      className="w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-slate-800 outline-none focus:border-blue-600"
+                                      className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-750 px-2.5 py-1.5 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                                       placeholder="e.g. EC-MOU-2026-01"
                                     />
                                   </div>
 
                                   {/* Status */}
                                   <div className="sm:col-span-2">
-                                    <label className="font-semibold text-slate-700 block mb-1">Status</label>
+                                    <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Status</label>
                                     <select
                                       value={asset.status || 'Active'}
                                       onChange={(e) => handleUpdateAssetItem(asset.id, 'status', e.target.value)}
-                                      className="w-full rounded-xl border border-slate-200 px-2 py-1.5 text-slate-800 outline-none focus:border-blue-600 bg-white"
+                                      className="w-full rounded-xl border border-slate-200 dark:border-slate-700 px-2 py-1.5 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500 bg-white dark:bg-slate-750"
                                     >
                                       <option value="Active">Active</option>
                                       <option value="Assigned">Assigned</option>
@@ -2708,7 +2708,7 @@ const Employees: React.FC = () => {
                                       type="button"
                                       onClick={() => handleRemoveAssetItem(asset.id)}
                                       title="Remove asset"
-                                      className="h-8 w-8 rounded-xl border border-rose-200 text-rose-500 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center transition-colors"
+                                      className="h-8 w-8 rounded-xl border border-rose-200 dark:border-rose-900/60 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
                                     >
                                       <Trash2 className="h-4 w-4" />
                                     </button>
@@ -2726,7 +2726,7 @@ const Employees: React.FC = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/80">
+            <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/80">
               <span className="text-xs text-slate-400 font-medium">
                 Admin updates are synced with employee profile immediately.
               </span>
@@ -2734,7 +2734,7 @@ const Employees: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowProfileEditor(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200/60 transition-colors"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -2742,7 +2742,7 @@ const Employees: React.FC = () => {
                   type="submit"
                   form="profileForm"
                   disabled={profileSaving}
-                  className="px-5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-colors"
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-colors cursor-pointer"
                 >
                   {profileSaving ? 'Saving Changes...' : 'Save Employee Information'}
                 </button>
@@ -2759,36 +2759,36 @@ const Employees: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
           <Card
             title={selectedEmployee ? 'Update Employee Settings' : 'Create New Employee'}
-            className="w-full max-w-lg shadow-2xl bg-white"
+            className="w-full max-w-lg shadow-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
           >
             <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
               {formError && (
-                <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 font-semibold text-rose-800">
+                <div className="rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 p-3 font-semibold text-rose-800 dark:text-rose-300">
                   {formError}
                 </div>
               )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Employee Code</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Employee Code</label>
                   <input
                     type="text"
                     required
                     value={formCode}
                     onChange={(e) => setFormCode(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                     placeholder="e.g. EMP001"
                   />
                 </div>
 
                 <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Full Name</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Full Name</label>
                   <input
                     type="text"
                     required
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                     placeholder="e.g. John Doe"
                   />
                 </div>
@@ -2796,24 +2796,24 @@ const Employees: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Email</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Email</label>
                   <input
                     type="email"
                     required
                     value={formEmail}
                     onChange={(e) => setFormEmail(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                     placeholder="john@company.com"
                   />
                 </div>
 
                 <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Phone</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Phone</label>
                   <input
                     type="text"
                     value={formPhone}
                     onChange={(e) => setFormPhone(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                     placeholder="9876543210"
                   />
                 </div>
@@ -2821,13 +2821,13 @@ const Employees: React.FC = () => {
 
               {!selectedEmployee && (
                 <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Initial Password</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Initial Password</label>
                   <input
                     type="password"
                     required
                     value={formPassword}
                     onChange={(e) => setFormPassword(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                     placeholder="Set temporary password"
                   />
                 </div>
@@ -2836,11 +2836,11 @@ const Employees: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="font-semibold text-slate-700 block text-xs">Assigned Team / Shift</label>
+                    <label className="font-semibold text-slate-700 dark:text-slate-300 block text-xs">Assigned Team / Shift</label>
                     <button
                       type="button"
                       onClick={() => setShowAddTeamModal(true)}
-                      className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+                      className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
                     >
                       <Plus className="h-3 w-3" /> Add Team
                     </button>
@@ -2858,11 +2858,11 @@ const Employees: React.FC = () => {
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="font-semibold text-slate-700 block text-xs">Role</label>
+                    <label className="font-semibold text-slate-700 dark:text-slate-300 block text-xs">Role</label>
                     <button
                       type="button"
                       onClick={() => setShowAddRoleModal(true)}
-                      className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+                      className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
                     >
                       <Plus className="h-3 w-3" /> Add Role
                     </button>
@@ -2882,11 +2882,11 @@ const Employees: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="font-semibold text-slate-700 block text-xs">Employment Type</label>
+                    <label className="font-semibold text-slate-700 dark:text-slate-300 block text-xs">Employment Type</label>
                     <button
                       type="button"
                       onClick={() => setShowAddStaffTypeModal(true)}
-                      className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+                      className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
                     >
                       <Plus className="h-3 w-3" /> Add Type
                     </button>
@@ -2903,11 +2903,11 @@ const Employees: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Account Status</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Account Status</label>
                   <select
                     value={formStatus}
                     onChange={(e) => setFormStatus(e.target.value as any)}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600 bg-white"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500 bg-white dark:bg-slate-800"
                   >
                     <option value="ACTIVE">ACTIVE</option>
                     <option value="INACTIVE">INACTIVE</option>
@@ -2915,7 +2915,7 @@ const Employees: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+              <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <Button variant="outline" size="sm" type="button" onClick={() => setShowFormModal(false)}>
                   Cancel
                 </Button>
@@ -2933,13 +2933,13 @@ const Employees: React.FC = () => {
       {/* ───────────────────────────────────────────────────────────── */}
       {showAddRoleModal && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-          <Card title="Add & Manage Custom Roles" className="w-full max-w-md shadow-2xl bg-white animate-in fade-in">
+          <Card title="Add & Manage Custom Roles" className="w-full max-w-md shadow-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 animate-in fade-in">
             <div className="space-y-4 text-xs">
-              <p className="text-slate-500 text-[11px]">
+              <p className="text-slate-500 dark:text-slate-400 text-[11px]">
                 Create a new job role or administrative title, or delete existing custom roles.
               </p>
               <div>
-                <label className="font-bold text-slate-700 block mb-1">Role Title / Name</label>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Role Title / Name</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -2952,7 +2952,7 @@ const Employees: React.FC = () => {
                         handleCreateCustomRole();
                       }
                     }}
-                    className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-indigo-600 font-semibold"
+                    className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-indigo-600 dark:focus:border-indigo-500 font-semibold"
                     placeholder="e.g. Frontend Developer, QA Lead"
                     autoFocus
                   />
@@ -2970,21 +2970,21 @@ const Employees: React.FC = () => {
 
               {/* Custom Roles List with Delete Action */}
               {customRoles.length > 0 && (
-                <div className="pt-3 border-t border-slate-100">
-                  <label className="font-bold text-slate-700 block mb-2 text-[11px]">
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-2 text-[11px]">
                     Custom Roles ({customRoles.length})
                   </label>
                   <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                     {customRoles.map((cr) => (
                       <div
                         key={cr.id}
-                        className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition-colors"
+                        className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700/60 hover:border-slate-200 dark:hover:border-slate-600 transition-colors"
                       >
-                        <span className="font-semibold text-slate-800">{cr.label}</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-100">{cr.label}</span>
                         <button
                           type="button"
                           onClick={() => handleDeleteRole(cr.id)}
-                          className="p-1 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          className="p-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
                           title="Delete role"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -2995,7 +2995,7 @@ const Employees: React.FC = () => {
                 </div>
               )}
 
-              <div className="flex justify-end pt-3 border-t border-slate-100">
+              <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-800">
                 <Button variant="outline" size="sm" type="button" onClick={() => setShowAddRoleModal(false)}>
                   Close
                 </Button>
@@ -3010,13 +3010,13 @@ const Employees: React.FC = () => {
       {/* ───────────────────────────────────────────────────────────── */}
       {showAddStaffTypeModal && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-          <Card title="Add & Manage Employment Types" className="w-full max-w-md shadow-2xl bg-white animate-in fade-in">
+          <Card title="Add & Manage Employment Types" className="w-full max-w-md shadow-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 animate-in fade-in">
             <div className="space-y-4 text-xs">
-              <p className="text-slate-500 text-[11px]">
+              <p className="text-slate-500 dark:text-slate-400 text-[11px]">
                 Define a new staff classification or employment term, or delete existing custom types.
               </p>
               <div>
-                <label className="font-bold text-slate-700 block mb-1">Employment Type Name</label>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Employment Type Name</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -3029,7 +3029,7 @@ const Employees: React.FC = () => {
                         handleCreateCustomStaffType();
                       }
                     }}
-                    className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-indigo-600 font-semibold"
+                    className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-indigo-600 dark:focus:border-indigo-500 font-semibold"
                     placeholder="e.g. Consultant, Apprentice, Free Lancer"
                     autoFocus
                   />
@@ -3047,21 +3047,21 @@ const Employees: React.FC = () => {
 
               {/* Custom Employment Types List with Delete Action */}
               {customStaffTypes.length > 0 && (
-                <div className="pt-3 border-t border-slate-100">
-                  <label className="font-bold text-slate-700 block mb-2 text-[11px]">
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-2 text-[11px]">
                     Custom Employment Types ({customStaffTypes.length})
                   </label>
                   <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                     {customStaffTypes.map((st) => (
                       <div
                         key={st.id}
-                        className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition-colors"
+                        className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700/60 hover:border-slate-200 dark:hover:border-slate-600 transition-colors"
                       >
-                        <span className="font-semibold text-slate-800">{st.label}</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-100">{st.label}</span>
                         <button
                           type="button"
                           onClick={() => handleDeleteStaffType(st.id)}
-                          className="p-1 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          className="p-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
                           title="Delete employment type"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -3072,7 +3072,7 @@ const Employees: React.FC = () => {
                 </div>
               )}
 
-              <div className="flex justify-end pt-3 border-t border-slate-100">
+              <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-800">
                 <Button variant="outline" size="sm" type="button" onClick={() => setShowAddStaffTypeModal(false)}>
                   Close
                 </Button>
@@ -3087,51 +3087,51 @@ const Employees: React.FC = () => {
       {/* ───────────────────────────────────────────────────────────── */}
       {showAddTeamModal && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-          <Card title="Add & Manage Teams & Shift Timings" className="w-full max-w-md shadow-2xl bg-white animate-in fade-in">
+          <Card title="Add & Manage Teams & Shift Timings" className="w-full max-w-md shadow-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 animate-in fade-in">
             <div className="space-y-4 text-xs">
-              <p className="text-slate-500 text-[11px]">
+              <p className="text-slate-500 dark:text-slate-400 text-[11px]">
                 Create a new assigned department with its office work shift hours and late login grace.
               </p>
               <div>
-                <label className="font-bold text-slate-700 block mb-1">Team / Department Name</label>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Team / Department Name</label>
                 <input
                   type="text"
                   required
                   value={newTeamName}
                   onChange={(e) => setNewTeamName(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-indigo-600 font-semibold"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-indigo-600 dark:focus:border-indigo-500 font-semibold"
                   placeholder="e.g. Digital Marketing, Customer Support"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+              <div className="grid grid-cols-2 gap-2.5 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/60">
                 <div>
-                  <label className="font-bold text-slate-700 block mb-1 text-[11px]">Shift Start (Login)</label>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 text-[11px]">Shift Start (Login)</label>
                   <input
                     type="time"
                     required
                     value={newTeamLoginTime}
                     onChange={(e) => setNewTeamLoginTime(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-bold text-slate-800 bg-white focus:border-indigo-600 outline-none"
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800 focus:border-indigo-600 outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="font-bold text-slate-700 block mb-1 text-[11px]">Shift End (Logout)</label>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 text-[11px]">Shift End (Logout)</label>
                   <input
                     type="time"
                     required
                     value={newTeamLogoutTime}
                     onChange={(e) => setNewTeamLogoutTime(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-bold text-slate-800 bg-white focus:border-indigo-600 outline-none"
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800 focus:border-indigo-600 outline-none"
                   />
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="font-bold text-slate-700 text-[11px]">Late Login Grace Window</label>
-                  <span className="font-mono text-indigo-700 font-bold bg-indigo-50 px-2 py-0.5 rounded text-[11px]">
+                  <label className="font-bold text-slate-700 dark:text-slate-300 text-[11px]">Late Login Grace Window</label>
+                  <span className="font-mono text-indigo-700 dark:text-indigo-400 font-bold bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded text-[11px] border border-indigo-200/50 dark:border-indigo-800">
                     +{newTeamGraceMinutes} Minutes
                   </span>
                 </div>
@@ -3148,21 +3148,21 @@ const Employees: React.FC = () => {
 
               {/* Custom Teams List with Delete Action */}
               {customTeams.length > 0 && (
-                <div className="pt-3 border-t border-slate-100">
-                  <label className="font-bold text-slate-700 block mb-2 text-[11px]">
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-2 text-[11px]">
                     Custom Teams ({customTeams.length})
                   </label>
                   <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
                     {customTeams.map((ct) => (
                       <div
                         key={ct.id}
-                        className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition-colors"
+                        className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700/60 hover:border-slate-200 dark:hover:border-slate-600 transition-colors"
                       >
-                        <span className="font-semibold text-slate-800">{ct.name}</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-100">{ct.name}</span>
                         <button
                           type="button"
                           onClick={() => handleDeleteTeam(ct.id)}
-                          className="p-1 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          className="p-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
                           title="Delete team"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -3173,7 +3173,7 @@ const Employees: React.FC = () => {
                 </div>
               )}
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <Button variant="outline" size="sm" type="button" onClick={() => setShowAddTeamModal(false)}>
                   Cancel
                 </Button>
@@ -3192,22 +3192,21 @@ const Employees: React.FC = () => {
         </div>
       )}
 
-
       {/* ───────────────────────────────────────────────────────────── */}
       {/* RESET PASSWORD MODAL                                          */}
       {/* ───────────────────────────────────────────────────────────── */}
       {showResetModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <Card title={`Reset Password: ${selectedEmployee?.name}`} className="w-full max-w-sm shadow-2xl bg-white">
+          <Card title={`Reset Password: ${selectedEmployee?.name}`} className="w-full max-w-sm shadow-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
             <form onSubmit={handleResetPassword} className="space-y-4 text-xs">
               <div>
-                <label className="font-semibold text-slate-700 block mb-1">New Password</label>
+                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">New Password</label>
                 <input
                   type="password"
                   required
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-blue-600"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100 outline-none focus:border-blue-600 dark:focus:border-blue-500"
                   placeholder="Enter new password"
                 />
               </div>
@@ -3232,7 +3231,7 @@ const Employees: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
           <Card
             title={`Attendance History: ${selectedEmployee?.name} (${selectedEmployee?.employeeCode})`}
-            className="w-full max-w-3xl shadow-2xl bg-white max-h-[85vh] flex flex-col"
+            className="w-full max-w-3xl shadow-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 max-h-[85vh] flex flex-col"
           >
             <div className="flex-1 overflow-y-auto my-2">
               {historyLoading ? (
@@ -3266,27 +3265,27 @@ const Employees: React.FC = () => {
                       header: 'Status',
                       render: (r: Attendance) => {
                         if (r.timingStatus === 'LEAVE') {
-                          return <span className="inline-flex rounded-full bg-rose-50 px-2 py-0.5 text-xs font-bold text-rose-600 border border-rose-200">Leave</span>;
+                          return <span className="inline-flex rounded-full bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 text-xs font-bold text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800">Leave</span>;
                         }
                         if (r.timingStatus === 'PERMISSION') {
-                          return <span className="inline-flex rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-bold text-indigo-600 border border-indigo-200">Permission</span>;
+                          return <span className="inline-flex rounded-full bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 text-xs font-bold text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">Permission</span>;
                         }
                         if (r.timingStatus === 'LATE') {
-                          return <span className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800 border border-amber-300">Late</span>;
+                          return <span className="inline-flex rounded-full bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 text-xs font-bold text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">Late</span>;
                         }
                         if (r.status === 'LOGGED_IN') {
-                          return <span className="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-600 border border-blue-200">Working</span>;
+                          return <span className="inline-flex rounded-full bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 text-xs font-bold text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-800">Working</span>;
                         }
                         if (r.status === 'COMPLETED') {
-                          return <span className="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-600 border border-emerald-200">Present</span>;
+                          return <span className="inline-flex rounded-full bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">Present</span>;
                         }
-                        return <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-500">{r.status}</span>;
+                        return <span className="inline-flex rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-xs font-bold text-slate-500 dark:text-slate-400">{r.status}</span>;
                       },
                     },
                     {
                       header: 'Distance (GPS)',
                       render: (r: Attendance) => (
-                        <span className="text-slate-500 font-medium">
+                        <span className="text-slate-500 dark:text-slate-400 font-medium">
                           {r.loginDistance != null ? `${r.loginDistance.toFixed(1)}m` : '--'}
                         </span>
                       ),
@@ -3296,7 +3295,7 @@ const Employees: React.FC = () => {
               )}
             </div>
 
-            <div className="flex justify-end pt-3 border-t border-slate-100">
+            <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-800">
               <Button variant="outline" size="sm" onClick={() => setShowHistoryModal(false)}>
                 Close
               </Button>
@@ -3310,53 +3309,53 @@ const Employees: React.FC = () => {
       {/* ───────────────────────────────────────────────────────────── */}
       {deleteModalEmp && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-slate-100 animate-scale-up">
-            <div className="flex items-center gap-3.5 pb-4 border-b border-slate-100">
-              <div className="h-11 w-11 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 p-6 shadow-2xl border border-slate-100 dark:border-slate-800 animate-scale-up">
+            <div className="flex items-center gap-3.5 pb-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="h-11 w-11 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
                 <Trash2 className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="text-base font-extrabold text-slate-900">Delete Employee Account</h3>
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Delete Employee Account</h3>
                 <p className="text-xs text-slate-400">Permanently remove employee records</p>
               </div>
             </div>
 
             {deleteError && (
-              <div className="mt-4 flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-800">
+              <div className="mt-4 flex items-center gap-2 rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 p-3 text-xs font-semibold text-rose-800 dark:text-rose-300">
                 <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
                 <span>{deleteError}</span>
               </div>
             )}
 
             <div className="my-5 space-y-3 text-xs">
-              <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/70 rounded-2xl border border-slate-100 dark:border-slate-700/60 space-y-1">
                 <div className="flex justify-between">
                   <span className="text-slate-400 font-medium">Employee Name:</span>
-                  <span className="font-bold text-slate-800">{deleteModalEmp.name}</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-100">{deleteModalEmp.name}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400 font-medium">Employee Code:</span>
-                  <span className="font-mono font-bold text-slate-800">{deleteModalEmp.employeeCode}</span>
+                  <span className="font-mono font-bold text-slate-800 dark:text-slate-100">{deleteModalEmp.employeeCode}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400 font-medium">Email:</span>
-                  <span className="text-slate-700">{deleteModalEmp.email}</span>
+                  <span className="text-slate-700 dark:text-slate-300">{deleteModalEmp.email}</span>
                 </div>
               </div>
 
-              <div className="p-3 rounded-2xl bg-rose-50/60 border border-rose-100 text-rose-900 flex items-start gap-2.5">
-                <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
+              <div className="p-3 rounded-2xl bg-rose-50/60 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/40 text-rose-900 dark:text-rose-200 flex items-start gap-2.5">
+                <AlertTriangle className="h-4 w-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                 <p className="text-[11px] leading-relaxed">
                   <strong>Warning:</strong> This action cannot be undone. All attendance punches, leave history, permission logs, and quota balances belonging to this employee will also be permanently deleted.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
               <button
                 type="button"
                 onClick={() => setDeleteModalEmp(null)}
-                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
               >
                 Cancel
               </button>

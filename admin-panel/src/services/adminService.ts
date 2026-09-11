@@ -13,6 +13,7 @@ export interface DashboardStats {
   pendingPermissionRequests: number;
   pendingLeaveRequests: number;
   absent: number;
+  wfhToday?: number;
 }
 
 export const adminService = {
@@ -28,6 +29,10 @@ export const adminService = {
     return response.data;
   },
 
+  getDashboardStatsRange: async (startDate?: string, endDate?: string): Promise<DashboardStats> => {
+    return adminService.getStats(startDate, endDate);
+  },
+
   getSummaryCharts: async (startDate?: string, endDate?: string): Promise<any[]> => {
     const params = new URLSearchParams();
     if (startDate && endDate) {
@@ -38,6 +43,10 @@ export const adminService = {
     }
     const response = await api.get<any[]>('/admin/attendance-summary', { params });
     return response.data;
+  },
+
+  getAttendanceTrends: async (startDate?: string, endDate?: string): Promise<any[]> => {
+    return adminService.getSummaryCharts(startDate, endDate);
   },
 
   getReport: async (filters: {

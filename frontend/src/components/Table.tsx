@@ -22,9 +22,9 @@ function Table<T>({
   loading = false,
 }: TableProps<T>) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-slate-100 bg-white shadow-sm">
-      <table className="w-full border-collapse text-left text-sm text-slate-600">
-        <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500">
+    <div className="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+      <table className="w-full border-collapse text-left text-sm text-slate-600 dark:text-slate-300">
+        <thead className="bg-slate-50 dark:bg-slate-800/80 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           <tr>
             {columns.map((col, idx) => (
               <th key={idx} scope="col" className={`px-6 py-4 font-semibold ${col.className || ''}`}>
@@ -33,27 +33,27 @@ function Table<T>({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100 border-t border-slate-100">
+        <tbody className="divide-y divide-slate-100 dark:divide-slate-800 border-t border-slate-100 dark:border-slate-800">
           {loading ? (
             <tr>
               <td colSpan={columns.length} className="px-6 py-12 text-center">
                 <div className="flex justify-center">
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-500 border-t-transparent"></div>
                 </div>
-                <p className="mt-2 text-xs text-slate-400">Loading data...</p>
+                <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">Loading data...</p>
               </td>
             </tr>
           ) : data.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="px-6 py-12 text-center text-slate-400 text-sm">
+              <td colSpan={columns.length} className="px-6 py-12 text-center text-slate-400 dark:text-slate-500 text-sm">
                 {emptyMessage}
               </td>
             </tr>
           ) : (
             data.map((row, rowIdx) => (
-              <tr key={keyExtractor(row, rowIdx)} className="hover:bg-slate-50/50 transition-colors">
+              <tr key={keyExtractor(row, rowIdx)} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                 {columns.map((col, colIdx) => (
-                  <td key={colIdx} className={`px-6 py-4 whitespace-nowrap text-slate-700 ${col.className || ''}`}>
+                  <td key={colIdx} className={`px-6 py-4 whitespace-nowrap text-slate-700 dark:text-slate-200 ${col.className || ''}`}>
                     {col.render(row, rowIdx)}
                   </td>
                 ))}

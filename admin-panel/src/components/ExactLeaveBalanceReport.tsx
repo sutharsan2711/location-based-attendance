@@ -283,75 +283,75 @@ export const ExactLeaveBalanceReport: React.FC = () => {
     <div className="space-y-6">
       {/* ── Summary KPI Cards ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-500">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
             <span className="text-[11px] font-bold uppercase tracking-wider">Total Staff</span>
-            <Users className="h-4 w-4 text-indigo-600" />
+            <Users className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-slate-900">{totalEmployees}</span>
-            <span className="text-[10px] text-slate-500 font-medium">Headcount</span>
+            <span className="text-2xl font-black text-slate-900 dark:text-white">{totalEmployees}</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Headcount</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-500">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
             <span className="text-[11px] font-bold uppercase tracking-wider">Employees</span>
-            <Award className="h-4 w-4 text-emerald-600" />
+            <Award className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-emerald-700">{employeesCount}</span>
-            <span className="text-[10px] text-emerald-600 font-medium">Permanent</span>
+            <span className="text-2xl font-black text-emerald-700 dark:text-emerald-300">{employeesCount}</span>
+            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">Permanent</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-500">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
             <span className="text-[11px] font-bold uppercase tracking-wider">Trainees / Interns</span>
-            <Award className="h-4 w-4 text-teal-600" />
+            <Award className="h-4 w-4 text-teal-600 dark:text-teal-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-teal-700">{traineesCount + internsCount}</span>
-            <span className="text-[10px] text-teal-600 font-medium">({traineesCount}T / {internsCount}I)</span>
+            <span className="text-2xl font-black text-teal-700 dark:text-teal-300">{traineesCount + internsCount}</span>
+            <span className="text-[10px] text-teal-600 dark:text-teal-400 font-medium">({traineesCount}T / {internsCount}I)</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-500">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
             <span className="text-[11px] font-bold uppercase tracking-wider">Total Quota</span>
-            <CheckCircle2 className="h-4 w-4 text-blue-600" />
+            <CheckCircle2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-blue-700">{totalLeaveQuota}</span>
-            <span className="text-[10px] text-blue-600 font-medium">Days Granted</span>
+            <span className="text-2xl font-black text-blue-700 dark:text-blue-300">{totalLeaveQuota}</span>
+            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">Days Granted</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-500">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
             <span className="text-[11px] font-bold uppercase tracking-wider">Leaves Taken</span>
-            <TrendingDown className="h-4 w-4 text-amber-600" />
+            <TrendingDown className="h-4 w-4 text-amber-600 dark:text-amber-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-amber-700">{totalLeaveTaken}</span>
-            <span className="text-[10px] text-amber-600 font-medium">Days Used</span>
+            <span className="text-2xl font-black text-amber-700 dark:text-amber-300">{totalLeaveTaken}</span>
+            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">Days Used</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-500">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
             <span className="text-[11px] font-bold uppercase tracking-wider">Overdrawn / Deficit</span>
-            <AlertTriangle className="h-4 w-4 text-rose-600" />
+            <AlertTriangle className="h-4 w-4 text-rose-600 dark:text-rose-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-rose-600">{negativeBalanceCount}</span>
-            <span className="text-[10px] text-rose-500 font-medium">Negative Bal.</span>
+            <span className="text-2xl font-black text-rose-600 dark:text-rose-400">{negativeBalanceCount}</span>
+            <span className="text-[10px] text-rose-500 dark:text-rose-400 font-medium">Negative Bal.</span>
           </div>
         </div>
       </div>
 
       {/* ── Toolbar & Filters ── */}
-      <div className="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-sm space-y-4">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           {/* Search and Filters */}
           <div className="flex flex-wrap items-center gap-3 flex-1">
@@ -362,7 +362,7 @@ export const ExactLeaveBalanceReport: React.FC = () => {
                 placeholder="Search ID, Name, Month..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-cyan-500 transition-colors"
+                className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-cyan-500 transition-colors"
               />
             </div>
 
@@ -370,7 +370,7 @@ export const ExactLeaveBalanceReport: React.FC = () => {
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:bg-white outline-none cursor-pointer"
+              className="text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-800 outline-none cursor-pointer"
             >
               <option value="ALL">All Types (Employee, Trainee, Intern)</option>
               <option value="Employee">Employee Only</option>
@@ -382,7 +382,7 @@ export const ExactLeaveBalanceReport: React.FC = () => {
             <select
               value={selectedBalanceFilter}
               onChange={(e) => setSelectedBalanceFilter(e.target.value)}
-              className="text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:bg-white outline-none cursor-pointer"
+              className="text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-800 outline-none cursor-pointer"
             >
               <option value="ALL">All Balances</option>
               <option value="POSITIVE">Positive / In Credit (Balance &gt;= 0)</option>
@@ -394,8 +394,8 @@ export const ExactLeaveBalanceReport: React.FC = () => {
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={handleResetToDefault}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs border border-amber-200 transition-colors cursor-pointer"
-              title="Reset to 19 Master Employee Records"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 font-bold text-xs border border-amber-200 dark:border-amber-800 transition-colors cursor-pointer"
+              title="Reset to Master Employee Records"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               <span>Reset to Master List</span>
@@ -404,7 +404,7 @@ export const ExactLeaveBalanceReport: React.FC = () => {
             <button
               onClick={syncFromSystemDatabase}
               disabled={loading}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer"
               title="Sync dynamically from registered employees"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -429,7 +429,7 @@ export const ExactLeaveBalanceReport: React.FC = () => {
 
             <button
               onClick={handleExportCsv}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition-colors cursor-pointer"
               title="Export as CSV"
             >
               <FileDown className="h-3.5 w-3.5" />
@@ -438,7 +438,7 @@ export const ExactLeaveBalanceReport: React.FC = () => {
 
             <button
               onClick={handlePrint}
-              className="p-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
+              className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
               title="Print Sheet"
             >
               <Printer className="h-4 w-4" />
@@ -446,7 +446,7 @@ export const ExactLeaveBalanceReport: React.FC = () => {
 
             <button
               onClick={handleClearAll}
-              className="p-2 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 transition-colors cursor-pointer"
+              className="p-2 rounded-xl border border-rose-200 dark:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 transition-colors cursor-pointer"
               title="Clear all records"
             >
               <Trash2 className="h-4 w-4" />
@@ -456,52 +456,52 @@ export const ExactLeaveBalanceReport: React.FC = () => {
       </div>
 
       {/* ── Formula Bar / Active Cell Inspector ── */}
-      <div className="bg-slate-100 px-4 py-2 rounded-2xl border border-slate-300 flex items-center gap-3 text-xs font-mono">
-        <div className="px-3 py-1 bg-white rounded-md border border-slate-300 font-bold text-slate-800 min-w-[60px] text-center shadow-2xs">
+      <div className="bg-slate-100 dark:bg-slate-900 px-4 py-2 rounded-2xl border border-slate-300 dark:border-slate-800 flex items-center gap-3 text-xs font-mono">
+        <div className="px-3 py-1 bg-white dark:bg-slate-800 rounded-md border border-slate-300 dark:border-slate-700 font-bold text-slate-800 dark:text-slate-100 min-w-[60px] text-center shadow-2xs">
           {activeCell.col}{activeCell.row}
         </div>
         <div className="text-slate-400 font-sans font-bold">fx</div>
-        <div className="flex-1 px-3 py-1 bg-white rounded-md border border-slate-300 text-slate-800 font-semibold truncate shadow-2xs">
-          <span className="font-bold text-indigo-700 font-mono">{String(activeCell.val)}</span>
-          <span className="text-slate-400 ml-2 font-normal font-sans">({activeCell.label})</span>
+        <div className="flex-1 px-3 py-1 bg-white dark:bg-slate-800 rounded-md border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-semibold truncate shadow-2xs">
+          <span className="font-bold text-indigo-700 dark:text-indigo-400 font-mono">{String(activeCell.val)}</span>
+          <span className="text-slate-400 dark:text-slate-500 ml-2 font-normal font-sans">({activeCell.label})</span>
         </div>
-        <div className="text-[11px] text-slate-500 font-sans font-semibold">
+        <div className="text-[11px] text-slate-500 dark:text-slate-400 font-sans font-semibold">
           Showing {filteredRows.length} of {reportRows.length} Employees
         </div>
       </div>
 
       {/* ── 📊 THE EXACT LEAVE REPORT SPREADSHEET ── */}
-      <div className="bg-white rounded-3xl border-2 border-black/80 shadow-xl overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl border-2 border-black/80 dark:border-slate-700 shadow-xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse font-sans text-xs text-slate-900 border border-black">
+          <table className="w-full border-collapse font-sans text-xs text-slate-900 dark:text-slate-100 border border-black dark:border-slate-700">
             <thead>
-              {/* Cyan Header: #00FFFF with solid black text and black cell borders */}
-              <tr className="bg-[#00FFFF] text-black font-extrabold text-xs border-b-2 border-black">
-                <th className="py-2.5 px-3 text-center border-r border-black border-b border-t min-w-[55px]">
+              {/* Cyan Header: #00FFFF with solid black text and cell borders */}
+              <tr className="bg-[#00FFFF] dark:bg-cyan-600 text-black dark:text-white font-extrabold text-xs border-b-2 border-black dark:border-slate-700">
+                <th className="py-2.5 px-3 text-center border-r border-black dark:border-slate-700 border-b border-t min-w-[55px]">
                   S.No
                 </th>
-                <th className="py-2.5 px-4 text-center border-r border-black border-b border-t min-w-[120px]">
+                <th className="py-2.5 px-4 text-center border-r border-black dark:border-slate-700 border-b border-t min-w-[120px]">
                   Employee ID
                 </th>
-                <th className="py-2.5 px-6 text-center border-r border-black border-b border-t min-w-[160px]">
+                <th className="py-2.5 px-6 text-center border-r border-black dark:border-slate-700 border-b border-t min-w-[160px]">
                   Employee Name
                 </th>
-                <th className="py-2.5 px-4 text-center border-r border-black border-b border-t min-w-[100px]">
+                <th className="py-2.5 px-4 text-center border-r border-black dark:border-slate-700 border-b border-t min-w-[100px]">
                   Type
                 </th>
-                <th className="py-2.5 px-4 text-center border-r border-black border-b border-t min-w-[110px]">
+                <th className="py-2.5 px-4 text-center border-r border-black dark:border-slate-700 border-b border-t min-w-[110px]">
                   Joined Month
                 </th>
-                <th className="py-2.5 px-4 text-center border-r border-black border-b border-t min-w-[100px]">
+                <th className="py-2.5 px-4 text-center border-r border-black dark:border-slate-700 border-b border-t min-w-[100px]">
                   Total Leave
                 </th>
-                <th className="py-2.5 px-4 text-center border-r border-black border-b border-t min-w-[110px]">
+                <th className="py-2.5 px-4 text-center border-r border-black dark:border-slate-700 border-b border-t min-w-[110px]">
                   Leave Taken
                 </th>
-                <th className="py-2.5 px-4 text-center border-r border-black border-b border-t min-w-[90px]">
+                <th className="py-2.5 px-4 text-center border-r border-black dark:border-slate-700 border-b border-t min-w-[90px]">
                   Balance
                 </th>
-                <th className="py-2.5 px-3 text-center border-b border-t border-black min-w-[80px] print:hidden bg-[#00e5ff]">
+                <th className="py-2.5 px-3 text-center border-b border-t border-black dark:border-slate-700 min-w-[80px] print:hidden bg-[#00e5ff] dark:bg-cyan-700">
                   Action
                 </th>
               </tr>
@@ -509,9 +509,9 @@ export const ExactLeaveBalanceReport: React.FC = () => {
             <tbody>
               {filteredRows.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-16 text-center text-slate-400 font-semibold space-y-2">
-                    <p className="text-sm text-slate-600 font-bold">No employee records in this leave report.</p>
-                    <p className="text-xs text-slate-400">Click &quot;Sync from Database&quot; to fetch registered employees or click &quot;Add Record&quot;.</p>
+                  <td colSpan={9} className="py-16 text-center text-slate-400 dark:text-slate-500 font-semibold space-y-2">
+                    <p className="text-sm text-slate-600 dark:text-slate-300 font-bold">No employee records in this leave report.</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">Click &quot;Sync from Database&quot; to fetch registered employees or click &quot;Add Record&quot;.</p>
                   </td>
                 </tr>
               ) : (
@@ -524,11 +524,11 @@ export const ExactLeaveBalanceReport: React.FC = () => {
                   return (
                     <tr
                       key={row.employeeId || index}
-                      className="border-b border-black hover:bg-cyan-50/30 transition-colors font-medium text-slate-900"
+                      className="border-b border-black dark:border-slate-700 hover:bg-cyan-50/30 dark:hover:bg-slate-800/60 transition-colors font-medium text-slate-900 dark:text-slate-100"
                     >
                       {/* S.No */}
                       <td
-                        className="py-2 px-3 text-center border-r border-black font-semibold cursor-pointer hover:bg-cyan-100/50"
+                        className="py-2 px-3 text-center border-r border-black dark:border-slate-700 font-semibold cursor-pointer hover:bg-cyan-100/50 dark:hover:bg-cyan-950/40"
                         onClick={() =>
                           setActiveCell({
                             row: rowIdx,
@@ -543,7 +543,7 @@ export const ExactLeaveBalanceReport: React.FC = () => {
 
                       {/* Employee ID */}
                       <td
-                        className="py-2 px-4 text-center border-r border-black font-semibold font-mono tracking-tight cursor-pointer hover:bg-cyan-100/50"
+                        className="py-2 px-4 text-center border-r border-black dark:border-slate-700 font-semibold font-mono tracking-tight cursor-pointer hover:bg-cyan-100/50 dark:hover:bg-cyan-950/40"
                         onClick={() =>
                           setActiveCell({
                             row: rowIdx,
@@ -558,7 +558,7 @@ export const ExactLeaveBalanceReport: React.FC = () => {
 
                       {/* Employee Name */}
                       <td
-                        className="py-2 px-6 text-center border-r border-black font-semibold cursor-pointer hover:bg-cyan-100/50"
+                        className="py-2 px-6 text-center border-r border-black dark:border-slate-700 font-semibold cursor-pointer hover:bg-cyan-100/50 dark:hover:bg-cyan-950/40"
                         onClick={() =>
                           setActiveCell({
                             row: rowIdx,
@@ -573,7 +573,7 @@ export const ExactLeaveBalanceReport: React.FC = () => {
 
                       {/* Type */}
                       <td
-                        className="py-2 px-4 text-center border-r border-black font-semibold cursor-pointer hover:bg-cyan-100/50"
+                        className="py-2 px-4 text-center border-r border-black dark:border-slate-700 font-semibold cursor-pointer hover:bg-cyan-100/50 dark:hover:bg-cyan-950/40"
                         onClick={() =>
                           setActiveCell({
                             row: rowIdx,
@@ -588,7 +588,7 @@ export const ExactLeaveBalanceReport: React.FC = () => {
 
                       {/* Joined Month */}
                       <td
-                        className="py-2 px-4 text-center border-r border-black font-semibold cursor-pointer hover:bg-cyan-100/50"
+                        className="py-2 px-4 text-center border-r border-black dark:border-slate-700 font-semibold cursor-pointer hover:bg-cyan-100/50 dark:hover:bg-cyan-950/40"
                         onClick={() =>
                           setActiveCell({
                             row: rowIdx,
@@ -603,8 +603,8 @@ export const ExactLeaveBalanceReport: React.FC = () => {
 
                       {/* Total Leave */}
                       <td
-                        className={`py-2 px-4 text-center border-r border-black font-bold cursor-pointer hover:bg-cyan-100/50 ${
-                          isRedTotal ? 'text-[#FF0000] font-black text-sm' : 'text-slate-900'
+                        className={`py-2 px-4 text-center border-r border-black dark:border-slate-700 font-bold cursor-pointer hover:bg-cyan-100/50 dark:hover:bg-cyan-950/40 ${
+                          isRedTotal ? 'text-[#FF0000] dark:text-rose-400 font-black text-sm' : 'text-slate-900 dark:text-slate-100'
                         }`}
                         onClick={() =>
                           setActiveCell({
@@ -620,10 +620,10 @@ export const ExactLeaveBalanceReport: React.FC = () => {
 
                       {/* Leave Taken */}
                       <td
-                        className={`py-2 px-4 text-center border-r border-black font-bold cursor-pointer transition-colors ${
+                        className={`py-2 px-4 text-center border-r border-black dark:border-slate-700 font-bold cursor-pointer transition-colors ${
                           isYellowTaken
-                            ? 'bg-[#FED986] text-black font-black'
-                            : 'hover:bg-cyan-100/50 text-slate-900'
+                            ? 'bg-[#FED986] dark:bg-amber-500/80 text-black dark:text-slate-950 font-black'
+                            : 'hover:bg-cyan-100/50 dark:hover:bg-cyan-950/40 text-slate-900 dark:text-slate-100'
                         }`}
                         onClick={() =>
                           setActiveCell({
@@ -639,10 +639,10 @@ export const ExactLeaveBalanceReport: React.FC = () => {
 
                       {/* Balance */}
                       <td
-                        className={`py-2 px-4 text-center border-r border-black font-bold cursor-pointer hover:bg-cyan-100/50 ${
+                        className={`py-2 px-4 text-center border-r border-black dark:border-slate-700 font-bold cursor-pointer hover:bg-cyan-100/50 dark:hover:bg-cyan-950/40 ${
                           isNegativeBalance
-                            ? 'text-rose-600 font-black'
-                            : 'text-slate-900'
+                            ? 'text-rose-600 dark:text-rose-400 font-black'
+                            : 'text-slate-900 dark:text-slate-100'
                         }`}
                         onClick={() =>
                           setActiveCell({
@@ -661,14 +661,14 @@ export const ExactLeaveBalanceReport: React.FC = () => {
                         <div className="flex items-center justify-center gap-1">
                           <button
                             onClick={() => handleEditClick(row)}
-                            className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
+                            className="p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-lg transition-colors cursor-pointer"
                             title="Edit Record"
                           >
                             <Edit2 className="h-3.5 w-3.5" />
                           </button>
                           <button
                             onClick={() => handleDeleteRow(row.sNo)}
-                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                            className="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
                             title="Delete Record"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -684,7 +684,7 @@ export const ExactLeaveBalanceReport: React.FC = () => {
         </div>
 
         {/* Table Footer */}
-        <div className="bg-slate-50 px-6 py-3 border-t border-black flex flex-col sm:flex-row items-center justify-between text-xs text-slate-600 gap-3 font-medium">
+        <div className="bg-slate-50 dark:bg-slate-900 px-6 py-3 border-t border-black dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-600 dark:text-slate-300 gap-3 font-medium">
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-cyan-500 inline-block" />
             <span>
@@ -708,17 +708,17 @@ export const ExactLeaveBalanceReport: React.FC = () => {
       {/* ── Modal: Edit / Add Leave Record ── */}
       {(editingRow || isAddMode) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-slate-100 animate-scale-up">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+          <div className="relative w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 p-6 shadow-2xl border border-slate-100 dark:border-slate-800 animate-scale-up">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-2xl bg-cyan-100 text-cyan-800 flex items-center justify-center font-bold">
+                <div className="h-10 w-10 rounded-2xl bg-cyan-100 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-300 flex items-center justify-center font-bold">
                   <FileSpreadsheet className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
                     {isAddMode ? 'Add Employee Leave Record' : 'Edit Leave Record'}
                   </h3>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
                     {isAddMode ? 'Create new row in leave sheet' : `Updating ${editingRow?.employeeName}`}
                   </p>
                 </div>
@@ -728,7 +728,7 @@ export const ExactLeaveBalanceReport: React.FC = () => {
                   setEditingRow(null);
                   setIsAddMode(false);
                 }}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl"
+                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -737,7 +737,7 @@ export const ExactLeaveBalanceReport: React.FC = () => {
             <form onSubmit={handleSaveModal} className="mt-4 space-y-4 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-1">
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide block mb-1">
                     Employee ID
                   </label>
                   <input
@@ -746,18 +746,18 @@ export const ExactLeaveBalanceReport: React.FC = () => {
                     value={formData.employeeId}
                     onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
                     placeholder="e.g. ECLCE2018"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold focus:bg-white focus:outline-none focus:border-cyan-500"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-mono font-bold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-cyan-500"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-1">
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide block mb-1">
                     Employment Type
                   </label>
                   <select
                     value={formData.type}
                     onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:bg-white focus:outline-none"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none"
                   >
                     <option value="Employee">Employee</option>
                     <option value="Trainee">Trainee</option>
@@ -767,7 +767,7 @@ export const ExactLeaveBalanceReport: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-1">
+                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide block mb-1">
                   Employee Name
                 </label>
                 <input
@@ -776,12 +776,12 @@ export const ExactLeaveBalanceReport: React.FC = () => {
                   value={formData.employeeName}
                   onChange={(e) => setFormData({ ...formData, employeeName: e.target.value })}
                   placeholder="Full Name"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:bg-white focus:outline-none focus:border-cyan-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-cyan-500"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-1">
+                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide block mb-1">
                   Joined Month
                 </label>
                 <input
@@ -790,13 +790,13 @@ export const ExactLeaveBalanceReport: React.FC = () => {
                   value={formData.joinedMonth}
                   onChange={(e) => setFormData({ ...formData, joinedMonth: e.target.value })}
                   placeholder="e.g. Aug-25 or Feb-26"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold focus:bg-white focus:outline-none focus:border-cyan-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-cyan-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-1">
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide block mb-1">
                     Total Leave Quota
                   </label>
                   <input
@@ -805,12 +805,12 @@ export const ExactLeaveBalanceReport: React.FC = () => {
                     required
                     value={formData.totalLeave}
                     onChange={(e) => setFormData({ ...formData, totalLeave: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:bg-white focus:outline-none focus:border-cyan-500"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-cyan-500"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-1">
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide block mb-1">
                     Leave Taken
                   </label>
                   <input
@@ -819,27 +819,27 @@ export const ExactLeaveBalanceReport: React.FC = () => {
                     required
                     value={formData.leaveTaken}
                     onChange={(e) => setFormData({ ...formData, leaveTaken: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:bg-white focus:outline-none focus:border-cyan-500"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-cyan-500"
                   />
                 </div>
               </div>
 
               {/* Live Computed Balance Preview */}
-              <div className="p-3 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-between">
-                <span className="font-bold text-slate-600">Calculated Balance:</span>
-                <span className={`text-sm font-black ${(formData.totalLeave - formData.leaveTaken) < 0 ? 'text-rose-600' : 'text-slate-900'}`}>
+              <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                <span className="font-bold text-slate-600 dark:text-slate-300">Calculated Balance:</span>
+                <span className={`text-sm font-black ${(formData.totalLeave - formData.leaveTaken) < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'}`}>
                   {(formData.totalLeave - formData.leaveTaken).toFixed(1)} Days
                 </span>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => {
                     setEditingRow(null);
                     setIsAddMode(false);
                   }}
-                  className="px-4 py-2 rounded-xl text-slate-600 font-bold hover:bg-slate-100 cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                 >
                   Cancel
                 </button>

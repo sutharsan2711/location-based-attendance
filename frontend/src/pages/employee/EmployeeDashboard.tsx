@@ -425,8 +425,27 @@ const EmployeeDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchDashboard();
+  }, [fetchDashboard]);
+
+  // ── Auto-fetch GPS distance every 1 minute while user is NOT checked in ──
+  // When user is checked in, automated background polling is disabled.
+  const isCheckedIn =
+    attendance?.status === 'LOGGED_IN' ||
+    attendance?.status === 'WORK_FROM_HOME' ||
+    attendance?.status === 'COMPLETED' ||
+    Boolean(attendance?.loginTime);
+
+  useEffect(() => {
+    if (isCheckedIn) return;
+
     reloadGpsDistance();
-  }, [fetchDashboard, reloadGpsDistance]);
+
+    const interval = setInterval(() => {
+      reloadGpsDistance();
+    }, 60000); // 1 minute
+
+    return () => clearInterval(interval);
+  }, [isCheckedIn, reloadGpsDistance]);
 
   // ── 2. Open Swipes & History Modal ──
   const handleOpenSwipesModal = async () => {
@@ -559,15 +578,26 @@ const EmployeeDashboard: React.FC = () => {
       let lng = longitude;
       let acc = accuracy || 15;
 
-      if (!lat || !lng) {
-        try {
-          const coords = await getCoordinates();
-          lat = coords.latitude;
-          lng = coords.longitude;
-          acc = coords.accuracy || 15;
-        } catch (e: any) {
-          console.warn('Geolocation warning on swipe:', e);
+      // Always retrieve fresh high-precision GPS coordinates on click (especially upon Check Out)
+      try {
+        const coords = await getCoordinates();
+        lat = coords.latitude;
+        lng = coords.longitude;
+        acc = coords.accuracy || 15;
+
+        // Recalculate and update current distance on the dashboard with fresh coordinates
+        let currentOffices = officeLocations;
+        if (!currentOffices || currentOffices.length === 0) {
+          try {
+            currentOffices = await locationService.getAllLocations();
+            setOfficeLocations(currentOffices);
+          } catch (e) {}
         }
+        if (currentOffices && currentOffices.length > 0 && typeof lat === 'number' && typeof lng === 'number') {
+          calculateAndSetDistance(lat, lng, currentOffices);
+        }
+      } catch (e: any) {
+        console.warn('Geolocation warning on swipe:', e);
       }
 
       const isAlreadyCheckedIn =
@@ -791,73 +821,7 @@ const EmployeeDashboard: React.FC = () => {
               )}
             </button>
 
-            {/* Live GPS Distance Badge & Reload Button */}
-            <div
-              className={`flex items-center gap-2 px-3 py-2 rounded-xl backdrop-blur-md border text-xs font-semibold transition-all ${
-                attendance?.isWfhApproved
-                  ? 'bg-purple-500/20 border-purple-300/40 text-purple-100'
-                  : liveDistance !== null && nearestOffice && liveDistance <= (nearestOffice.allowedRadius || 500)
-                  ? 'bg-emerald-500/25 border-emerald-300/40 text-white'
-                  : 'bg-white/15 border-white/20 text-white'
-              }`}
-              title={
-                attendance?.isWfhApproved
-                  ? 'Work From Home Approved - Geofence Bypassed'
-                  : nearestOffice
-                  ? `Office: ${nearestOffice.companyName} (Allowed: ${nearestOffice.allowedRadius || 500}m)`
-                  : 'Live Distance to Office'
-              }
-            >
-              <MapPin
-                className={`h-4 w-4 shrink-0 ${
-                  isDistanceLoading
-                    ? 'animate-bounce text-amber-300'
-                    : attendance?.isWfhApproved
-                    ? 'text-purple-300'
-                    : liveDistance !== null && nearestOffice && liveDistance <= (nearestOffice.allowedRadius || 500)
-                    ? 'text-emerald-300'
-                    : 'text-amber-300'
-                }`}
-              />
-              <div className="flex flex-col text-left leading-tight">
-                <span className="text-[9px] uppercase font-bold tracking-wider opacity-85">
-                  {attendance?.isWfhApproved ? 'WFH Active' : 'Distance'}
-                </span>
-                <span className="font-bold text-xs font-mono">
-                  {isDistanceLoading ? (
-                    <span className="inline-flex items-center gap-1 opacity-90">
-                      <RefreshCw className="h-2.5 w-2.5 animate-spin" /> Locating...
-                    </span>
-                  ) : attendance?.isWfhApproved ? (
-                    <span className="text-purple-200">WFH Mode 🏡</span>
-                  ) : liveDistance !== null ? (
-                    <span>
-                      {liveDistance < 1000 ? `${Math.round(liveDistance)}m` : `${(liveDistance / 1000).toFixed(2)}km`}
-                      {nearestOffice && (
-                        <span className={`ml-1 text-[10px] font-medium ${liveDistance <= (nearestOffice.allowedRadius || 500) ? 'text-emerald-200' : 'text-amber-200'}`}>
-                          ({liveDistance <= (nearestOffice.allowedRadius || 500) ? 'In Range' : 'Out Range'})
-                        </span>
-                      )}
-                    </span>
-                  ) : gpsError ? (
-                    <span className="text-rose-200 text-[10px]">GPS Off</span>
-                  ) : (
-                    <span className="opacity-80">--</span>
-                  )}
-                </span>
-              </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  reloadGpsDistance();
-                }}
-                disabled={isDistanceLoading}
-                className="p-1 hover:bg-white/20 active:bg-white/30 rounded-lg transition-all cursor-pointer text-white shrink-0 ml-0.5"
-                title="Click to Reload Live Distance"
-              >
-                <RefreshCw className={`h-3.5 w-3.5 ${isDistanceLoading ? 'animate-spin' : ''}`} />
-              </button>
-            </div>
+
 
             {assignedTasks.length > 0 && (
               <button

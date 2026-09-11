@@ -8,7 +8,7 @@ const AdminLayout: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50/50 flex flex-col w-full max-w-full overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50/50 dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 flex flex-col w-full max-w-full overflow-x-hidden transition-colors duration-200">
       <Sidebar mobileOpen={mobileMenuOpen} onCloseMobile={() => setMobileMenuOpen(false)} />
       <div className="flex flex-col flex-1 md:pl-64 min-h-screen w-full max-w-full min-w-0 transition-all">
         <Navbar onToggleMobileMenu={() => setMobileMenuOpen((prev) => !prev)} />
@@ -23,4 +23,3 @@ const AdminLayout: React.FC = () => {
 };
 
 export default AdminLayout;
-

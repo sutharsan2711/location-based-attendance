@@ -8,7 +8,7 @@ const DashboardLayout: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#f7f9fc] flex flex-col font-sans w-full max-w-full overflow-x-hidden">
+    <div className="min-h-screen bg-[#f7f9fc] dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 flex flex-col font-sans w-full max-w-full overflow-x-hidden transition-colors duration-200">
       {/* Sidebar with Desktop & Mobile Drawer support */}
       <Sidebar mobileOpen={mobileMenuOpen} onCloseMobile={() => setMobileMenuOpen(false)} />
 
@@ -25,4 +25,3 @@ const DashboardLayout: React.FC = () => {
 };
 
 export default DashboardLayout;
-
